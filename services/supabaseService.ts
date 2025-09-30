@@ -1,5 +1,6 @@
 
 
+
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { type EmotionEntry, type UserProfile, type EmotionType } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
@@ -32,7 +33,6 @@ export type Database = {
           user_id?: string;
           image_url?: string | null;
         };
-        Relationships: [];
       };
       profiles: {
         Row: {
@@ -59,7 +59,6 @@ export type Database = {
           updated_at?: string | null;
           journal_purpose?: string | null;
         };
-        Relationships: [];
       };
     };
     Views: { [key: string]: never };

@@ -7,10 +7,11 @@ import CalendarView from './components/CalendarView';
 import TrendsView from './components/TrendsView';
 import ReportsView from './components/ReportsView';
 import HistoryView from './components/HistoryView';
+import SettingsView from './components/SettingsView';
 import EntryModal from './components/EntryModal';
 import ProfileModal from './components/ProfileModal';
 import Auth from './components/Auth';
-import { type EmotionEntry, type ActiveView, type EmotionType, type UserProfile } from './types';
+import { type EmotionEntry, type ActiveView, type EmotionType, type UserProfile, type Theme } from './types';
 import * as db from './services/supabaseService';
 import * as auth from './services/auth';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
@@ -36,8 +37,19 @@ const App: React.FC = () => {
     journalPurpose: 'Loading purpose...'
   });
 
+  const [theme, setTheme] = useState<Theme>('twilight');
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('emotion-journal-theme') as Theme | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else {
+      document.documentElement.setAttribute('data-theme', 'twilight');
+    }
+  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -122,6 +134,13 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
     }
     // The onAuthStateChange listener will handle setting the session to null
   };
+  
+  const handleThemeChange = useCallback((newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem('emotion-journal-theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  }, []);
+
 
   const handleNavigate = useCallback((view: ActiveView) => {
     setActiveView(view);
@@ -266,7 +285,7 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
   const selectedEntry = selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined;
 
   return (
-    <div className="flex h-screen bg-black text-gray-100">
+    <div className="flex h-screen">
       <Sidebar 
         activeView={activeView} 
         onNavigate={handleNavigate} 
@@ -281,7 +300,7 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
             onProfileClick={handleOpenProfileModal}
             onSignOut={handleSignOut}
         />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4 md:p-6 lg:p-8">
           {activeView === 'journal' && (
             <CalendarView
               currentDate={currentDate}
@@ -298,6 +317,9 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
           )}
           {activeView === 'history' && (
             <HistoryView entries={Object.values(entries)} />
+          )}
+          {activeView === 'settings' && (
+            <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} />
           )}
         </main>
       </div>

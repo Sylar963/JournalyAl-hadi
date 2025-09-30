@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -116,23 +115,26 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
             title: { display: false },
              tooltip: {
                 enabled: true,
-                backgroundColor: 'rgba(31, 41, 55, 0.9)', // bg-gray-800 with opacity
+                backgroundColor: 'rgba(17, 24, 39, 0.9)', // bg-gray-900/90
                 titleColor: '#f9fafb', // text-gray-50
                 bodyColor: '#d1d5db', // text-gray-300
-                borderColor: '#374151', // border-gray-700
+                borderColor: 'rgba(250, 204, 21, 0.3)', // border-yellow-400/30
                 borderWidth: 1,
-                padding: 8,
+                padding: 12,
+                caretPadding: 10,
+                caretSize: 8,
+                cornerRadius: 8,
+                displayColors: true,
+                boxPadding: 5,
                 callbacks: {
-                    label: function(context: any) {
-                        let label = context.dataset.label || '';
-                        if (label) {
-                            label += ': ';
+                    title: (tooltipItems: any[]) => tooltipItems[0].label,
+                    label: (context: any) => {
+                        const count = context.parsed.y;
+                        if (count !== null) {
+                           return `${count} ${count === 1 ? 'day' : 'days'}`;
                         }
-                        if (context.parsed.y !== null) {
-                            label += `${context.parsed.y} ${context.parsed.y === 1 ? 'day' : 'days'}`;
-                        }
-                        return label;
-                    }
+                        return '';
+                   },
                 }
             }
         },
@@ -242,7 +244,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
     }, [entries]);
 
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-content-entry">
             <h1 className="text-2xl font-bold text-white">Monthly History</h1>
             
             {monthlyData.length > 0 ? (

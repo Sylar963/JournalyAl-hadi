@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { type EmotionEntry, type EmotionType } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
 import { getEmotionInsight } from '../services/geminiService';
@@ -30,6 +31,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     setSelectedEmotion(entry?.emotion ?? initialEmotion ?? null);
     setIntensity(entry?.intensity ?? 5);
@@ -40,6 +44,47 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setSaveError(null);
     setIsSaving(false);
   }, [entry, isOpen, initialEmotion]);
+
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement as HTMLElement;
+
+      const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusableElements || focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      
+      firstElement.focus();
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          onClose();
+        }
+        if (event.key === 'Tab') {
+          if (event.shiftKey) { // Shift + Tab
+            if (document.activeElement === firstElement) {
+              event.preventDefault();
+              lastElement.focus();
+            }
+          } else { // Tab
+            if (document.activeElement === lastElement) {
+              event.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        triggerRef.current?.focus();
+      };
+    }
+  }, [isOpen, onClose]);
 
   const handleSave = async () => {
     if (!selectedEmotion) return;
@@ -110,14 +155,19 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg border border-gray-800">
+      <div 
+        ref={modalRef} 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="entry-modal-title"
+        className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg border border-gray-800">
         <div className="p-6 border-b border-gray-800">
           <div className="flex justify-between items-start">
             <div>
-                <h2 className="text-xl font-bold text-white">Your Entry</h2>
+                <h2 id="entry-modal-title" className="text-xl font-bold text-white">Your Entry</h2>
                 <p className="text-gray-400">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">&times;</button>
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none">&times;</button>
           </div>
         </div>
 

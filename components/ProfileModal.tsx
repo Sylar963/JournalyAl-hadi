@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { type UserProfile } from '../types';
 import IconUpload from './icons/IconUpload';
 
@@ -14,6 +14,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
   const [alias, setAlias] = useState(profile.alias);
   const [picture, setPicture] = useState<string | undefined>(profile.picture);
   const [journalPurpose, setJournalPurpose] = useState(profile.journalPurpose);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   
   useEffect(() => {
     setName(profile.name);
@@ -21,6 +24,47 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
     setPicture(profile.picture);
     setJournalPurpose(profile.journalPurpose);
   }, [profile, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement as HTMLElement;
+
+      const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusableElements || focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      
+      firstElement.focus();
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          onClose();
+        }
+        if (event.key === 'Tab') {
+          if (event.shiftKey) { // Shift + Tab
+            if (document.activeElement === firstElement) {
+              event.preventDefault();
+              lastElement.focus();
+            }
+          } else { // Tab
+            if (document.activeElement === lastElement) {
+              event.preventDefault();
+              firstElement.focus();
+            }
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        triggerRef.current?.focus();
+      };
+    }
+  }, [isOpen, onClose]);
 
   const handleSave = () => {
     onSave({ name, alias, picture, journalPurpose });
@@ -52,9 +96,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-md border border-gray-800">
+      <div 
+        ref={modalRef} 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-title"
+        className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-md border border-gray-800"
+      >
         <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">Edit Profile</h2>
+          <h2 id="profile-modal-title" className="text-xl font-bold text-white">Edit Profile</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none">&times;</button>
         </div>
 

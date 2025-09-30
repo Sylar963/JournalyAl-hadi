@@ -58,7 +58,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
     }, [filteredEntries, startDate, endDate]);
     
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-content-entry">
             <h1 className="text-2xl font-bold text-white">Wellness Reports</h1>
             
             <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">

@@ -88,7 +88,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, setCurrentDate
 
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-xl p-4 md:p-6">
+    <div className="bg-gray-900 rounded-lg shadow-xl p-4 md:p-6 animate-content-entry">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
             <h2 className="text-xl font-bold text-white mr-4">

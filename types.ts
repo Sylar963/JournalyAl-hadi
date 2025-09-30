@@ -6,6 +6,20 @@ export type EmotionType = 'happy' | 'calm' | 'anxious' | 'sad' | 'angry';
 
 export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'settings';
 
+export type Theme = 'twilight' | 'sunrise' | 'cyberpunk' | 'forest';
+
+export interface ThemeConfig {
+  id: Theme;
+  label: string;
+  colors: {
+    background: string;
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+}
+
+
 export interface EmotionEntry {
   date: string; // YYYY-MM-DD
   emotion: EmotionType;
