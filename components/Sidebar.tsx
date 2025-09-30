@@ -1,0 +1,147 @@
+import React, { useState, useEffect } from 'react';
+import IconJournal from './icons/IconJournal';
+import IconTrends from './icons/IconTrends';
+import IconReports from './icons/IconReports';
+import IconHistory from './icons/IconHistory';
+import IconSettings from './icons/IconSettings';
+import IconPlus from './icons/IconPlus';
+import { type ActiveView, type EmotionType, type UserProfile } from '../types';
+
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+  disabled?: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick, disabled }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-left ${
+      active
+        ? 'bg-yellow-400/10 text-yellow-300'
+        : disabled 
+        ? 'text-gray-600 cursor-not-allowed'
+        : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+    }`}
+    aria-current={active ? 'page' : undefined}
+  >
+    {icon}
+    <span className="ml-3">{label}</span>
+  </button>
+);
+
+const QuickActionItem: React.FC<{ icon: React.ReactNode; label: string, onClick: () => void; }> = ({ icon, label, onClick }) => (
+    <button onClick={onClick} className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-gray-200 rounded-lg transition-colors duration-200">
+        {icon}
+        <span className="ml-3">{label}</span>
+    </button>
+);
+
+interface SidebarProps {
+  activeView: ActiveView;
+  onNavigate: (view: ActiveView) => void;
+  onNewEntryClick: (emotion: EmotionType) => void;
+  userProfile: UserProfile;
+  onSaveProfile: (profile: UserProfile) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryClick, userProfile, onSaveProfile }) => {
+  const [isEditingPurpose, setIsEditingPurpose] = useState(false);
+  const [purposeText, setPurposeText] = useState(userProfile.journalPurpose || '');
+
+  useEffect(() => {
+    if (!isEditingPurpose) {
+      setPurposeText(userProfile.journalPurpose || '');
+    }
+  }, [userProfile.journalPurpose, isEditingPurpose]);
+
+  const handleEditClick = () => {
+    setIsEditingPurpose(true);
+  };
+
+  const handleCancelClick = () => {
+    setIsEditingPurpose(false);
+    setPurposeText(userProfile.journalPurpose || '');
+  };
+
+  const handleSaveClick = () => {
+    onSaveProfile({ ...userProfile, journalPurpose: purposeText });
+    setIsEditingPurpose(false);
+  };
+
+  return (
+    <div className="hidden md:flex flex-col w-64 bg-black border-r border-gray-800/50 p-4">
+      <div className="flex items-center mb-8">
+        <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-lg mr-3"></div>
+        <h1 className="text-xl font-bold text-white">Emotion Journal</h1>
+      </div>
+
+      <div className="flex-1">
+        <h2 className="px-4 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Main Navigation</h2>
+        <nav className="space-y-1">
+          <NavItem icon={<IconJournal className="w-5 h-5" />} label="Journal" active={activeView === 'journal'} onClick={() => onNavigate('journal')} />
+          <NavItem icon={<IconTrends className="w-5 h-5" />} label="Trends" active={activeView === 'trends'} onClick={() => onNavigate('trends')} />
+          <NavItem icon={<IconReports className="w-5 h-5" />} label="Reports" active={activeView === 'reports'} onClick={() => onNavigate('reports')} />
+          <NavItem icon={<IconHistory className="w-5 h-5" />} label="History" active={activeView === 'history'} onClick={() => onNavigate('history')} />
+          <NavItem icon={<IconSettings className="w-5 h-5" />} label="Settings" active={activeView === 'settings'} onClick={() => onNavigate('settings')} disabled />
+        </nav>
+        
+        <h2 className="px-4 mt-8 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Quick Actions</h2>
+        <nav className="space-y-1">
+            <QuickActionItem icon={<IconPlus className="w-5 h-5 text-yellow-400"/>} label="Log Happy" onClick={() => onNewEntryClick('happy')} />
+            <QuickActionItem icon={<IconPlus className="w-5 h-5 text-blue-300"/>} label="Log Calm" onClick={() => onNewEntryClick('calm')} />
+            <QuickActionItem icon={<IconPlus className="w-5 h-5 text-red-400"/>} label="Log Angry" onClick={() => onNewEntryClick('angry')} />
+        </nav>
+      </div>
+
+      <div className="mt-auto">
+        <div className="bg-gray-900 p-4 rounded-lg">
+          <h3 className="font-semibold text-white">My Journal's Purpose</h3>
+           {isEditingPurpose ? (
+            <textarea
+              value={purposeText}
+              onChange={(e) => setPurposeText(e.target.value)}
+              className="mt-2 w-full bg-gray-800 border border-gray-700 text-sm text-gray-300 p-2 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+              rows={4}
+              aria-label="Edit journal purpose"
+            />
+          ) : (
+            <p className="text-sm text-gray-400 mt-1 italic">
+              {purposeText || "Click 'Edit' to set your journal's purpose."}
+            </p>
+          )}
+          <div className="mt-3">
+             {isEditingPurpose ? (
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={handleSaveClick}
+                  className="flex-1 bg-yellow-600 text-black py-2 rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors"
+                >
+                  Save
+                </button>
+                <button 
+                  onClick={handleCancelClick}
+                  className="flex-1 bg-gray-700 text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={handleEditClick}
+                className="w-full bg-gray-700 text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
