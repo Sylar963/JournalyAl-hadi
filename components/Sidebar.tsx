@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import IconJournal from './icons/IconJournal';
 import IconTrends from './icons/IconTrends';
 import IconReports from './icons/IconReports';
@@ -7,6 +7,7 @@ import IconSettings from './icons/IconSettings';
 import IconPlus from './icons/IconPlus';
 import IconChevronsLeft from './icons/IconChevronsLeft';
 import { type ActiveView, type EmotionType, type UserProfile } from '../types';
+import { WISDOM_QUOTES } from '../constants';
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -56,6 +57,41 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditingPurpose, setIsEditingPurpose] = useState(false);
   const [purposeText, setPurposeText] = useState(userProfile.journalPurpose || '');
+  
+  const [showQuotes, setShowQuotes] = useState(false);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const inactivityTimerRef = useRef<number | null>(null);
+  const quoteIntervalRef = useRef<number | null>(null);
+
+  const stopTimers = () => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (quoteIntervalRef.current) clearInterval(quoteIntervalRef.current);
+  };
+
+  const resetInactivityTimer = () => {
+    stopTimers();
+    inactivityTimerRef.current = window.setTimeout(() => {
+      setShowQuotes(true);
+    }, 15000); // 15 seconds
+  };
+  
+  useEffect(() => {
+    resetInactivityTimer();
+    return () => stopTimers();
+  }, []);
+  
+  useEffect(() => {
+    if (showQuotes && !isEditingPurpose) {
+      quoteIntervalRef.current = window.setInterval(() => {
+        setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % WISDOM_QUOTES.length);
+      }, 7000); // 7 seconds per quote
+    } else {
+      stopTimers();
+    }
+    return () => {
+      if (quoteIntervalRef.current) clearInterval(quoteIntervalRef.current);
+    };
+  }, [showQuotes, isEditingPurpose]);
 
   useEffect(() => {
     if (!isEditingPurpose) {
@@ -64,17 +100,32 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
   }, [userProfile.journalPurpose, isEditingPurpose]);
 
   const handleEditClick = () => {
+    stopTimers();
+    setShowQuotes(false);
     setIsEditingPurpose(true);
   };
 
   const handleCancelClick = () => {
     setIsEditingPurpose(false);
     setPurposeText(userProfile.journalPurpose || '');
+    resetInactivityTimer();
   };
 
   const handleSaveClick = () => {
     onSaveProfile({ ...userProfile, journalPurpose: purposeText });
     setIsEditingPurpose(false);
+    resetInactivityTimer();
+  };
+
+  const handleMouseEnter = () => {
+    if (isEditingPurpose) return;
+    stopTimers();
+    setShowQuotes(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (isEditingPurpose) return;
+    resetInactivityTimer();
   };
 
   return (
@@ -108,21 +159,32 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
 
       <div className="mt-auto pt-4 border-t border-gray-800/50 space-y-4">
         {!isCollapsed && (
-          <div className="bg-gray-900 p-4 rounded-lg">
+          <div 
+            className="bg-gray-900 p-4 rounded-lg"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <h3 className="font-semibold text-white">My Journal's Purpose</h3>
-            {isEditingPurpose ? (
-              <textarea
-                value={purposeText}
-                onChange={(e) => setPurposeText(e.target.value)}
-                className="mt-2 w-full bg-gray-800 border border-gray-700 text-sm text-gray-300 p-2 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
-                rows={4}
-                aria-label="Edit journal purpose"
-              />
-            ) : (
-              <p className="text-sm text-gray-400 mt-1 italic">
-                {purposeText || "Click 'Edit' to set your journal's purpose."}
-              </p>
-            )}
+            <div className="h-24 flex items-center justify-center">
+              {isEditingPurpose ? (
+                <textarea
+                  value={purposeText}
+                  onChange={(e) => setPurposeText(e.target.value)}
+                  className="mt-2 w-full bg-gray-800 border border-gray-700 text-sm text-gray-300 p-2 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+                  rows={4}
+                  aria-label="Edit journal purpose"
+                  autoFocus
+                />
+              ) : showQuotes ? (
+                <p key={currentQuoteIndex} className="text-sm text-gray-400 italic text-center animate-fade-in">
+                  "{WISDOM_QUOTES[currentQuoteIndex]}"
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 mt-1 italic">
+                  {purposeText || "Click 'Edit' to set your journal's purpose."}
+                </p>
+              )}
+            </div>
             <div className="mt-3">
               {isEditingPurpose ? (
                 <div className="flex items-center space-x-2">

@@ -1,4 +1,3 @@
-
 import { type EmotionType, type ThemeConfig } from './types';
 
 interface EmotionConfig {
@@ -96,4 +95,17 @@ export const THEMES_CONFIG: ThemeConfig[] = [
       accent: 'bg-amber-500',
     },
   },
+];
+
+export const WISDOM_QUOTES = [
+  "The secret of change is to focus all of your energy not on fighting the old, but on building the new.",
+  "Waste no more time arguing about what a good man should be. Be one.",
+  "The mind is everything. What you think you become.",
+  "You have power over your mind — not outside events. Realize this, and you will find strength.",
+  "Peace comes from within. Do not seek it without.",
+  "The best revenge is not to be like your enemy.",
+  "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment.",
+  "He who lives in harmony with himself lives in harmony with the universe.",
+  "Three things cannot be long hidden: the sun, the moon, and the truth.",
+  "The happiness of your life depends upon the quality of your thoughts."
 ];
