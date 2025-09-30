@@ -98,6 +98,33 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         plugins: {
             legend: { display: false },
             title: { display: false },
+            tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(31, 41, 55, 0.9)', // bg-gray-800 with opacity
+                titleColor: '#f9fafb', // text-gray-50
+                bodyColor: '#d1d5db', // text-gray-300
+                borderColor: '#374151', // border-gray-700
+                borderWidth: 1,
+                padding: 10,
+                caretPadding: 10,
+                displayColors: true,
+                boxPadding: 4,
+                callbacks: {
+                    label: function(context: any) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += `${context.parsed.y} ${context.parsed.y === 1 ? 'day' : 'days'}`;
+                        }
+                        return label;
+                    },
+                    title: function(context: any) {
+                        return context[0].label;
+                    }
+                }
+            }
         },
         scales: {
             y: {

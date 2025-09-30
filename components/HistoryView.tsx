@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -10,7 +11,7 @@ import {
   Legend,
 } from 'chart.js';
 import { type EmotionEntry, type EmotionType, type MonthlySummary } from '../types';
-import { EMOTIONS_CONFIG } from '../constants';
+import { EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
 import IconHistory from './icons/IconHistory';
 
 ChartJS.register(
@@ -34,8 +35,57 @@ const emotionColors: Record<string, {bg: string, border: string}> = {
     Angry: {bg: 'rgba(239, 68, 68, 0.5)', border: 'rgb(248, 113, 113)'}, // red-500 / red-400
 };
 
+const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEntry[] }> = ({ year, month, entries }) => {
+    const entriesMap = useMemo(() => new Map(entries.map(e => [e.date, e])), [entries]);
 
-const MonthlySummaryCard: React.FC<{ summary: MonthlySummary }> = ({ summary }) => {
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const days = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        days.push(<div key={`pad-${i}`} className="w-full aspect-square"></div>);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const entry = entriesMap.get(dateKey);
+
+        let cell;
+        if (entry) {
+            const config = EMOTIONS_CONFIG[entry.emotion];
+            const intensityOpacity = 0.2 + (entry.intensity / 10) * 0.8;
+            
+            cell = (
+                <div 
+                  key={dateKey} 
+                  className={`w-full aspect-square rounded-sm ${config.solidColor}`} 
+                  style={{ opacity: intensityOpacity }} 
+                  title={`${config.label} (${entry.intensity}/10) on ${date.toLocaleDateString()}`}
+                >
+                </div>
+            );
+        } else {
+            cell = <div key={dateKey} className="w-full aspect-square rounded-sm bg-gray-800/50"></div>;
+        }
+        days.push(cell);
+    }
+
+    return (
+        <div>
+            <h3 className="text-lg font-semibold text-white mb-3">Daily Heatmap</h3>
+            <div className="grid grid-cols-7 gap-1">
+                {WEEK_DAYS.map(day => <div key={day} className="text-xs text-center text-gray-500 font-medium uppercase">{day}</div>)}
+            </div>
+            <div className="grid grid-cols-7 gap-1 mt-2">
+                {days}
+            </div>
+        </div>
+    );
+};
+
+
+const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEntry[] }> = ({ summary, entries }) => {
     const monthName = new Date(summary.year, summary.month).toLocaleString('default', { month: 'long' });
 
     const chartData = useMemo(() => {
@@ -64,6 +114,27 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary }> = ({ summary }) 
         plugins: {
             legend: { display: false },
             title: { display: false },
+             tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(31, 41, 55, 0.9)', // bg-gray-800 with opacity
+                titleColor: '#f9fafb', // text-gray-50
+                bodyColor: '#d1d5db', // text-gray-300
+                borderColor: '#374151', // border-gray-700
+                borderWidth: 1,
+                padding: 8,
+                callbacks: {
+                    label: function(context: any) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += `${context.parsed.y} ${context.parsed.y === 1 ? 'day' : 'days'}`;
+                        }
+                        return label;
+                    }
+                }
+            }
         },
         scales: {
             y: {
@@ -95,17 +166,26 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary }> = ({ summary }) 
                     <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity}</p>
                 </div>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-3">Emotion Distribution</h3>
-            <div className="h-60">
-                 <Bar options={chartOptions as any} data={chartData} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">Emotion Distribution</h3>
+                    <div className="h-60">
+                        <Bar options={chartOptions as any} data={chartData} />
+                    </div>
+                </div>
+                <MonthlyHeatmap year={summary.year} month={summary.month} entries={entries} />
             </div>
         </div>
     );
 };
 
+interface MonthlyData {
+    summary: MonthlySummary;
+    entries: EmotionEntry[];
+}
 
 const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
-    const monthlySummaries = useMemo<MonthlySummary[]>(() => {
+    const monthlyData = useMemo<MonthlyData[]>(() => {
         const groupedByMonth: Record<string, EmotionEntry[]> = {};
         const today = new Date();
         const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -122,7 +202,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
             groupedByMonth[monthKey].push(entry);
         }
 
-        const summaries = Object.entries(groupedByMonth).map(([monthKey, monthEntries]) => {
+        const data = Object.entries(groupedByMonth).map(([monthKey, monthEntries]) => {
             const [year, month] = monthKey.split('-').map(Number);
             
             const emotionCounts: Record<EmotionType, number> = { happy: 0, calm: 0, anxious: 0, sad: 0, angry: 0 };
@@ -142,7 +222,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
                     ? sortedEmotions[0]
                     : 'N/A';
             
-            return {
+            const summary: MonthlySummary = {
                 year,
                 month: month - 1, // month is 1-based from key, convert to 0-based for Date object
                 totalEntries: monthEntries.length,
@@ -150,12 +230,13 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
                 avgIntensity: monthEntries.length > 0 ? parseFloat((totalIntensity / monthEntries.length).toFixed(1)) : 0,
                 emotionCounts,
             };
+            return { summary, entries: monthEntries };
         });
 
         // Sort by year then month, descending
-        return summaries.sort((a, b) => {
-            if (a.year !== b.year) return b.year - a.year;
-            return b.month - a.month;
+        return data.sort((a, b) => {
+            if (a.summary.year !== b.summary.year) return b.summary.year - a.summary.year;
+            return b.summary.month - a.summary.month;
         });
 
     }, [entries]);
@@ -164,10 +245,10 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
         <div className="space-y-6 animate-fade-in">
             <h1 className="text-2xl font-bold text-white">Monthly History</h1>
             
-            {monthlySummaries.length > 0 ? (
+            {monthlyData.length > 0 ? (
                 <div className="space-y-6">
-                    {monthlySummaries.map(summary => (
-                        <MonthlySummaryCard key={`${summary.year}-${summary.month}`} summary={summary} />
+                    {monthlyData.map(({ summary, entries }) => (
+                        <MonthlySummaryCard key={`${summary.year}-${summary.month}`} summary={summary} entries={entries} />
                     ))}
                 </div>
             ) : (
