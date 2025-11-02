@@ -1,16 +1,20 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Line, Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
+  RadialLinearScale,
+  Filler,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
 import { type EmotionEntry, type EmotionType } from '../types';
-import { EMOTIONS_CONFIG } from '../constants';
+import { EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
 import { getTrendsSummary } from '../services/geminiService';
 import IconSparkles from './icons/IconSparkles';
 
@@ -18,6 +22,10 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
+  RadialLinearScale,
+  Filler,
   Title,
   Tooltip,
   Legend
@@ -71,7 +79,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         Angry: {bg: 'rgba(239, 68, 68, 0.5)', border: 'rgb(248, 113, 113)'}, // red-500 / red-400
     };
 
-    const chartData = useMemo(() => {
+    const distributionChartData = useMemo(() => {
         const labels = Object.keys(EMOTIONS_CONFIG).map(key => EMOTIONS_CONFIG[key as EmotionType].label);
         const data = labels.map(label => {
             const emotionKey = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).find(key => EMOTIONS_CONFIG[key].label === label);
@@ -92,7 +100,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     }, [currentMonthEntries]);
 
 
-    const chartOptions = {
+    const barChartOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -100,10 +108,10 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             title: { display: false },
             tooltip: {
                 enabled: true,
-                backgroundColor: 'rgba(17, 24, 39, 0.9)', // bg-gray-900/90
-                titleColor: '#f9fafb', // text-gray-50
-                bodyColor: '#d1d5db', // text-gray-300
-                borderColor: 'rgba(250, 204, 21, 0.3)', // border-yellow-400/30
+                backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                titleColor: '#f9fafb',
+                bodyColor: '#d1d5db',
+                borderColor: 'rgba(250, 204, 21, 0.3)',
                 borderWidth: 1,
                 padding: 12,
                 caretPadding: 10,
@@ -136,6 +144,118 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         }
     };
     
+    const intensityChartData = useMemo(() => {
+        if (currentMonthEntries.length === 0) return { labels: [], datasets: [] };
+      
+        const sortedEntries = [...currentMonthEntries].sort((a, b) => new Date(a.date).getDate() - new Date(b.date).getDate());
+        
+        const labels = sortedEntries.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        const data = sortedEntries.map(e => e.intensity);
+        const pointBgColors = sortedEntries.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion].label]?.border || '#ffffff');
+      
+        return {
+          labels,
+          datasets: [{
+            label: 'Intensity',
+            data,
+            fill: true,
+            backgroundColor: 'rgba(250, 204, 21, 0.05)',
+            borderColor: 'rgba(250, 204, 21, 0.4)',
+            tension: 0.3,
+            pointBackgroundColor: pointBgColors,
+            pointBorderColor: '#0000',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+          }]
+        };
+    }, [currentMonthEntries]);
+      
+    const intensityChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            title: { display: false },
+            tooltip: {
+                ...barChartOptions.plugins.tooltip,
+                callbacks: {
+                    title: (tooltipItems: any[]) => {
+                        const index = tooltipItems[0].dataIndex;
+                        const entry = [...currentMonthEntries].sort((a, b) => new Date(a.date).getDate() - new Date(b.date).getDate())[index];
+                        return `${tooltipItems[0].label} - ${EMOTIONS_CONFIG[entry.emotion].label}`;
+                    },
+                    label: (context: any) => `Intensity: ${context.parsed.y}`,
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                min: 1,
+                max: 10,
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { color: '#9ca3af', stepSize: 1 }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#9ca3af' }
+            }
+        }
+    };
+
+    const dayOfWeekChartData = useMemo(() => {
+        const counts: Record<EmotionType, number[]> = { happy: [0,0,0,0,0,0,0], calm: [0,0,0,0,0,0,0], anxious: [0,0,0,0,0,0,0], sad: [0,0,0,0,0,0,0], angry: [0,0,0,0,0,0,0] };
+        currentMonthEntries.forEach(entry => {
+            const dayIndex = new Date(entry.date + 'T00:00:00').getDay();
+            counts[entry.emotion][dayIndex]++;
+        });
+        const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
+        return {
+            labels: WEEK_DAYS,
+            datasets: emotionKeys.map(emotion => ({
+                label: EMOTIONS_CONFIG[emotion].label,
+                data: counts[emotion],
+                backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.bg,
+                borderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                borderWidth: 1.5,
+                pointBackgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+            }))
+        };
+    }, [currentMonthEntries]);
+
+    const radarChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' as const, labels: { color: '#9ca3af' } },
+            title: { display: false },
+             tooltip: {
+                ...barChartOptions.plugins.tooltip,
+                callbacks: {
+                    title: (tooltipItems: any[]) => tooltipItems[0].label,
+                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? 'day' : 'days'}`,
+                }
+            }
+        },
+        scales: {
+            r: {
+                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                pointLabels: { color: '#d1d5db' },
+                ticks: {
+                    color: '#9ca3af',
+                    backdropColor: 'rgba(0,0,0,0.5)',
+                    backdropPadding: 4,
+                    precision: 0,
+                },
+                beginAtZero: true,
+            }
+        }
+    };
+
     const handleGenerateSummary = useCallback(async () => {
         setIsSummaryLoading(true);
         setSummaryError('');
@@ -168,17 +288,43 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
           <p className="text-3xl font-bold text-white mt-1">{stats.avgIntensity}</p>
         </div>
       </div>
-
-      <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
-        <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
-        <div className="h-64">
-           {currentMonthEntries.length > 0 ? (
-             <Bar options={chartOptions as any} data={chartData} />
-           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">
-                No data for this month to display.
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
+            <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
+            <div className="h-80">
+            {currentMonthEntries.length > 0 ? (
+                <Bar options={barChartOptions as any} data={distributionChartData} />
+            ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                    No data for this month to display.
+                </div>
+            )}
             </div>
-           )}
+        </div>
+        <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
+            <h3 className="text-lg font-semibold text-white mb-4">Intensity Over Time</h3>
+            <div className="h-80">
+            {currentMonthEntries.length > 0 ? (
+                <Line options={intensityChartOptions as any} data={intensityChartData} />
+            ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                    Log emotions to see intensity trends.
+                </div>
+            )}
+            </div>
+        </div>
+        <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50 lg:col-span-2">
+            <h3 className="text-lg font-semibold text-white mb-4">Emotions by Day of Week</h3>
+            <div className="h-96">
+            {currentMonthEntries.length > 0 ? (
+                <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
+            ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                    No weekly data to analyze yet.
+                </div>
+            )}
+            </div>
         </div>
       </div>
 

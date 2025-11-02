@@ -12,7 +12,7 @@ interface EntryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (entry: Omit<EmotionEntry, 'date'>) => Promise<void>;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
   selectedDate: Date;
   entry?: EmotionEntry;
   initialEmotion?: EmotionType;
@@ -29,7 +29,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const [aiError, setAiError] = useState<string>('');
 
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [operationError, setOperationError] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState<{ message: string; visible: boolean } | null>(null);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -41,8 +43,10 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setImage(entry?.imageUrl ?? undefined);
     setAiInsight('');
     setAiError('');
-    setSaveError(null);
+    setOperationError(null);
     setIsSaving(false);
+    setIsDeleting(false);
+    setConfirmation(null);
   }, [entry, isOpen, initialEmotion]);
 
   useEffect(() => {
@@ -61,7 +65,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
 
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
-          onClose();
+          if (!isSaving && !isDeleting) {
+            onClose();
+          }
         }
         if (event.key === 'Tab') {
           if (event.shiftKey) { // Shift + Tab
@@ -84,16 +90,39 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
         triggerRef.current?.focus();
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isSaving, isDeleting]);
+  
+   // Effect to manage the toast animation lifecycle
+  useEffect(() => {
+    if (confirmation?.message && !confirmation.visible) {
+      // A message is set, but invisible. Trigger the visibility on the next tick.
+      const timer = setTimeout(() => {
+        setConfirmation({ ...confirmation, visible: true });
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+
+    if (confirmation?.visible) {
+      // The toast is visible, schedule the modal to close.
+      const timer = setTimeout(() => {
+        onClose();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [confirmation, onClose]);
+
+  const showConfirmation = (message: string) => {
+    setConfirmation({ message, visible: false });
+  };
 
   const handleSave = async () => {
     if (!selectedEmotion) return;
 
     setIsSaving(true);
-    setSaveError(null);
+    setOperationError(null);
     try {
       await onSave({ emotion: selectedEmotion, intensity, notes, imageUrl: image });
-      // The onSave handler in App.tsx closes the modal on success.
+      showConfirmation('Entry Saved!');
     } catch (error: any) {
       let message = 'An unexpected error occurred. Please try again.';
       if (error.message && error.message.includes('ON CONFLICT')) {
@@ -101,9 +130,20 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
       } else if (error.message) {
         message = `Error: ${error.message}`;
       }
-      setSaveError(message);
-    } finally {
-        setIsSaving(false);
+      setOperationError(message);
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setOperationError(null);
+    try {
+        await onDelete();
+        showConfirmation('Entry Deleted!');
+    } catch (err: any) {
+        setOperationError(err.message || 'Failed to delete entry.');
+        setIsDeleting(false);
     }
   };
 
@@ -167,7 +207,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 <h2 id="entry-modal-title" className="text-xl font-bold text-white">Your Entry</h2>
                 <p className="text-gray-400">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none">&times;</button>
+            <button onClick={onClose} disabled={isSaving || isDeleting} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none disabled:opacity-50">&times;</button>
           </div>
         </div>
 
@@ -267,33 +307,46 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
           )}
         </div>
 
-        <div className="p-6 bg-black/25 border-t border-gray-800 flex flex-col gap-4 rounded-b-xl">
-            {saveError && (
-                <div className="bg-red-900/50 border border-red-500/30 text-red-300 p-3 rounded-lg text-sm">
-                    <p className="font-bold mb-1">Could not save entry</p>
-                    <p className="text-red-200">{saveError}</p>
+        <div className="p-6 bg-black/25 border-t border-gray-800 flex flex-col gap-4 rounded-b-xl min-h-[88px]">
+            {confirmation ? (
+                <div className={`flex items-center justify-center text-green-400 p-3 transition-all duration-300 ease-out ${confirmation.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-medium">{confirmation.message}</span>
                 </div>
-            )}
-            <div className="flex justify-between items-center">
-                <div>
-                    {entry && (
-                        <button onClick={onDelete} className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors">Delete Entry</button>
+            ) : (
+                <>
+                    {operationError && (
+                        <div className="bg-red-900/50 border border-red-500/30 text-red-300 p-3 rounded-lg text-sm">
+                            <p className="font-bold mb-1">Operation Failed</p>
+                            <p className="text-red-200">{operationError}</p>
+                        </div>
                     )}
-                </div>
-                <div className="flex space-x-3">
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">Cancel</button>
-                    <button 
-                        onClick={handleSave} 
-                        disabled={!selectedEmotion || isSaving}
-                        title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
-                        className="px-4 py-2 text-sm font-medium bg-yellow-600 text-black hover:bg-yellow-700 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 w-28 text-center"
-                    >
-                        {isSaving ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mx-auto"></div>
-                        ) : 'Save Entry'}
-                    </button>
-                </div>
-            </div>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            {entry && (
+                                <button onClick={handleDelete} disabled={isSaving || isDeleting} className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {isDeleting ? 'Deleting...' : 'Delete Entry'}
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex space-x-3">
+                            <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+                            <button 
+                                onClick={handleSave} 
+                                disabled={!selectedEmotion || isSaving || isDeleting}
+                                title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
+                                className="px-4 py-2 text-sm font-medium bg-yellow-600 text-black hover:bg-yellow-700 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 w-28 text-center"
+                            >
+                                {isSaving ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mx-auto"></div>
+                                ) : 'Save Entry'}
+                            </button>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
 
       </div>

@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Emotion Journal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,6 +53,39 @@
       .animate-fade-in {
         animation: fade-in 0.7s ease-in-out forwards;
       }
+      
+      /* ===== DAY OF WEEK COLORS ===== */
+      .day-su { color: #f87171; } /* red-400 */
+      .day-mo { color: #fbbf24; } /* amber-400 */
+      .day-tu { color: #fde047; } /* yellow-300 */
+      .day-we { color: #a3e635; } /* lime-400 */
+      .day-th { color: #38bdf8; } /* sky-400 */
+      .day-fr { color: #818cf8; } /* indigo-400 */
+      .day-sa { color: #c026d3; } /* fuchsia-400 */
+
+      [data-theme="sunrise"] .day-su { color: #ef4444; } /* red-500 */
+      [data-theme="sunrise"] .day-mo { color: #f97316; } /* orange-500 */
+      [data-theme="sunrise"] .day-tu { color: #f59e0b; } /* amber-500 */
+      [data-theme="sunrise"] .day-we { color: #eab308; } /* yellow-500 */
+      [data-theme="sunrise"] .day-th { color: #65a30d; } /* lime-600 */
+      [data-theme="sunrise"] .day-fr { color: #0d9488; } /* teal-600 */
+      [data-theme="sunrise"] .day-sa { color: #f43f5e; } /* rose-500 */
+
+      [data-theme="cyberpunk"] .day-su { color: #ec4899; } /* pink-500 */
+      [data-theme="cyberpunk"] .day-mo { color: #d946ef; } /* fuchsia-500 */
+      [data-theme="cyberpunk"] .day-tu { color: #a855f7; } /* purple-500 */
+      [data-theme="cyberpunk"] .day-we { color: #22d3ee; } /* cyan-400 */
+      [data-theme="cyberpunk"] .day-th { color: #a3e635; } /* lime-400 */
+      [data-theme="cyberpunk"] .day-fr { color: #facc15; } /* yellow-400 */
+      [data-theme="cyberpunk"] .day-sa { color: #f43f5e; } /* rose-500 */
+
+      [data-theme="forest"] .day-su { color: #dc2626; } /* red-600 */
+      [data-theme="forest"] .day-mo { color: #ea580c; } /* orange-600 */
+      [data-theme="forest"] .day-tu { color: #f59e0b; } /* amber-500 */
+      [data-theme="forest"] .day-we { color: #eab308; } /* yellow-500 */
+      [data-theme="forest"] .day-th { color: #22c55e; } /* green-500 */
+      [data-theme="forest"] .day-fr { color: #14b8a6; } /* teal-500 */
+      [data-theme="forest"] .day-sa { color: #e11d48; } /* rose-600 */
       
       /* ===== THEME OVERRIDES ===== */
       
@@ -178,6 +210,7 @@
       [data-theme="forest"] .bg-yellow-400 { background-color: #fbbf24 !important; }
 
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   <script type="importmap">
 {
   "imports": {

@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -11,10 +10,18 @@ import SettingsView from './components/SettingsView';
 import EntryModal from './components/EntryModal';
 import ProfileModal from './components/ProfileModal';
 import Auth from './components/Auth';
+import AdPopup from './components/AdPopup';
 import { type EmotionEntry, type ActiveView, type EmotionType, type UserProfile, type Theme } from './types';
 import * as db from './services/supabaseService';
 import * as auth from './services/auth';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config';
+import { AD_MESSAGES, WISDOM_QUOTES } from './constants';
+
+import IconReports from './components/icons/IconReports';
+import IconSparkles from './components/icons/IconSparkles';
+import IconSettings from './components/icons/IconSettings';
+import IconUpload from './components/icons/IconUpload';
+import IconJournal from './components/icons/IconJournal';
 
 const isSupabaseConfigured = (SUPABASE_URL as string) !== 'YOUR_SUPABASE_URL' && SUPABASE_URL && (SUPABASE_ANON_KEY as string) !== 'YOUR_SUPABASE_ANON_KEY' && SUPABASE_ANON_KEY;
 
@@ -41,6 +48,68 @@ const App: React.FC = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [isAdVisible, setIsAdVisible] = useState(false);
+  const [adContent, setAdContent] = useState<{ title: string; message: string; icon: React.ReactNode } | null>(null);
+  const adTimerRef = useRef<number | null>(null);
+
+  const AD_ICONS: Record<string, React.ReactNode> = {
+    reports: <IconReports className="w-6 h-6" />,
+    sparkles: <IconSparkles className="w-6 h-6" />,
+    settings: <IconSettings className="w-6 h-6" />,
+    upload: <IconUpload className="w-6 h-6" />,
+    journal: <IconJournal className="w-6 h-6" />,
+  };
+
+  const showAd = useCallback(() => {
+    // Make the wisdom quotes dynamic by picking a random one each time
+    const adPool = [...AD_MESSAGES];
+    const quoteAdIndex = adPool.findIndex(ad => ad.title === "A Moment of Wisdom");
+    if (quoteAdIndex !== -1) {
+        adPool[quoteAdIndex] = {
+            ...adPool[quoteAdIndex],
+            message: WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
+        };
+    }
+
+    const randomAd = adPool[Math.floor(Math.random() * adPool.length)];
+    
+    setAdContent({
+        title: randomAd.title,
+        message: randomAd.message,
+        icon: AD_ICONS[randomAd.icon] || <IconSparkles className="w-6 h-6" />
+    });
+    setIsAdVisible(true);
+  }, []);
+
+  const resetAdTimer = useCallback(() => {
+      // Hide any currently visible ad when activity is detected
+      setIsAdVisible(false);
+      
+      if (adTimerRef.current) {
+          clearTimeout(adTimerRef.current);
+      }
+      // Set to 30 minutes for production
+      const AD_INTERVAL = 60 * 1000 * 30; 
+      adTimerRef.current = window.setTimeout(showAd, AD_INTERVAL);
+  }, [showAd]);
+
+  useEffect(() => {
+      resetAdTimer(); // Start the timer on initial load
+
+      // Add event listeners to reset timer on user activity
+      window.addEventListener('mousedown', resetAdTimer);
+      window.addEventListener('keydown', resetAdTimer);
+
+      // Cleanup function to remove listeners and clear timer
+      return () => {
+          if (adTimerRef.current) {
+              clearTimeout(adTimerRef.current);
+          }
+          window.removeEventListener('mousedown', resetAdTimer);
+          window.removeEventListener('keydown', resetAdTimer);
+      };
+  }, [resetAdTimer]);
+
   useEffect(() => {
     const savedTheme = localStorage.getItem('emotion-journal-theme') as Theme | null;
     if (savedTheme) {
@@ -59,12 +128,16 @@ const App: React.FC = () => {
       setIsAuthLoading(false);
     });
 
-    const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+      // If the event is SIGNED_IN, it's a fresh login. Show the ad.
+      if (event === 'SIGNED_IN') {
+          showAd();
+      }
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [showAd]);
 
   useEffect(() => {
     if (!session) {
@@ -180,14 +253,13 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
           ...prevEntries,
           [dateKey]: newEntry,
         }));
-        handleCloseModal();
       } catch (err) {
           console.error("Failed to save entry:", err);
           // Re-throw the error so the modal can catch and display it
           throw err;
       }
     }
-  }, [selectedDate, handleCloseModal]);
+  }, [selectedDate]);
   
   const handleDeleteEntry = useCallback(async () => {
     if(selectedDate) {
@@ -203,12 +275,12 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
                 delete newEntries[dateKey];
                 return newEntries;
             });
-            handleCloseModal();
         } catch (err) {
             console.error("Failed to delete entry:", err);
+            throw err;
         }
     }
-  }, [selectedDate, handleCloseModal]);
+  }, [selectedDate]);
   
   const handleOpenProfileModal = useCallback(() => {
       setIsProfileModalOpen(true);
@@ -227,6 +299,25 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
         console.error("Failed to save profile:", err);
     }
   }, [handleCloseProfileModal]);
+
+  const handleMonthChange = useCallback((offset: number) => {
+    setCurrentDate(prevDate => {
+      // Set to the first day of the month to avoid day-of-month issues (e.g., Jan 31 -> Feb 31 doesn't exist)
+      const newDate = new Date(prevDate.getFullYear(), prevDate.getMonth() + offset, 1);
+      return newDate;
+    });
+  }, []);
+
+  const handleYearChange = useCallback((offset: number) => {
+    setCurrentDate(prevDate => {
+      const newDate = new Date(prevDate.getFullYear() + offset, prevDate.getMonth(), 1);
+      return newDate;
+    });
+  }, []);
+  
+  const handleGoToToday = useCallback(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   if (!isSupabaseConfigured) {
     return (
@@ -299,12 +390,15 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
             userProfile={userProfile}
             onProfileClick={handleOpenProfileModal}
             onSignOut={handleSignOut}
+            onNavigatePast={() => handleMonthChange(-1)}
         />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4 md:p-6 lg:p-8">
           {activeView === 'journal' && (
             <CalendarView
               currentDate={currentDate}
-              setCurrentDate={setCurrentDate}
+              onMonthChange={handleMonthChange}
+              onYearChange={handleYearChange}
+              onGoToToday={handleGoToToday}
               onDateClick={handleDateClick}
               entries={entries}
             />
@@ -340,6 +434,15 @@ Please review the Supabase setup instructions and ensure your 'entries' and 'pro
           onClose={handleCloseProfileModal}
           onSave={handleSaveProfile}
           profile={userProfile}
+        />
+      )}
+      {adContent && (
+        <AdPopup 
+            isOpen={isAdVisible}
+            onClose={() => setIsAdVisible(false)}
+            title={adContent.title}
+            message={adContent.message}
+            icon={adContent.icon}
         />
       )}
     </div>

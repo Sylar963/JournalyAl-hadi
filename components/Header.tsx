@@ -10,6 +10,7 @@ interface HeaderProps {
     userProfile: UserProfile;
     onProfileClick: () => void;
     onSignOut: () => void;
+    onNavigatePast: () => void;
 }
 
 const getInitials = (name: string): string => {
@@ -20,7 +21,7 @@ const getInitials = (name: string): string => {
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
 };
 
-const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onSignOut }) => {
+const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onSignOut, onNavigatePast }) => {
   return (
     <header className="flex-shrink-0 bg-gray-900/50 border-b border-gray-800/50 backdrop-blur-sm">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
@@ -45,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
             New Entry
           </button>
 
-          <button className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
+          <button onClick={onNavigatePast} className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" title="Previous Month">
             <IconCalendar className="w-6 h-6" />
           </button>
           

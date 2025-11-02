@@ -1,10 +1,14 @@
 import React, { useMemo } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Line, Radar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
+  RadialLinearScale,
+  Filler,
   Title,
   Tooltip,
   Legend,
@@ -17,6 +21,10 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  PointElement,
+  LineElement,
+  RadialLinearScale,
+  Filler,
   Title,
   Tooltip,
   Legend
@@ -71,41 +79,21 @@ const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEn
     }
 
     return (
-        <div>
-            <h3 className="text-lg font-semibold text-white mb-3">Daily Heatmap</h3>
+        <>
             <div className="grid grid-cols-7 gap-1">
                 {WEEK_DAYS.map(day => <div key={day} className="text-xs text-center text-gray-500 font-medium uppercase">{day}</div>)}
             </div>
             <div className="grid grid-cols-7 gap-1 mt-2">
                 {days}
             </div>
-        </div>
+        </>
     );
 };
 
 
 const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEntry[] }> = ({ summary, entries }) => {
     const monthName = new Date(summary.year, summary.month).toLocaleString('default', { month: 'long' });
-
-    const chartData = useMemo(() => {
-        const labels = Object.keys(EMOTIONS_CONFIG).map(key => EMOTIONS_CONFIG[key as EmotionType].label);
-        const data = labels.map(label => {
-            const emotionKey = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).find(key => EMOTIONS_CONFIG[key].label === label);
-            return emotionKey ? summary.emotionCounts[emotionKey] || 0 : 0;
-        });
-
-        return {
-            labels,
-            datasets: [{
-                label: 'Emotion Count',
-                data,
-                backgroundColor: labels.map(l => emotionColors[l]?.bg || 'rgba(255, 255, 255, 0.5)'),
-                borderColor: labels.map(l => emotionColors[l]?.border || 'rgb(255, 255, 255)'),
-                borderWidth: 1,
-                borderRadius: 4,
-            }]
-        };
-    }, [summary.emotionCounts]);
+    const capitalizedMonthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
     const chartOptions = {
         responsive: true,
@@ -151,10 +139,133 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
         }
     };
 
+    const distChartData = useMemo(() => {
+        const labels = Object.keys(EMOTIONS_CONFIG).map(key => EMOTIONS_CONFIG[key as EmotionType].label);
+        const data = labels.map(label => {
+            const emotionKey = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).find(key => EMOTIONS_CONFIG[key].label === label);
+            return emotionKey ? summary.emotionCounts[emotionKey] || 0 : 0;
+        });
+
+        return {
+            labels,
+            datasets: [{
+                label: 'Emotion Count',
+                data,
+                backgroundColor: labels.map(l => emotionColors[l]?.bg || 'rgba(255, 255, 255, 0.5)'),
+                borderColor: labels.map(l => emotionColors[l]?.border || 'rgb(255, 255, 255)'),
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        };
+    }, [summary.emotionCounts]);
+
+    const sortedEntriesForIntensity = useMemo(() => {
+        return [...entries].sort((a, b) => new Date(a.date).getDate() - new Date(b.date).getDate());
+    }, [entries]);
+
+    const intensityChartData = useMemo(() => {
+        if (sortedEntriesForIntensity.length === 0) return { labels: [], datasets: [] };
+        
+        const labels = sortedEntriesForIntensity.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        const data = sortedEntriesForIntensity.map(e => e.intensity);
+        const pointBgColors = sortedEntriesForIntensity.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion].label]?.border || '#ffffff');
+      
+        return {
+          labels,
+          datasets: [{
+            label: 'Intensity',
+            data,
+            fill: true,
+            backgroundColor: 'rgba(250, 204, 21, 0.05)',
+            borderColor: 'rgba(250, 204, 21, 0.4)',
+            tension: 0.3,
+            pointBackgroundColor: pointBgColors,
+            pointBorderColor: '#0000',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+          }]
+        };
+    }, [sortedEntriesForIntensity]);
+
+    const intensityChartOptions = {
+        ...chartOptions,
+        plugins: {
+            ...chartOptions.plugins,
+            tooltip: {
+                ...chartOptions.plugins.tooltip,
+                callbacks: {
+                    title: (tooltipItems: any[]) => {
+                        const index = tooltipItems[0].dataIndex;
+                        const entry = sortedEntriesForIntensity[index];
+                        return `${tooltipItems[0].label} - ${EMOTIONS_CONFIG[entry.emotion].label}`;
+                    },
+                    label: (context: any) => `Intensity: ${context.parsed.y}`,
+                }
+            }
+        },
+        scales: {
+            y: { ...chartOptions.scales.y, min: 1, max: 10, beginAtZero: false, ticks: { ...chartOptions.scales.y.ticks, stepSize: 1 } },
+            x: chartOptions.scales.x,
+        }
+    };
+    
+    const dayOfWeekChartData = useMemo(() => {
+        const counts: Record<EmotionType, number[]> = { happy: [0,0,0,0,0,0,0], calm: [0,0,0,0,0,0,0], anxious: [0,0,0,0,0,0,0], sad: [0,0,0,0,0,0,0], angry: [0,0,0,0,0,0,0] };
+        entries.forEach(entry => {
+            const dayIndex = new Date(entry.date + 'T00:00:00').getDay();
+            counts[entry.emotion][dayIndex]++;
+        });
+        const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
+        return {
+            labels: WEEK_DAYS,
+            datasets: emotionKeys.map(emotion => ({
+                label: EMOTIONS_CONFIG[emotion].label,
+                data: counts[emotion],
+                backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.bg,
+                borderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                borderWidth: 1.5,
+                pointBackgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+            }))
+        };
+    }, [entries]);
+
+    const radarChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'top' as const, labels: { color: '#9ca3af' } },
+            title: { display: false },
+             tooltip: {
+                ...chartOptions.plugins.tooltip,
+                callbacks: {
+                    title: (tooltipItems: any[]) => tooltipItems[0].label,
+                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? 'day' : 'days'}`,
+                }
+            }
+        },
+        scales: {
+            r: {
+                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                pointLabels: { color: '#d1d5db' },
+                ticks: {
+                    color: '#9ca3af',
+                    backdropColor: 'rgba(0,0,0,0.5)',
+                    backdropPadding: 4,
+                    precision: 0,
+                },
+                beginAtZero: true,
+            }
+        }
+    };
+
     return (
         <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
-            <h2 className="text-xl font-bold text-white">{monthName} {summary.year}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 mb-5">
+            <h2 className="text-xl font-bold text-white">{capitalizedMonthName} {summary.year}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 mb-6">
                 <div className="bg-black/20 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-400">Total Entries</h3>
                     <p className="text-2xl font-bold text-white mt-1">{summary.totalEntries}</p>
@@ -168,14 +279,29 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                     <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity}</p>
                 </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-                <div>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-black/20 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-white mb-3">Emotion Distribution</h3>
-                    <div className="h-60">
-                        <Bar options={chartOptions as any} data={chartData} />
+                    <div className="h-64">
+                        <Bar options={chartOptions as any} data={distChartData} />
                     </div>
                 </div>
-                <MonthlyHeatmap year={summary.year} month={summary.month} entries={entries} />
+                <div className="bg-black/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-white mb-3">Intensity Over Time</h3>
+                    <div className="h-64">
+                         <Line options={intensityChartOptions as any} data={intensityChartData} />
+                    </div>
+                </div>
+                <div className="bg-black/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-white mb-3">Emotions by Day of Week</h3>
+                    <div className="h-64">
+                        <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
+                    </div>
+                </div>
+                <div className="bg-black/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-white mb-3">Daily Heatmap</h3>
+                    <MonthlyHeatmap year={summary.year} month={summary.month} entries={entries} />
+                </div>
             </div>
         </div>
     );

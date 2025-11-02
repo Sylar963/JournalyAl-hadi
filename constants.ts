@@ -109,3 +109,31 @@ export const WISDOM_QUOTES = [
   "Three things cannot be long hidden: the sun, the moon, and the truth.",
   "The happiness of your life depends upon the quality of your thoughts."
 ];
+
+export const AD_MESSAGES = [
+  {
+    title: "Unlock Deeper Insights",
+    message: "Generate a full wellness report on the Reports page to understand your emotional patterns.",
+    icon: 'reports'
+  },
+  {
+    title: "A Moment of Wisdom",
+    message: "The happiness of your life depends upon the quality of your thoughts.",
+    icon: 'sparkles'
+  },
+  {
+    title: "Personalize Your Space",
+    message: "Did you know you can change your theme in the Settings view? Find a look that calms you.",
+    icon: 'settings'
+  },
+  {
+    title: "Did You Know?",
+    message: "You can attach an image to any journal entry to capture the moment visually.",
+    icon: 'upload'
+  },
+  {
+    title: "Stay Consistent",
+    message: "Journaling is most effective when it's a regular habit. Keep up the great work!",
+    icon: 'journal'
+  }
+];
