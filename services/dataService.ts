@@ -2,21 +2,26 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
 import * as supabaseService from './supabaseService';
 import * as localDataService from './localDataService';
-import { EmotionEntry, UserProfile } from '../types';
+import { EmotionEntry, UserProfile, Quest } from '../types';
 
-// These are the placeholder values from a fresh clone of the app.
-const PLACEHOLDER_URL = 'YOUR_SUPABASE_URL';
-const PLACEHOLDER_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// Check if the environment variables for Supabase are provided.
+const isSupabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
-const isSupabaseConfigured = (SUPABASE_URL as string) !== PLACEHOLDER_URL && SUPABASE_URL && (SUPABASE_ANON_KEY as string) !== PLACEHOLDER_KEY && SUPABASE_ANON_KEY;
 
 // Define the interface for our data service to ensure both modules conform
 interface DataService {
+    // Entries
     getEntries(): Promise<Record<string, EmotionEntry>>;
     saveEntry(entry: EmotionEntry): Promise<EmotionEntry>;
     deleteEntry(date: string): Promise<void>;
+    // Profile
     getProfile(): Promise<UserProfile>;
     saveProfile(profile: UserProfile): Promise<UserProfile>;
+    // Quests
+    getQuests(): Promise<Quest[]>;
+    addQuest(text: string): Promise<Quest>;
+    updateQuestStatus(id: string, completed: boolean): Promise<Quest>;
+    deleteQuest(id: string): Promise<void>;
 }
 
 // Conditionally select the service to use
@@ -28,6 +33,11 @@ export const saveEntry = service.saveEntry;
 export const deleteEntry = service.deleteEntry;
 export const getProfile = service.getProfile;
 export const saveProfile = service.saveProfile;
+export const getQuests = service.getQuests;
+export const addQuest = service.addQuest;
+export const updateQuestStatus = service.updateQuestStatus;
+export const deleteQuest = service.deleteQuest;
+
 
 // Also export a flag that the UI can use to understand the current persistence mode.
 export const isUsingSupabase = isSupabaseConfigured;

@@ -1,15 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { type EmotionEntry, type ReportAnalysis } from '../types';
-import { GEMINI_API_KEY } from '../config';
 
 let aiClient: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI {
-  if ((GEMINI_API_KEY as string) === 'YOUR_GEMINI_API_KEY' || !GEMINI_API_KEY) {
-      throw new Error("Gemini API key is not configured. Please update `config.ts`.");
-  }
   if (!aiClient) {
-    aiClient = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    // The API key is expected to be securely provided as an environment variable.
+    // This is the standard and secure way to handle API keys.
+    aiClient = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
   return aiClient;
 }

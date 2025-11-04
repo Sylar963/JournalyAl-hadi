@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { type EmotionEntry } from '../types';
 import { WEEK_DAYS, EMOTIONS_CONFIG } from '../constants';
 import IconChevronLeft from './icons/IconChevronLeft';
@@ -19,6 +19,7 @@ const DAY_TEXT_CLASSES = [
 ];
 
 const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange, onYearChange, onGoToToday, onDateClick, entries }) => {
+  const [animatingDateKey, setAnimatingDateKey] = useState<string | null>(null);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -26,6 +27,26 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
   const year = currentDate.getFullYear();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+  const handleCellClick = (date: Date) => {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    const dateKey = `${y}-${m}-${d}`;
+
+    setAnimatingDateKey(dateKey);
+
+    // Call parent handler after animation duration
+    setTimeout(() => {
+      onDateClick(date);
+    }, 400);
+
+    // Clear animation class after it completes
+    setTimeout(() => {
+      setAnimatingDateKey(null);
+    }, 400); 
+  };
+
 
   const renderCalendarDays = () => {
     const days = [];
@@ -59,9 +80,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       } else {
         dayNumberClasses += ' text-gray-300';
       }
+      
+      if (animatingDateKey === dateKey) {
+          cellClasses += ' animate-cell-click';
+      }
 
       days.push(
-        <div key={dateKey} className={cellClasses} onClick={() => onDateClick(date)}>
+        <div key={dateKey} className={cellClasses} onClick={() => handleCellClick(date)}>
           <div className={dayNumberClasses}>{day}</div>
           {entry && (
             <div className="mt-2 flex-grow flex flex-col justify-end">

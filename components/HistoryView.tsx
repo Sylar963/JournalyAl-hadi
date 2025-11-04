@@ -276,7 +276,14 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                 </div>
                 <div className="bg-black/20 p-4 rounded-lg">
                     <h3 className="text-sm font-medium text-gray-400">Avg. Intensity</h3>
-                    <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity}</p>
+                    <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity.toFixed(1)}</p>
+                    <div className="w-full bg-gray-700/50 rounded-full h-2 mt-2">
+                        <div 
+                            className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full" 
+                            style={{ width: `${(summary.avgIntensity / 10) * 100}%` }}
+                            title={`Average intensity: ${summary.avgIntensity.toFixed(1)} out of 10`}
+                        ></div>
+                    </div>
                 </div>
             </div>
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

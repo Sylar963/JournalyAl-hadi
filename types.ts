@@ -50,3 +50,10 @@ export interface MonthlySummary {
     avgIntensity: number;
     emotionCounts: Record<EmotionType, number>;
 }
+
+export interface Quest {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: string;
+}

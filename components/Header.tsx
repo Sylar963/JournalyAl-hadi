@@ -1,16 +1,17 @@
+
 import React from 'react';
-import IconCalendar from './icons/IconCalendar';
-import IconBell from './icons/IconBell';
+import IconQuest from './icons/IconQuest';
 import IconPlus from './icons/IconPlus';
 import IconLogout from './icons/IconLogout';
+import Clock from './Clock';
 import { type UserProfile } from '../types';
 
 interface HeaderProps {
     onNewEntryClick: () => void;
     userProfile: UserProfile;
     onProfileClick: () => void;
+    onQuestsClick: () => void;
     onSignOut: () => void;
-    onNavigatePast: () => void;
 }
 
 const getInitials = (name: string): string => {
@@ -21,7 +22,7 @@ const getInitials = (name: string): string => {
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
 };
 
-const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onSignOut, onNavigatePast }) => {
+const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onQuestsClick, onSignOut }) => {
   return (
     <header className="flex-shrink-0 bg-gray-900/50 border-b border-gray-800/50 backdrop-blur-sm">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
@@ -45,17 +46,12 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
             <IconPlus className="w-5 h-5 mr-2 -ml-1" />
             New Entry
           </button>
-
-          <button onClick={onNavigatePast} className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" title="Previous Month">
-            <IconCalendar className="w-6 h-6" />
-          </button>
           
-          <div className="relative">
-            <button className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
-              <IconBell className="w-6 h-6" />
-            </button>
-            <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-yellow-400 border-2 border-gray-900"></span>
-          </div>
+          <Clock />
+          
+          <button id="quests-toggle-button" onClick={onQuestsClick} className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" title="My Quests">
+            <IconQuest className="w-6 h-6" />
+          </button>
 
           <button onClick={onProfileClick} className="flex items-center space-x-3 p-1 rounded-lg hover:bg-gray-800/50 transition-colors">
              <div className="w-9 h-9 bg-amber-600 rounded-full flex items-center justify-center font-bold text-white overflow-hidden">
