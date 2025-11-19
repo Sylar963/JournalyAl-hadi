@@ -26,6 +26,8 @@ import IconSparkles from './components/icons/IconSparkles';
 import IconSettings from './components/icons/IconSettings';
 import IconUpload from './components/icons/IconUpload';
 import IconJournal from './components/icons/IconJournal';
+import Background from './components/Background';
+import GridOverlay from './components/GridOverlay';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -38,7 +40,7 @@ const App: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>('journal');
   const [initialEmotion, setInitialEmotion] = useState<EmotionType | undefined>(undefined);
-  
+
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isQuestsOpen, setIsQuestsOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -71,49 +73,49 @@ const App: React.FC = () => {
     const adPool = [...AD_MESSAGES];
     const quoteAdIndex = adPool.findIndex(ad => ad.title === "A Moment of Wisdom");
     if (quoteAdIndex !== -1) {
-        adPool[quoteAdIndex] = {
-            ...adPool[quoteAdIndex],
-            message: WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
-        };
+      adPool[quoteAdIndex] = {
+        ...adPool[quoteAdIndex],
+        message: WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
+      };
     }
 
     const randomAd = adPool[Math.floor(Math.random() * adPool.length)];
-    
+
     setAdContent({
-        title: randomAd.title,
-        message: randomAd.message,
-        icon: AD_ICONS[randomAd.icon] || <IconSparkles className="w-6 h-6" />
+      title: randomAd.title,
+      message: randomAd.message,
+      icon: AD_ICONS[randomAd.icon] || <IconSparkles className="w-6 h-6" />
     });
     setIsAdVisible(true);
   }, []);
 
   const resetAdTimer = useCallback(() => {
-      // Hide any currently visible ad when activity is detected
-      setIsAdVisible(false);
-      
-      if (adTimerRef.current) {
-          clearTimeout(adTimerRef.current);
-      }
-      // Set to 30 minutes for production
-      const AD_INTERVAL = 60 * 1000 * 30; 
-      adTimerRef.current = window.setTimeout(showAd, AD_INTERVAL);
+    // Hide any currently visible ad when activity is detected
+    setIsAdVisible(false);
+
+    if (adTimerRef.current) {
+      clearTimeout(adTimerRef.current);
+    }
+    // Set to 30 minutes for production
+    const AD_INTERVAL = 60 * 1000 * 30;
+    adTimerRef.current = window.setTimeout(showAd, AD_INTERVAL);
   }, [showAd]);
 
   useEffect(() => {
-      resetAdTimer(); // Start the timer on initial load
+    resetAdTimer(); // Start the timer on initial load
 
-      // Add event listeners to reset timer on user activity
-      window.addEventListener('mousedown', resetAdTimer);
-      window.addEventListener('keydown', resetAdTimer);
+    // Add event listeners to reset timer on user activity
+    window.addEventListener('mousedown', resetAdTimer);
+    window.addEventListener('keydown', resetAdTimer);
 
-      // Cleanup function to remove listeners and clear timer
-      return () => {
-          if (adTimerRef.current) {
-              clearTimeout(adTimerRef.current);
-          }
-          window.removeEventListener('mousedown', resetAdTimer);
-          window.removeEventListener('keydown', resetAdTimer);
-      };
+    // Cleanup function to remove listeners and clear timer
+    return () => {
+      if (adTimerRef.current) {
+        clearTimeout(adTimerRef.current);
+      }
+      window.removeEventListener('mousedown', resetAdTimer);
+      window.removeEventListener('keydown', resetAdTimer);
+    };
   }, [resetAdTimer]);
 
   useEffect(() => {
@@ -140,7 +142,7 @@ const App: React.FC = () => {
     const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
       // If the event is SIGNED_IN, it's a fresh login. Show the ad.
       if (event === 'SIGNED_IN') {
-          showAd();
+        showAd();
       }
       setSession(session);
     });
@@ -163,58 +165,58 @@ const App: React.FC = () => {
       setError(null);
       try {
         const [fetchedEntries, fetchedProfile, fetchedQuests] = await Promise.all([
-            db.getEntries(),
-            db.getProfile(),
-            db.getQuests()
+          db.getEntries(),
+          db.getProfile(),
+          db.getQuests()
         ]);
         setEntries(fetchedEntries);
         setUserProfile(fetchedProfile);
         setQuests(fetchedQuests);
       } catch (err: any) {
         console.error("Failed to load data:", err.message);
-        
+
         let errorComponent: React.ReactNode = (
-            <div className="bg-gray-900 border border-red-500/30 rounded-lg p-6 text-center">
-                <h2 className="text-xl font-bold text-red-400">Failed to Load Data</h2>
-                <p className="mt-2 text-gray-300">
-                    An unexpected error occurred while loading your data from Supabase.
-                </p>
-                <p className="mt-4 text-sm bg-black/20 p-2 rounded font-mono text-red-300">{err.message}</p>
-            </div>
+          <div className="bg-gray-900 border border-red-500/30 rounded-lg p-6 text-center">
+            <h2 className="text-xl font-bold text-red-400">Failed to Load Data</h2>
+            <p className="mt-2 text-gray-300">
+              An unexpected error occurred while loading your data from Supabase.
+            </p>
+            <p className="mt-4 text-sm bg-black/20 p-2 rounded font-mono text-red-300">{err.message}</p>
+          </div>
         );
 
         if (err.message) {
-            const msg = err.message.toLowerCase();
-            if (msg.includes('relation "public.profiles" does not exist')) {
-                errorComponent = <SchemaError
-                    title="Database Setup Incomplete: 'profiles' table missing"
-                    message={<p>The application requires a <code>profiles</code> table to store user information. Please copy the SQL below and run it in your Supabase project's SQL Editor to create the table and its security policies.</p>}
-                    sql={PROFILES_TABLE_SETUP_SQL}
-                />
-            } else if (msg.includes('relation "public.entries" does not exist')) {
-                errorComponent = <SchemaError
-                    title="Database Setup Incomplete: 'entries' table missing"
-                    message={<p>The application requires an <code>entries</code> table to store your journal entries. Please copy the SQL below and run it in your Supabase project's SQL Editor.</p>}
-                    sql={ENTRIES_TABLE_SETUP_SQL}
-                />
-            } else if (msg.includes('relation "public.quests" does not exist')) {
-                errorComponent = <SchemaError
-                    title="Database Setup Incomplete: 'quests' table missing"
-                    message={<p>The application requires a <code>quests</code> table for the quests feature. Please copy the SQL below and run it in your Supabase project's SQL Editor.</p>}
-                    sql={QUESTS_TABLE_SETUP_SQL}
-                />
-            } else if (msg.includes('invalid input syntax for type uuid')) {
-                errorComponent = <SchemaError
-                    title="Database Schema Mismatch: Invalid Profile ID"
-                    message={
-                        <>
-                            <p>Your <code>profiles</code> table seems to have an <code>id</code> column with the wrong data type. The application expects it to be a <code>uuid</code> to link with authenticated users.</p>
-                            <p className="mt-2">Please ensure your <code>profiles</code> table is created correctly by running the setup SQL.</p>
-                        </>
-                    }
-                    sql={PROFILES_TABLE_SETUP_SQL}
-                />
-            }
+          const msg = err.message.toLowerCase();
+          if (msg.includes('relation "public.profiles" does not exist')) {
+            errorComponent = <SchemaError
+              title="Database Setup Incomplete: 'profiles' table missing"
+              message={<p>The application requires a <code>profiles</code> table to store user information. Please copy the SQL below and run it in your Supabase project's SQL Editor to create the table and its security policies.</p>}
+              sql={PROFILES_TABLE_SETUP_SQL}
+            />
+          } else if (msg.includes('relation "public.entries" does not exist')) {
+            errorComponent = <SchemaError
+              title="Database Setup Incomplete: 'entries' table missing"
+              message={<p>The application requires an <code>entries</code> table to store your journal entries. Please copy the SQL below and run it in your Supabase project's SQL Editor.</p>}
+              sql={ENTRIES_TABLE_SETUP_SQL}
+            />
+          } else if (msg.includes('relation "public.quests" does not exist')) {
+            errorComponent = <SchemaError
+              title="Database Setup Incomplete: 'quests' table missing"
+              message={<p>The application requires a <code>quests</code> table for the quests feature. Please copy the SQL below and run it in your Supabase project's SQL Editor.</p>}
+              sql={QUESTS_TABLE_SETUP_SQL}
+            />
+          } else if (msg.includes('invalid input syntax for type uuid')) {
+            errorComponent = <SchemaError
+              title="Database Schema Mismatch: Invalid Profile ID"
+              message={
+                <>
+                  <p>Your <code>profiles</code> table seems to have an <code>id</code> column with the wrong data type. The application expects it to be a <code>uuid</code> to link with authenticated users.</p>
+                  <p className="mt-2">Please ensure your <code>profiles</code> table is created correctly by running the setup SQL.</p>
+                </>
+              }
+              sql={PROFILES_TABLE_SETUP_SQL}
+            />
+          }
         }
 
         setError(errorComponent);
@@ -226,7 +228,7 @@ const App: React.FC = () => {
     loadInitialData();
   }, [session, isSupabaseConfigured]);
 
-    useEffect(() => {
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const questsButton = document.getElementById('quests-toggle-button');
       if (
@@ -250,7 +252,7 @@ const App: React.FC = () => {
       console.error('Error signing out:', error.message);
     }
   };
-  
+
   const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
     localStorage.setItem('emotion-journal-theme', newTheme);
@@ -270,7 +272,7 @@ const App: React.FC = () => {
   const handleOpenNewEntry = useCallback((emotion?: EmotionType) => {
     setSelectedDate(new Date());
     if (emotion) {
-        setInitialEmotion(emotion);
+      setInitialEmotion(emotion);
     }
     setIsModalOpen(true);
   }, []);
@@ -287,7 +289,7 @@ const App: React.FC = () => {
       const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
       const d = selectedDate.getDate().toString().padStart(2, '0');
       const dateKey = `${y}-${m}-${d}`;
-      
+
       const newEntry = { ...entry, date: dateKey };
 
       try {
@@ -297,167 +299,171 @@ const App: React.FC = () => {
           [dateKey]: newEntry,
         }));
       } catch (err: any) {
-          console.error("Failed to save entry:", err.message);
-          throw err;
+        console.error("Failed to save entry:", err.message);
+        throw err;
       }
     }
   }, [selectedDate]);
-  
+
   const handleDeleteEntry = useCallback(async () => {
-    if(selectedDate) {
-        const y = selectedDate.getFullYear();
-        const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-        const d = selectedDate.getDate().toString().padStart(2, '0');
-        const dateKey = `${y}-${m}-${d}`;
-        
-        try {
-            await db.deleteEntry(dateKey);
-            setEntries(prevEntries => {
-                const newEntries = {...prevEntries};
-                delete newEntries[dateKey];
-                return newEntries;
-            });
-        } catch (err: any) {
-            console.error("Failed to delete entry:", err.message);
-            throw err;
-        }
+    if (selectedDate) {
+      const y = selectedDate.getFullYear();
+      const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
+      const d = selectedDate.getDate().toString().padStart(2, '0');
+      const dateKey = `${y}-${m}-${d}`;
+
+      try {
+        await db.deleteEntry(dateKey);
+        setEntries(prevEntries => {
+          const newEntries = { ...prevEntries };
+          delete newEntries[dateKey];
+          return newEntries;
+        });
+      } catch (err: any) {
+        console.error("Failed to delete entry:", err.message);
+        throw err;
+      }
     }
   }, [selectedDate]);
-  
+
   const handleOpenProfileModal = useCallback(() => {
-      setIsProfileModalOpen(true);
+    setIsProfileModalOpen(true);
   }, []);
 
   const handleCloseProfileModal = useCallback(() => {
-      setIsProfileModalOpen(false);
+    setIsProfileModalOpen(false);
   }, []);
-  
+
   const handleSaveProfile = useCallback(async (profile: UserProfile) => {
     try {
-        const savedProfile = await db.saveProfile(profile);
-        setUserProfile(savedProfile);
-        setIsProfileModalOpen(false);
+      const savedProfile = await db.saveProfile(profile);
+      setUserProfile(savedProfile);
+      setIsProfileModalOpen(false);
     } catch (err: any) {
-        console.error('Failed to save profile:', err.message);
-        // Here you could set an error state to show in the profile modal
+      console.error('Failed to save profile:', err.message);
+      // Here you could set an error state to show in the profile modal
     }
   }, []);
 
   const handleAddQuest = useCallback(async (text: string) => {
-      try {
-          const newQuest = await db.addQuest(text);
-          setQuests(prev => [...prev, newQuest]);
-      } catch(err: any) {
-          console.error('Error adding quest:', err.message);
-      }
+    try {
+      const newQuest = await db.addQuest(text);
+      setQuests(prev => [...prev, newQuest]);
+    } catch (err: any) {
+      console.error('Error adding quest:', err.message);
+    }
   }, []);
 
   const handleToggleQuest = useCallback(async (id: string, completed: boolean) => {
-      try {
-          const updatedQuest = await db.updateQuestStatus(id, completed);
-          setQuests(prev => prev.map(q => q.id === id ? updatedQuest : q));
-      } catch(err: any) {
-          console.error('Error updating quest:', err.message);
-      }
+    try {
+      const updatedQuest = await db.updateQuestStatus(id, completed);
+      setQuests(prev => prev.map(q => q.id === id ? updatedQuest : q));
+    } catch (err: any) {
+      console.error('Error updating quest:', err.message);
+    }
   }, []);
 
   const handleDeleteQuest = useCallback(async (id: string) => {
-      try {
-          await db.deleteQuest(id);
-          setQuests(prev => prev.filter(q => q.id !== id));
-      } catch(err: any) {
-          console.error('Error deleting quest:', err.message);
-      }
+    try {
+      await db.deleteQuest(id);
+      setQuests(prev => prev.filter(q => q.id !== id));
+    } catch (err: any) {
+      console.error('Error deleting quest:', err.message);
+    }
   }, []);
 
   if (isAuthLoading) {
-      return <div className="flex h-screen w-screen items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div></div>;
+    return <div className="flex h-screen w-screen items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div></div>;
   }
-  
+
   if (!session && isSupabaseConfigured) {
-      return <Auth />;
+    return <Auth />;
   }
 
   const entriesArray = Object.values(entries);
 
   return (
-    <div className="flex h-screen w-screen">
-      <Sidebar 
-        activeView={activeView} 
-        onNavigate={handleNavigate}
-        onNewEntryClick={handleOpenNewEntry}
-        userProfile={userProfile}
-        onSaveProfile={handleSaveProfile}
-      />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          onNewEntryClick={() => handleOpenNewEntry()}
+    <div className="flex h-screen w-screen relative">
+      <Background theme={theme} />
+      <GridOverlay />
+      <div className="flex h-full w-full z-10 relative">
+        <Sidebar
+          activeView={activeView}
+          onNavigate={handleNavigate}
+          onNewEntryClick={handleOpenNewEntry}
           userProfile={userProfile}
-          onProfileClick={handleOpenProfileModal}
-          onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
-          onSignOut={handleSignOut}
+          onSaveProfile={handleSaveProfile}
         />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-          {isDataLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-full p-4">{error}</div>
-          ) : (
-            <>
-              {activeView === 'journal' && (
-                <CalendarView
-                  currentDate={currentDate}
-                  onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
-                  onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
-                  onGoToToday={() => setCurrentDate(new Date())}
-                  onDateClick={handleDateClick}
-                  entries={entries}
-                />
-              )}
-              {activeView === 'trends' && <TrendsView entries={entriesArray} />}
-              {activeView === 'reports' && <ReportsView entries={entriesArray} />}
-              {activeView === 'history' && <HistoryView entries={entriesArray} />}
-              {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} />}
-            </>
-          )}
-        </main>
-      </div>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header
+            onNewEntryClick={() => handleOpenNewEntry()}
+            userProfile={userProfile}
+            onProfileClick={handleOpenProfileModal}
+            onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
+            onSignOut={handleSignOut}
+          />
+          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+            {isDataLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center h-full p-4">{error}</div>
+            ) : (
+              <>
+                {activeView === 'journal' && (
+                  <CalendarView
+                    currentDate={currentDate}
+                    onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
+                    onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
+                    onGoToToday={() => setCurrentDate(new Date())}
+                    onDateClick={handleDateClick}
+                    entries={entries}
+                  />
+                )}
+                {activeView === 'trends' && <TrendsView entries={entriesArray} />}
+                {activeView === 'reports' && <ReportsView entries={entriesArray} />}
+                {activeView === 'history' && <HistoryView entries={entriesArray} />}
+                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} />}
+              </>
+            )}
+          </main>
+        </div>
 
-      <EntryModal 
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSave={handleSaveEntry}
-        onDelete={handleDeleteEntry}
-        selectedDate={selectedDate || new Date()}
-        entry={selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined}
-        initialEmotion={initialEmotion}
-      />
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={handleCloseProfileModal}
-        onSave={handleSaveProfile}
-        profile={userProfile}
-      />
-       <QuestsPopover
-        isOpen={isQuestsOpen}
-        onClose={() => setIsQuestsOpen(false)}
-        quests={quests}
-        onAddQuest={handleAddQuest}
-        onToggleQuest={handleToggleQuest}
-        onDeleteQuest={handleDeleteQuest}
-        anchorRef={questsPopoverRef}
-      />
-      {adContent && (
-        <AdPopup
+        <EntryModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSaveEntry}
+          onDelete={handleDeleteEntry}
+          selectedDate={selectedDate || new Date()}
+          entry={selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined}
+          initialEmotion={initialEmotion}
+        />
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={handleCloseProfileModal}
+          onSave={handleSaveProfile}
+          profile={userProfile}
+        />
+        <QuestsPopover
+          isOpen={isQuestsOpen}
+          onClose={() => setIsQuestsOpen(false)}
+          quests={quests}
+          onAddQuest={handleAddQuest}
+          onToggleQuest={handleToggleQuest}
+          onDeleteQuest={handleDeleteQuest}
+          anchorRef={questsPopoverRef}
+        />
+        {adContent && (
+          <AdPopup
             isOpen={isAdVisible}
             onClose={() => setIsAdVisible(false)}
             title={adContent.title}
             message={adContent.message}
             icon={adContent.icon}
-        />
-      )}
+          />
+        )}
+      </div>
     </div>
   );
 };
