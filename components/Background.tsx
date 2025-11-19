@@ -21,6 +21,9 @@ const Whale: React.FC<{ theme: Theme; startPos: [number, number, number]; speed:
     const tailRef = useRef<THREE.Group>(null);
     const themeConfig = THEME_COLORS[theme] || THEME_COLORS.twilight;
 
+    // Load the whale texture
+    const texture = useTexture('/whale.png');
+
     // Random offset for swimming animation phase
     const offset = useMemo(() => Math.random() * 100, []);
 
@@ -28,7 +31,7 @@ const Whale: React.FC<{ theme: Theme; startPos: [number, number, number]; speed:
         if (groupRef.current && tailRef.current && bodyRef.current) {
             const time = state.clock.getElapsedTime();
 
-            // Move forward (slide)
+            // Move forward (slide from left to right)
             groupRef.current.position.x += speed * 0.01;
 
             // Reset position when it goes off screen (assuming camera at z=5, view width approx 10-15)
@@ -40,8 +43,13 @@ const Whale: React.FC<{ theme: Theme; startPos: [number, number, number]; speed:
             // Swimming motion (sine wave on Y and rotation)
             const swimCycle = time * 2 + offset;
             groupRef.current.position.y += Math.sin(swimCycle) * 0.002;
+
+            // Rotation logic fixed:
+            // 1. Face direction of movement (+X). The default geometry is aligned along X (tail at -X, head at +X).
+            // 2. Add slight roll (Z) and yaw (Y) for swimming effect.
+            // Removed the + Math.PI / 2 offset which was making them face North/Z.
             groupRef.current.rotation.z = Math.sin(swimCycle) * 0.05; // Slight roll
-            groupRef.current.rotation.y = Math.sin(swimCycle * 0.5) * 0.1 + Math.PI / 2; // Face direction + slight yaw
+            groupRef.current.rotation.y = Math.sin(swimCycle * 0.5) * 0.1; // Slight yaw, centered around 0 (facing +X)
 
             // Tail wag
             tailRef.current.rotation.y = Math.sin(swimCycle * 3) * 0.2;
@@ -52,44 +60,62 @@ const Whale: React.FC<{ theme: Theme; startPos: [number, number, number]; speed:
         color: themeConfig.color,
         emissive: themeConfig.light,
         emissiveIntensity: 0.2,
-        metalness: 0.8,
+        metalness: 0.5,
         roughness: 0.2,
-        distort: 0.4, // Add the "bubble" distortion effect
+        distort: 0.4, // Keep the bubble effect
         speed: 2,
+        map: texture, // Apply the texture to the 3D form
     };
 
     return (
         <group ref={groupRef} position={startPos} scale={scale}>
-            {/* Main Body */}
-            <mesh ref={bodyRef} position={[0, 0, 0]}>
+            {/* Head/Snout - positioned forward */}
+            <mesh position={[1.8, 0.1, 0]}>
+                <sphereGeometry args={[0.6, 32, 32]} />
+                <MeshDistortMaterial {...materialProps} distort={0.3} />
+            </mesh>
+
+            {/* Main Body - elongated sphere */}
+            <mesh ref={bodyRef} position={[0, 0, 0]} scale={[2.8, 1, 1.2]}>
                 <sphereGeometry args={[1, 32, 32]} />
                 <MeshDistortMaterial {...materialProps} />
-                {/* Scale the body to be elongated like a whale */}
-                <group scale={[2.5, 1, 1]}>
-                </group>
+            </mesh>
+
+            {/* Mid-body section for smoother transition */}
+            <mesh position={[-1.5, 0, 0]} scale={[1.2, 0.8, 0.9]}>
+                <sphereGeometry args={[0.8, 32, 32]} />
+                <MeshDistortMaterial {...materialProps} distort={0.3} />
+            </mesh>
+
+            {/* Dorsal Fin - on top of the whale */}
+            <mesh position={[0.3, 1, 0]} rotation={[0, 0, -0.3]}>
+                <coneGeometry args={[0.3, 0.8, 32]} />
+                <MeshDistortMaterial {...materialProps} distort={0.1} />
             </mesh>
 
             {/* Tail Section */}
-            <group ref={tailRef} position={[-2, 0, 0]}>
-                <mesh position={[-0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                    <coneGeometry args={[0.6, 1.5, 32]} />
+            <group ref={tailRef} position={[-2.5, 0, 0]}>
+                {/* Tail body taper */}
+                <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.8, 1.2, 0.8]}>
+                    <coneGeometry args={[0.6, 1.2, 32]} />
                     <MeshDistortMaterial {...materialProps} distort={0.2} />
                 </mesh>
-                {/* Flukes */}
-                <mesh position={[-1.2, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                    <boxGeometry args={[0.2, 1.5, 0.1]} />
-                    <MeshDistortMaterial {...materialProps} distort={0} />
+
+                {/* Tail Flukes - horizontal (more realistic whale tail) */}
+                <mesh position={[-0.8, 0, 0]} rotation={[0, 0, 0]} scale={[0.15, 1, 2.2]}>
+                    <boxGeometry args={[1, 0.1, 1]} />
+                    <MeshDistortMaterial {...materialProps} distort={0.05} />
                 </mesh>
             </group>
 
-            {/* Side Fins */}
-            <mesh position={[0.5, -0.5, 0.8]} rotation={[0.5, 0, 0.5]}>
-                <boxGeometry args={[0.8, 0.1, 0.4]} />
-                <MeshDistortMaterial {...materialProps} distort={0} />
+            {/* Pectoral Fins (side fins) - better positioned */}
+            <mesh position={[0.8, -0.4, 1]} rotation={[0.3, -0.2, 0.8]} scale={[1.2, 0.15, 0.5]}>
+                <boxGeometry args={[1, 0.1, 1]} />
+                <MeshDistortMaterial {...materialProps} distort={0.05} />
             </mesh>
-            <mesh position={[0.5, -0.5, -0.8]} rotation={[-0.5, 0, -0.5]}>
-                <boxGeometry args={[0.8, 0.1, 0.4]} />
-                <MeshDistortMaterial {...materialProps} distort={0} />
+            <mesh position={[0.8, -0.4, -1]} rotation={[-0.3, 0.2, -0.8]} scale={[1.2, 0.15, 0.5]}>
+                <boxGeometry args={[1, 0.1, 1]} />
+                <MeshDistortMaterial {...materialProps} distort={0.05} />
             </mesh>
         </group>
     );
