@@ -24,7 +24,7 @@ const getInitials = (name: string): string => {
 
 const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onQuestsClick, onSignOut }) => {
   return (
-    <header className="flex-shrink-0 bg-gray-900/50 border-b border-gray-800/50 backdrop-blur-sm">
+    <header className="flex-shrink-0 glass-panel border-b-0 border-t-0 border-l-0 border-r-0 border-b border-[color:var(--glass-border)] rounded-none z-10">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
         {/* Search */}
         <div className="relative w-full max-w-xs hidden sm:block">
@@ -36,25 +36,25 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
           <input
             type="text"
             placeholder="Search notes..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition text-gray-200 placeholder-gray-500"
           />
         </div>
 
         {/* Actions */}
         <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
-          <button onClick={onNewEntryClick} className="flex items-center justify-center bg-yellow-600 text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-yellow-500">
+          <button onClick={onNewEntryClick} className="flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-[var(--accent-primary)] shadow-[0_0_15px_var(--chart-glow-color-1)]">
             <IconPlus className="w-5 h-5 mr-2 -ml-1" />
             New Entry
           </button>
           
           <Clock />
           
-          <button id="quests-toggle-button" onClick={onQuestsClick} className="p-2 rounded-full text-gray-400 hover:bg-gray-800 hover:text-white transition-colors" title="My Quests">
+          <button id="quests-toggle-button" onClick={onQuestsClick} className="p-2 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition-colors" title="My Quests">
             <IconQuest className="w-6 h-6" />
           </button>
 
-          <button onClick={onProfileClick} className="flex items-center space-x-3 p-1 rounded-lg hover:bg-gray-800/50 transition-colors">
-             <div className="w-9 h-9 bg-amber-600 rounded-full flex items-center justify-center font-bold text-white overflow-hidden">
+          <button onClick={onProfileClick} className="flex items-center space-x-3 p-1 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/5">
+             <div className="w-9 h-9 bg-gradient-to-br from-[var(--accent-secondary)] to-[var(--accent-primary)] rounded-full flex items-center justify-center font-bold text-white overflow-hidden shadow-inner">
                 {userProfile.picture ? (
                     <img src={userProfile.picture} alt="Profile" className="w-full h-full object-cover" />
                 ) : (

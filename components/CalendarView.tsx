@@ -52,7 +52,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
     const days = [];
     // Previous month's days
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`prev-${i}`} className="border-r border-b border-[color:var(--calendar-border)] bg-transparent"></div>);
+      days.push(<div key={`prev-${i}`} className="border-r border-b border-[color:var(--glass-border)] bg-transparent"></div>);
     }
     // Current month's days
     for (let day = 1; day <= daysInMonth; day++) {
@@ -66,19 +66,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       const entry = entries[dateKey];
       const isToday = date.getTime() === today.getTime();
 
-      let cellClasses = 'relative border-r border-b border-[color:var(--calendar-border)] p-2 text-left cursor-pointer transition-colors duration-200 min-h-[120px] flex flex-col';
-      let dayNumberClasses = 'font-semibold';
+      let cellClasses = 'relative border-r border-b border-[color:var(--glass-border)] p-2 text-left cursor-pointer transition-all duration-300 min-h-[120px] flex flex-col group hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]';
+      let dayNumberClasses = 'font-semibold transition-colors duration-300';
 
       if (entry) {
-        cellClasses += ` ${EMOTIONS_CONFIG[entry.emotion].hoverColor} bg-black/40 hover:bg-black/60`;
+        cellClasses += ` ${EMOTIONS_CONFIG[entry.emotion].hoverColor} bg-white/5 hover:bg-white/10 backdrop-blur-sm`;
       } else {
-        cellClasses += ' bg-transparent hover:bg-white/10';
+        cellClasses += ' bg-transparent hover:bg-white/5';
       }
 
       if (isToday) {
-        dayNumberClasses += ' bg-yellow-600 text-black rounded-full w-7 h-7 flex items-center justify-center';
+        dayNumberClasses += ' bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-[0_0_15px_var(--accent-primary)]';
       } else {
-        dayNumberClasses += ' text-gray-300';
+        dayNumberClasses += ' text-gray-400 group-hover:text-white';
       }
 
       if (animatingDateKey === dateKey) {
@@ -90,8 +90,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
           <div className={dayNumberClasses}>{day}</div>
           {entry && (
             <div className="mt-2 flex-grow flex flex-col justify-end">
-              <span className={`text-2xl mb-1`}>{EMOTIONS_CONFIG[entry.emotion].emoji}</span>
-              <p className={`font-bold text-lg ${EMOTIONS_CONFIG[entry.emotion].textColor}`}>{EMOTIONS_CONFIG[entry.emotion].label}</p>
+              <span className={`text-2xl mb-1 drop-shadow-md`}>{EMOTIONS_CONFIG[entry.emotion].emoji}</span>
+              <p className={`font-bold text-lg ${EMOTIONS_CONFIG[entry.emotion].textColor} drop-shadow-sm`}>{EMOTIONS_CONFIG[entry.emotion].label}</p>
               <p className="text-xs text-gray-400">{`Intensity: ${entry.intensity}/10`}</p>
             </div>
           )}
@@ -103,7 +103,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
     const totalCells = days.length;
     const remainingCells = (7 - (totalCells % 7)) % 7;
     for (let i = 0; i < remainingCells; i++) {
-      days.push(<div key={`next-${i}`} className="border-r border-b border-[color:var(--calendar-border)] bg-transparent"></div>);
+      days.push(<div key={`next-${i}`} className="border-r border-b border-[color:var(--glass-border)] bg-transparent"></div>);
     }
 
     return days;
@@ -120,25 +120,25 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
   const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
   return (
-    <div className={`rounded-lg shadow-xl p-4 md:p-6 animate-content-entry transition-all duration-500 ease-in-out ${isFolded ? 'bg-gray-900/40 backdrop-blur-sm' : 'bg-gray-900/80 backdrop-blur-md'}`}>
-      <div className="flex items-center justify-between mb-4">
+    <div className={`rounded-2xl glass-panel p-4 md:p-6 animate-content-entry transition-all duration-500 ease-in-out ${isFolded ? 'h-auto' : ''}`}>
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <h2 className="text-xl font-bold text-white mr-4">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mr-6 tracking-tight">
             {capitalizedMonth} {year}
           </h2>
-          <div className="flex items-center space-x-1">
-            <button onClick={() => onYearChange(-1)} className="p-2 rounded-md hover:bg-white/10 transition-colors" title="Previous Year"><IconChevronsLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(-1)} className="p-2 rounded-md hover:bg-white/10 transition-colors" title="Previous Month"><IconChevronLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(1)} className="p-2 rounded-md hover:bg-white/10 transition-colors" title="Next Month"><IconChevronRight className="w-5 h-5" /></button>
-            <button onClick={() => onYearChange(1)} className="p-2 rounded-md hover:bg-white/10 transition-colors" title="Next Year"><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
+          <div className="flex items-center space-x-2">
+            <button onClick={() => onYearChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Previous Year"><IconChevronsLeft className="w-5 h-5" /></button>
+            <button onClick={() => onMonthChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Previous Month"><IconChevronLeft className="w-5 h-5" /></button>
+            <button onClick={() => onMonthChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Next Month"><IconChevronRight className="w-5 h-5" /></button>
+            <button onClick={() => onYearChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Next Year"><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-300 hidden md:inline">{`${totalEntries} entries this month`}</span>
-          <button onClick={onGoToToday} className="px-4 py-2 text-sm font-medium bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white">Today</button>
+          <span className="text-sm text-gray-400 hidden md:inline font-medium tracking-wide">{`${totalEntries} entries this month`}</span>
+          <button onClick={onGoToToday} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-white hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]">Today</button>
           <button
             onClick={() => setIsFolded(!isFolded)}
-            className="px-4 py-2 text-sm font-medium bg-blue-600/80 hover:bg-blue-500/80 text-white rounded-lg transition-colors flex items-center"
+            className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] hover:opacity-90 text-white rounded-lg transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] flex items-center"
           >
             {isFolded ? 'Unfold' : 'Fold'}
           </button>
@@ -146,11 +146,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       </div>
 
       {!isFolded && (
-        <div className="grid grid-cols-7 border-t border-l border-[color:var(--calendar-border)] animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="grid grid-cols-7 border-t border-l border-[color:var(--glass-border)] animate-in fade-in slide-in-from-top-4 duration-500 rounded-tl-lg rounded-tr-lg overflow-hidden">
           {WEEK_DAYS.map((day, index) => (
             <div
               key={day}
-              className={`py-2 text-center text-xs font-bold uppercase bg-black/40 border-r border-b border-[color:var(--calendar-border)] text-gray-300 ${DAY_TEXT_CLASSES[index]}`}
+              className={`py-3 text-center text-xs font-bold uppercase bg-white/5 border-r border-b border-[color:var(--glass-border)] text-gray-400 tracking-wider ${DAY_TEXT_CLASSES[index]}`}
             >
               {day}
             </div>

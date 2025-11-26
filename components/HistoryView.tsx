@@ -263,23 +263,23 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
     };
 
     return (
-        <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
-            <h2 className="text-xl font-bold text-white">{capitalizedMonthName} {summary.year}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 mb-6">
-                <div className="bg-black/20 p-4 rounded-lg">
+        <div className="glass-panel p-6 rounded-2xl">
+            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{capitalizedMonthName} {summary.year}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 mb-8">
+                <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
                     <h3 className="text-sm font-medium text-gray-400">Total Entries</h3>
                     <p className="text-2xl font-bold text-white mt-1">{summary.totalEntries}</p>
                 </div>
-                <div className="bg-black/20 p-4 rounded-lg">
+                <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
                     <h3 className="text-sm font-medium text-gray-400">Most Frequent</h3>
                     <p className="text-2xl font-bold text-white mt-1">{summary.mostFrequent !== 'N/A' ? EMOTIONS_CONFIG[summary.mostFrequent].label : 'N/A'}</p>
                 </div>
-                <div className="bg-black/20 p-4 rounded-lg">
+                <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
                     <h3 className="text-sm font-medium text-gray-400">Avg. Intensity</h3>
                     <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity.toFixed(1)}</p>
-                    <div className="w-full bg-gray-700/50 rounded-full h-2 mt-2">
+                    <div className="w-full bg-white/10 rounded-full h-2 mt-2">
                         <div 
-                            className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full" 
+                            className="bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] h-2 rounded-full shadow-[0_0_10px_var(--chart-glow-color-1)]" 
                             style={{ width: `${(summary.avgIntensity / 10) * 100}%` }}
                             title={`Average intensity: ${summary.avgIntensity.toFixed(1)} out of 10`}
                         ></div>
@@ -287,26 +287,26 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                 </div>
             </div>
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-black/20 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-white mb-3">Emotion Distribution</h3>
+                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                    <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
                     <div className="h-64">
                         <Bar options={chartOptions as any} data={distChartData} />
                     </div>
                 </div>
-                <div className="bg-black/20 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-white mb-3">Intensity Over Time</h3>
+                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                    <h3 className="text-lg font-semibold text-white mb-4">Intensity Over Time</h3>
                     <div className="h-64">
                          <Line options={intensityChartOptions as any} data={intensityChartData} />
                     </div>
                 </div>
-                <div className="bg-black/20 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-white mb-3">Emotions by Day of Week</h3>
+                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                    <h3 className="text-lg font-semibold text-white mb-4">Emotions by Day of Week</h3>
                     <div className="h-64">
                         <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
                     </div>
                 </div>
-                <div className="bg-black/20 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-white mb-3">Daily Heatmap</h3>
+                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                    <h3 className="text-lg font-semibold text-white mb-4">Daily Heatmap</h3>
                     <MonthlyHeatmap year={summary.year} month={summary.month} entries={entries} />
                 </div>
             </div>

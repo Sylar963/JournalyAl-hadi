@@ -61,7 +61,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
         <div className="space-y-6 animate-content-entry">
             <h1 className="text-2xl font-bold text-white">Wellness Reports</h1>
             
-            <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
+            <div className="glass-panel p-6 rounded-2xl">
                 <h3 className="text-lg font-semibold text-white mb-4">Select Date Range</h3>
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                     <div className="relative w-full sm:w-auto">
@@ -72,7 +72,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             max={endDate}
-                            className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-2.5 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+                            className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-2.5 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
                         />
                     </div>
                     <div className="relative w-full sm:w-auto">
@@ -84,14 +84,14 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                             onChange={(e) => setEndDate(e.target.value)}
                             min={startDate}
                             max={toISODateString(new Date())}
-                            className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-2.5 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+                            className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-2.5 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
                         />
                     </div>
                      <div className="w-full sm:w-auto sm:self-end">
                          <button 
                             onClick={handleGenerateReport} 
                             disabled={isLoading || filteredEntries.length === 0}
-                            className="w-full flex-shrink-0 flex items-center justify-center bg-yellow-600 text-black px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-yellow-700 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                          >
                             <IconSparkles className="w-5 h-5 mr-2" />
                             {isLoading ? 'Generating...' : 'Generate Report'}
@@ -99,29 +99,29 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                     </div>
                 </div>
                  {filteredEntries.length === 0 && !isLoading && (
-                     <p className="text-sm text-yellow-400 mt-3">No entries found for the selected date range. Adjust the dates or add new entries.</p>
+                     <p className="text-sm text-[var(--accent-primary)] mt-3">No entries found for the selected date range. Adjust the dates or add new entries.</p>
                  )}
             </div>
 
             {isLoading && (
-                 <div className="text-center p-8 bg-gray-900/50 rounded-lg">
-                     <div role="status" className="animate-spin inline-block w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full">
+                 <div className="text-center p-8 bg-white/5 rounded-2xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                     <div role="status" className="animate-spin inline-block w-8 h-8 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full">
                          <span className="sr-only">Loading...</span>
                      </div>
                      <p className="mt-4 text-gray-400">The AI is analyzing your data. This may take a moment...</p>
                  </div>
             )}
             {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-lg">
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl backdrop-blur-sm">
                     <p className="font-semibold">Error</p>
                     <p>{error}</p>
                 </div>
             )}
 
             {report && (
-                <div className="bg-gray-900 p-6 rounded-lg border border-gray-800/50 space-y-6 animate-fade-in">
-                    <div className="border-b border-gray-800 pb-4">
-                        <h2 className="text-xl font-bold text-white">Wellness Report</h2>
+                <div className="glass-panel p-6 rounded-2xl space-y-6 animate-fade-in">
+                    <div className="border-b border-[color:var(--glass-border)] pb-4">
+                        <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Wellness Report</h2>
                         <p className="text-gray-400 text-sm">Analysis for {new Date(startDate+'T00:00:00').toLocaleDateString()} to {new Date(endDate+'T00:00:00').toLocaleDateString()}</p>
                     </div>
                     
@@ -133,7 +133,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
             )}
 
             {!report && !isLoading && !error && (
-                 <div className="text-center p-8 bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-800">
+                 <div className="text-center p-8 bg-white/5 rounded-2xl border-2 border-dashed border-[color:var(--glass-border)] backdrop-blur-sm">
                      <IconCalendar className="w-12 h-12 mx-auto text-gray-600" />
                      <h3 className="mt-4 text-lg font-medium text-gray-400">Your report will appear here</h3>
                      <p className="mt-1 text-sm text-gray-500">Select a date range and click "Generate Report" to get started.</p>

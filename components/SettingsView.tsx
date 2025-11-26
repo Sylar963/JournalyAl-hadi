@@ -12,7 +12,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
     <div className="space-y-6 animate-content-entry">
       <h1 className="text-2xl font-bold text-white">Settings</h1>
       
-      <div className="bg-gray-900 p-5 rounded-lg border border-gray-800/50">
+      <div className="glass-panel p-6 rounded-2xl">
         <h2 className="text-lg font-semibold text-white mb-4">Appearance</h2>
         <p className="text-sm text-gray-400 mb-6">Choose a theme to personalize your journal's look and feel.</p>
         
@@ -23,10 +23,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
               <button
                 key={theme.id}
                 onClick={() => onThemeChange(theme.id)}
-                className={`relative p-4 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                className={`relative p-4 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-[var(--accent-primary)] ${
                   isActive
-                    ? 'border-yellow-400'
-                    : 'border-gray-700 hover:border-gray-600'
+                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+                    : 'bg-white/5 border-[color:var(--glass-border)] hover:bg-white/10 hover:border-white/20'
                 }`}
                 aria-pressed={isActive}
               >
@@ -38,7 +38,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                   <div className={`w-6 h-6 rounded-full ${theme.colors.accent}`}></div>
                 </div>
                 {isActive && (
-                  <div className="absolute top-2 right-2 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <div className="absolute top-2 right-2 w-5 h-5 bg-[var(--accent-primary)] rounded-full flex items-center justify-center shadow-lg">
                     <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>

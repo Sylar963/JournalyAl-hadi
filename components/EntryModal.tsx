@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { type EmotionEntry, type EmotionType } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
@@ -194,24 +193,24 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
       <div 
         ref={modalRef} 
         role="dialog"
         aria-modal="true"
         aria-labelledby="entry-modal-title"
-        className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-lg border border-gray-800">
-        <div className="p-6 border-b border-gray-800">
+        className="glass-panel rounded-2xl shadow-2xl w-full max-w-lg border border-[color:var(--glass-border)] animate-scale-in">
+        <div className="p-6 border-b border-[color:var(--glass-border)]">
           <div className="flex justify-between items-start">
             <div>
-                <h2 id="entry-modal-title" className="text-xl font-bold text-white">Your Entry</h2>
-                <p className="text-gray-400">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <h2 id="entry-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Your Entry</h2>
+                <p className="text-gray-400 text-sm">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
             <button onClick={onClose} disabled={isSaving || isDeleting} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none disabled:opacity-50">&times;</button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">How are you feeling?</label>
             <div className="grid grid-cols-5 gap-3">
@@ -222,12 +221,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     <button
                       key={key}
                       onClick={() => setSelectedEmotion(key)}
-                      className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all duration-200 ${
-                          isSelected ? `${config.color.replace('bg-', 'border-')} scale-105` : 'border-gray-700 hover:border-gray-600'
+                      className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-300 ${
+                          isSelected 
+                            ? `border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 scale-105 shadow-[0_0_15px_rgba(6,182,212,0.2)]` 
+                            : 'border-[color:var(--glass-border)] bg-white/5 hover:bg-white/10 hover:border-white/20'
                       }`}
                     >
-                      <span className="text-3xl">{config.emoji}</span>
-                      <span className={`mt-1 text-xs font-medium ${isSelected ? config.textColor : 'text-gray-400'}`}>{config.label}</span>
+                      <span className="text-3xl filter drop-shadow-md">{config.emoji}</span>
+                      <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--accent-primary)]' : 'text-gray-400'}`}>{config.label}</span>
                     </button>
                   )
               })}
@@ -235,13 +236,13 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
           </div>
           
           {!selectedEmotion && (
-            <div className="text-center text-sm text-yellow-400/80 bg-yellow-900/20 p-2 rounded-md border border-yellow-500/30">
+            <div className="text-center text-sm text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 p-2 rounded-lg border border-[var(--accent-primary)]/20">
               Please select an emotion above to save your entry.
             </div>
           )}
 
           <div>
-            <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">Intensity: <span className="font-bold text-white">{intensity}</span></label>
+            <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">Intensity: <span className="font-bold text-[var(--accent-primary)]">{intensity}</span></label>
             <input
               type="range"
               id="intensity"
@@ -249,7 +250,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
               max="10"
               value={intensity}
               onChange={e => setIntensity(Number(e.target.value))}
-              className="w-full h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+              className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-primary)]"
             />
           </div>
 
@@ -261,7 +262,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="What happened today?"
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+              className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
             ></textarea>
           </div>
           
@@ -269,11 +270,11 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
             <label className="block text-sm font-medium text-gray-300 mb-2">Attached Image</label>
             {image ? (
                 <div className="relative group">
-                <img src={image} alt="Entry attachment" className="w-full h-auto max-h-48 object-cover rounded-lg" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg">
+                <img src={image} alt="Entry attachment" className="w-full h-auto max-h-48 object-cover rounded-xl border border-[color:var(--glass-border)]" />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl backdrop-blur-sm">
                     <button 
                     onClick={handleRemoveImage}
-                    className="flex items-center bg-red-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="flex items-center bg-red-500/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors backdrop-blur-md"
                     >
                     <IconTrash className="w-4 h-4 mr-2" />
                     Remove Image
@@ -281,9 +282,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 </div>
                 </div>
             ) : (
-                <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-700 rounded-lg hover:bg-gray-800/50 hover:border-gray-600 transition-colors">
-                <IconUpload className="w-8 h-8 text-gray-500 mb-2" />
-                <span className="text-sm font-semibold text-yellow-400">Upload an image</span>
+                <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[color:var(--glass-border)] rounded-xl hover:bg-white/5 hover:border-[var(--accent-primary)]/50 transition-all group">
+                <IconUpload className="w-8 h-8 text-gray-500 mb-2 group-hover:text-[var(--accent-primary)] transition-colors" />
+                <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">Upload an image</span>
                 <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
                 <input id="image-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
                 </label>
@@ -292,24 +293,24 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
 
           {entry && (
              <div>
-                <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="w-full flex items-center justify-center bg-gradient-to-r from-yellow-500 to-amber-600 text-black px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="w-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                     <IconSparkles className="w-5 h-5 mr-2" />
                     {isInsightLoading ? 'Generating...' : 'Get AI Insight'}
                 </button>
-                 {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2">The AI is thinking...</p>}
+                 {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2 animate-pulse">The AI is thinking...</p>}
                  {aiError && <p className="text-center text-sm text-red-400 mt-2">{aiError}</p>}
                  {aiInsight && (
-                     <div className="mt-4 p-4 bg-black/25 rounded-lg border border-gray-700">
-                        <p className="text-sm text-gray-300 whitespace-pre-wrap">{aiInsight}</p>
+                     <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                        <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{aiInsight}</p>
                      </div>
                  )}
             </div>
           )}
         </div>
 
-        <div className="p-6 bg-black/25 border-t border-gray-800 flex flex-col gap-4 rounded-b-xl min-h-[88px]">
+        <div className="p-6 bg-white/5 border-t border-[color:var(--glass-border)] flex flex-col gap-4 rounded-b-2xl min-h-[88px] backdrop-blur-md">
             {confirmation ? (
-                <div className={`flex items-center justify-center text-green-400 p-3 transition-all duration-300 ease-out ${confirmation.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                <div className={`flex items-center justify-center text-[var(--accent-primary)] p-3 transition-all duration-300 ease-out ${confirmation.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -318,7 +319,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
             ) : (
                 <>
                     {operationError && (
-                        <div className="bg-red-900/50 border border-red-500/30 text-red-300 p-3 rounded-lg text-sm">
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-xl text-sm backdrop-blur-sm">
                             <p className="font-bold mb-1">Operation Failed</p>
                             <p className="text-red-200">{operationError}</p>
                         </div>
@@ -326,21 +327,21 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     <div className="flex justify-between items-center">
                         <div>
                             {entry && (
-                                <button onClick={handleDelete} disabled={isSaving || isDeleting} className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button onClick={handleDelete} disabled={isSaving || isDeleting} className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isDeleting ? 'Deleting...' : 'Delete Entry'}
                                 </button>
                             )}
                         </div>
                         <div className="flex space-x-3">
-                            <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Cancel</button>
+                            <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-white/10">Cancel</button>
                             <button 
                                 onClick={handleSave} 
                                 disabled={!selectedEmotion || isSaving || isDeleting}
                                 title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
-                                className="px-4 py-2 text-sm font-medium bg-yellow-600 text-black hover:bg-yellow-700 rounded-lg transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed disabled:text-gray-400 w-28 text-center"
+                                className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
                             >
                                 {isSaving ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mx-auto"></div>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
                                 ) : 'Save Entry'}
                             </button>
                         </div>
