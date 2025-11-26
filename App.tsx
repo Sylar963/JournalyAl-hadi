@@ -29,9 +29,12 @@ import IconJournal from './components/icons/IconJournal';
 import Background from './components/Background';
 import GridOverlay from './components/GridOverlay';
 
+import LandingPage from './components/LandingPage';
+
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [showLanding, setShowLanding] = useState(true);
 
   const [entries, setEntries] = useState<Record<string, EmotionEntry>>({});
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -377,7 +380,14 @@ const App: React.FC = () => {
   }
 
   if (!session && isSupabaseConfigured) {
+    if (showLanding) {
+      return <LandingPage onGetStarted={() => setShowLanding(false)} />;
+    }
     return <Auth />;
+  }
+
+  if (!session && !isSupabaseConfigured && showLanding) {
+     return <LandingPage onGetStarted={() => setShowLanding(false)} />;
   }
 
   const entriesArray = Object.values(entries);
