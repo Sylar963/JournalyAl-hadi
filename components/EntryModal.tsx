@@ -18,6 +18,7 @@ interface EntryModalProps {
 }
 
 const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDelete, selectedDate, entry, initialEmotion }) => {
+  const [activeTab, setActiveTab] = useState<'journal' | 'trading'>('journal');
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(entry?.emotion ?? initialEmotion ?? null);
   const [intensity, setIntensity] = useState<number>(entry?.intensity ?? 5);
   const [notes, setNotes] = useState<string>(entry?.notes ?? '');
@@ -36,6 +37,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const triggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    setActiveTab('journal'); // Reset to journal tab on open
     setSelectedEmotion(entry?.emotion ?? initialEmotion ?? null);
     setIntensity(entry?.intensity ?? 5);
     setNotes(entry?.notes ?? '');
@@ -199,112 +201,160 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
         role="dialog"
         aria-modal="true"
         aria-labelledby="entry-modal-title"
-        className="glass-panel rounded-2xl shadow-2xl w-full max-w-lg border border-[color:var(--glass-border)] animate-scale-in">
+        className="glass-panel rounded-2xl shadow-2xl w-full max-w-lg border border-[color:var(--glass-border)] animate-scale-in flex flex-col max-h-[90vh]">
+        
+        {/* Browser-like Tab Bar */}
+        <div className="flex items-center px-4 pt-4 border-b border-[color:var(--glass-border)] bg-black/20 rounded-t-2xl space-x-2">
+            <button
+                onClick={() => setActiveTab('journal')}
+                className={`px-6 py-2 rounded-t-lg text-sm font-medium transition-all relative ${
+                    activeTab === 'journal'
+                        ? 'text-white bg-white/5 border-t border-l border-r border-[color:var(--glass-border)]'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+            >
+                Journal
+                {activeTab === 'journal' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050507] z-10"></div>}
+            </button>
+            <button
+                onClick={() => setActiveTab('trading')}
+                className={`px-6 py-2 rounded-t-lg text-sm font-medium transition-all relative ${
+                    activeTab === 'trading'
+                        ? 'text-white bg-white/5 border-t border-l border-r border-[color:var(--glass-border)]'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+            >
+                Trading
+                {activeTab === 'trading' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050507] z-10"></div>}
+            </button>
+            
+            <div className="ml-auto">
+                <button onClick={onClose} disabled={isSaving || isDeleting} className="text-gray-400 hover:text-white transition-colors text-xl leading-none disabled:opacity-50 p-1">&times;</button>
+            </div>
+        </div>
+
         <div className="p-6 border-b border-[color:var(--glass-border)]">
           <div className="flex justify-between items-start">
             <div>
-                <h2 id="entry-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Your Entry</h2>
+                <h2 id="entry-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                    {activeTab === 'journal' ? 'Your Entry' : 'Trading Log'}
+                </h2>
                 <p className="text-gray-400 text-sm">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
-            <button onClick={onClose} disabled={isSaving || isDeleting} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none disabled:opacity-50">&times;</button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">How are you feeling?</label>
-            <div className="grid grid-cols-5 gap-3">
-              {emotionKeys.map(key => {
-                  const config = EMOTIONS_CONFIG[key];
-                  const isSelected = selectedEmotion === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedEmotion(key)}
-                      className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-300 ${
-                          isSelected 
-                            ? `border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 scale-105 shadow-[0_0_15px_rgba(6,182,212,0.2)]` 
-                            : 'border-[color:var(--glass-border)] bg-white/5 hover:bg-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <span className="text-3xl filter drop-shadow-md">{config.emoji}</span>
-                      <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--accent-primary)]' : 'text-gray-400'}`}>{config.label}</span>
-                    </button>
-                  )
-              })}
-            </div>
-          </div>
-          
-          {!selectedEmotion && (
-            <div className="text-center text-sm text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 p-2 rounded-lg border border-[var(--accent-primary)]/20">
-              Please select an emotion above to save your entry.
-            </div>
-          )}
-
-          <div>
-            <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">Intensity: <span className="font-bold text-[var(--accent-primary)]">{intensity}</span></label>
-            <input
-              type="range"
-              id="intensity"
-              min="1"
-              max="10"
-              value={intensity}
-              onChange={e => setIntensity(Number(e.target.value))}
-              className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-primary)]"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
-            <textarea
-              id="notes"
-              rows={4}
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="What happened today?"
-              className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
-            ></textarea>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Attached Image</label>
-            {image ? (
-                <div className="relative group">
-                <img src={image} alt="Entry attachment" className="w-full h-auto max-h-48 object-cover rounded-xl border border-[color:var(--glass-border)]" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl backdrop-blur-sm">
-                    <button 
-                    onClick={handleRemoveImage}
-                    className="flex items-center bg-red-500/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors backdrop-blur-md"
-                    >
-                    <IconTrash className="w-4 h-4 mr-2" />
-                    Remove Image
-                    </button>
+        <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
+          {activeTab === 'journal' ? (
+              <>
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">How are you feeling?</label>
+                    <div className="grid grid-cols-5 gap-3">
+                    {emotionKeys.map(key => {
+                        const config = EMOTIONS_CONFIG[key];
+                        const isSelected = selectedEmotion === key;
+                        return (
+                            <button
+                            key={key}
+                            onClick={() => setSelectedEmotion(key)}
+                            className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-300 ${
+                                isSelected 
+                                    ? `border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 scale-105 shadow-[0_0_15px_rgba(6,182,212,0.2)]` 
+                                    : 'border-[color:var(--glass-border)] bg-white/5 hover:bg-white/10 hover:border-white/20'
+                            }`}
+                            >
+                            <span className="text-3xl filter drop-shadow-md">{config.emoji}</span>
+                            <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--accent-primary)]' : 'text-gray-400'}`}>{config.label}</span>
+                            </button>
+                        )
+                    })}
+                    </div>
                 </div>
-                </div>
-            ) : (
-                <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[color:var(--glass-border)] rounded-xl hover:bg-white/5 hover:border-[var(--accent-primary)]/50 transition-all group">
-                <IconUpload className="w-8 h-8 text-gray-500 mb-2 group-hover:text-[var(--accent-primary)] transition-colors" />
-                <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">Upload an image</span>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
-                <input id="image-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
-                </label>
-            )}
-          </div>
+                
+                {!selectedEmotion && (
+                    <div className="text-center text-sm text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 p-2 rounded-lg border border-[var(--accent-primary)]/20">
+                    Please select an emotion above to save your entry.
+                    </div>
+                )}
 
-          {entry && (
-             <div>
-                <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="w-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-                    <IconSparkles className="w-5 h-5 mr-2" />
-                    {isInsightLoading ? 'Generating...' : 'Get AI Insight'}
-                </button>
-                 {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2 animate-pulse">The AI is thinking...</p>}
-                 {aiError && <p className="text-center text-sm text-red-400 mt-2">{aiError}</p>}
-                 {aiInsight && (
-                     <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                        <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{aiInsight}</p>
-                     </div>
-                 )}
-            </div>
+                <div>
+                    <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">Intensity: <span className="font-bold text-[var(--accent-primary)]">{intensity}</span></label>
+                    <input
+                    type="range"
+                    id="intensity"
+                    min="1"
+                    max="10"
+                    value={intensity}
+                    onChange={e => setIntensity(Number(e.target.value))}
+                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[var(--accent-primary)]"
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
+                    <textarea
+                    id="notes"
+                    rows={4}
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="What happened today?"
+                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
+                    ></textarea>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Attached Image</label>
+                    {image ? (
+                        <div className="relative group">
+                        <img src={image} alt="Entry attachment" className="w-full h-auto max-h-48 object-cover rounded-xl border border-[color:var(--glass-border)]" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl backdrop-blur-sm">
+                            <button 
+                            onClick={handleRemoveImage}
+                            className="flex items-center bg-red-500/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors backdrop-blur-md"
+                            >
+                            <IconTrash className="w-4 h-4 mr-2" />
+                            Remove Image
+                            </button>
+                        </div>
+                        </div>
+                    ) : (
+                        <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[color:var(--glass-border)] rounded-xl hover:bg-white/5 hover:border-[var(--accent-primary)]/50 transition-all group">
+                        <IconUpload className="w-8 h-8 text-gray-500 mb-2 group-hover:text-[var(--accent-primary)] transition-colors" />
+                        <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">Upload an image</span>
+                        <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
+                        <input id="image-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
+                        </label>
+                    )}
+                </div>
+
+                {entry && (
+                    <div>
+                        <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="w-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                            <IconSparkles className="w-5 h-5 mr-2" />
+                            {isInsightLoading ? 'Generating...' : 'Get AI Insight'}
+                        </button>
+                        {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2 animate-pulse">The AI is thinking...</p>}
+                        {aiError && <p className="text-center text-sm text-red-400 mt-2">{aiError}</p>}
+                        {aiInsight && (
+                            <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                                <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{aiInsight}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+              </>
+          ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-[color:var(--glass-border)]">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-medium text-white">Trading Log</h3>
+                      <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Track your calls, puts, and market analysis here. Coming soon.</p>
+                  </div>
+              </div>
           )}
         </div>
 
@@ -326,7 +376,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     )}
                     <div className="flex justify-between items-center">
                         <div>
-                            {entry && (
+                            {entry && activeTab === 'journal' && (
                                 <button onClick={handleDelete} disabled={isSaving || isDeleting} className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isDeleting ? 'Deleting...' : 'Delete Entry'}
                                 </button>
@@ -334,16 +384,18 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                         </div>
                         <div className="flex space-x-3">
                             <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-white/10">Cancel</button>
-                            <button 
-                                onClick={handleSave} 
-                                disabled={!selectedEmotion || isSaving || isDeleting}
-                                title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
-                                className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
-                            >
-                                {isSaving ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
-                                ) : 'Save Entry'}
-                            </button>
+                            {activeTab === 'journal' && (
+                                <button 
+                                    onClick={handleSave} 
+                                    disabled={!selectedEmotion || isSaving || isDeleting}
+                                    title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
+                                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
+                                >
+                                    {isSaving ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
+                                    ) : 'Save Entry'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </>
