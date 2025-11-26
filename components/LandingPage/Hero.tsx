@@ -1,4 +1,4 @@
-import React from 'react';
+import FluidBackground from './FluidBackground';
 
 interface HeroProps {
   onGetStarted: () => void;
@@ -9,6 +9,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     <section className="relative overflow-hidden bg-[#0c0c0e] text-white py-20 lg:py-32">
       {/* Background Effects */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <FluidBackground />
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-green-500/10 rounded-full blur-[120px]" />
       </div>
