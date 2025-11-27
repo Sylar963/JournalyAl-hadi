@@ -110,7 +110,7 @@ const Auth: React.FC = () => {
         <div className="flex h-screen w-screen items-center justify-center bg-black text-white p-4">
             <div className="w-full max-w-sm p-8 space-y-6 bg-gray-900 rounded-xl shadow-2xl border border-gray-800">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-white">Emotion Journal</h1>
+                    <h1 className="text-3xl font-bold text-white">Deltajournal</h1>
                     <p className="text-gray-400 mt-2">{isLoginView ? 'Sign in to access your journal' : 'Create a new account'}</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">

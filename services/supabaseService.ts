@@ -278,7 +278,7 @@ export async function getProfile(): Promise<UserProfile> {
         name: user?.email?.split('@')[0] || 'New User',
         alias: user?.email || 'No email',
         picture: undefined,
-        journalPurpose: "This is my new emotion journal!",
+        journalPurpose: "This is my new Deltajournal!",
     };
     return saveProfile(newUserProfile);
 }
