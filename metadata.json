@@ -1,5 +1,5 @@
 {
-  "name": "Emotion Journal",
+  "name": "Deltajournal",
   "description": "An application to log, visualize, and analyze daily emotional states using a color-coded interactive calendar and AI-powered insights.",
   "requestFramePermissions": [],
   "prompt": ""

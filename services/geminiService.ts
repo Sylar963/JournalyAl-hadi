@@ -17,7 +17,7 @@ export async function getEmotionInsight(entry: EmotionEntry): Promise<string> {
   const model = "gemini-2.5-flash";
 
   const prompt = `
-    You are an empathetic and insightful AI companion for an emotion journal.
+    You are an empathetic and insightful AI companion for Deltajournal.
     A user has logged the following entry:
     - Emotion: ${entry.emotion}
     - Intensity (1-10): ${entry.intensity}
@@ -62,7 +62,7 @@ export async function getTrendsSummary(entries: EmotionEntry[]): Promise<string>
         .join("\n");
     
     const prompt = `
-        You are an expert mental wellness and data analyst AI. You are analyzing a user's emotion journal entries for the past month.
+        You are an expert mental wellness and data analyst AI. You are analyzing a user's Deltajournal entries for the past month.
         Here is the data:
         ${entriesSummary}
 
@@ -113,7 +113,7 @@ export async function getReportAnalysis(entries: EmotionEntry[], startDate: stri
       .join("\n");
   
   const prompt = `
-      Analyze the following emotion journal entries from ${startDate} to ${endDate} and generate a wellness report.
+      Analyze the following Deltajournal entries from ${startDate} to ${endDate} and generate a wellness report.
       Data:
       ${entriesSummary}
   `;

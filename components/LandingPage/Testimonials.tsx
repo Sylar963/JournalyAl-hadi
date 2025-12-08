@@ -20,14 +20,14 @@ const testimonials = [
 
 const Testimonials: React.FC = () => {
   return (
-    <section className="py-24 bg-[#0c0c0e] border-t border-white/5">
+    <section className="py-24 bg-bg border-t border-white/10 relative">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-16">Trusted by High Performers</h2>
+        <h2 className="text-3xl md:text-5xl font-heading font-medium text-center text-white mb-20 tracking-tight">Trusted by High Performers</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((item, index) => (
-            <div key={index} className="p-8 rounded-2xl bg-[#151518] energy-border relative">
-              <div className="text-green-500 text-4xl font-serif absolute top-4 left-4 opacity-20">"</div>
+            <div key={index} className="p-8 rounded-none border-l border-white/10 bg-white/5 backdrop-blur-sm relative hover:bg-white/10 transition-colors duration-300">
+              <div className="text-white/20 text-4xl font-serif absolute top-6 right-6 opacity-50">"</div>
               <p className="text-gray-300 mb-6 relative z-10 italic">
                 {item.quote}
               </p>
