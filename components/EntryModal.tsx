@@ -24,6 +24,16 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const [notes, setNotes] = useState<string>(entry?.notes ?? '');
   const [image, setImage] = useState<string | undefined>(entry?.imageUrl);
   
+  // Trading Tab State
+  const [pnl, setPnl] = useState<string>(entry?.pnl?.toString() ?? '');
+  const [trades, setTrades] = useState<any[]>(entry?.tradingData?.trades ?? []);
+  
+  // New Trade Form State
+  const [tradeType, setTradeType] = useState<string>('Long Future');
+  const [tradeSymbol, setTradeSymbol] = useState('');
+  const [tradePnl, setTradePnl] = useState('');
+  const [tradeNotes, setTradeNotes] = useState('');
+
   const [aiInsight, setAiInsight] = useState<string>('');
   const [isInsightLoading, setIsInsightLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string>('');
@@ -42,6 +52,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setIntensity(entry?.intensity ?? 5);
     setNotes(entry?.notes ?? '');
     setImage(entry?.imageUrl ?? undefined);
+    setPnl(entry?.pnl?.toString() ?? '');
+    setTrades(entry?.tradingData?.trades ?? []);
+    
     setAiInsight('');
     setAiError('');
     setOperationError(null);
@@ -116,13 +129,50 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setConfirmation({ message, visible: false });
   };
 
+  const handleAddTrade = () => {
+    if (!tradeSymbol || !tradeType) return;
+    
+    const newTrade = {
+        id: crypto.randomUUID(),
+        type: tradeType,
+        symbol: tradeSymbol.toUpperCase(),
+        pnl: tradePnl ? parseFloat(tradePnl) : undefined,
+        notes: tradeNotes
+    };
+    
+    setTrades([...trades, newTrade]);
+    
+    // Reset form
+    setTradeSymbol('');
+    setTradePnl('');
+    setTradeNotes('');
+  };
+
+  const handleRemoveTrade = (id: string) => {
+    setTrades(trades.filter(t => t.id !== id));
+  };
+
   const handleSave = async () => {
-    if (!selectedEmotion) return;
+    if (!selectedEmotion) {
+        // If they are on the trading tab and try to save without an emotion, switch to journal tab
+        if (activeTab === 'trading') {
+            setActiveTab('journal');
+            // Small delay to let tab switch happen before alert or just let them see the error state
+        }
+        return;
+    }
 
     setIsSaving(true);
     setOperationError(null);
     try {
-      await onSave({ emotion: selectedEmotion, intensity, notes, imageUrl: image });
+      await onSave({ 
+          emotion: selectedEmotion, 
+          intensity, 
+          notes, 
+          imageUrl: image,
+          pnl: pnl ? parseFloat(pnl) : undefined,
+          tradingData: { trades }
+      });
       showConfirmation('Entry Saved!');
     } catch (error: any) {
       let message = 'An unexpected error occurred. Please try again.';
@@ -193,6 +243,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   if (!isOpen) return null;
   
   const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
+  const tradeTypes = ['Long Future', 'Short Future', 'BTO Call', 'BTO Put', 'STC Call', 'STC Put', 'STO Call', 'STO Put', 'BTC Call', 'BTC Put'];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -344,16 +395,93 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 )}
               </>
           ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-[color:var(--glass-border)]">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                  </div>
+              <div className="space-y-6">
+                 {/* Daily PNL Input */}
                   <div>
-                      <h3 className="text-lg font-medium text-white">Trading Log</h3>
-                      <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Track your calls, puts, and market analysis here. Coming soon.</p>
+                    <label htmlFor="daily-pnl" className="block text-sm font-medium text-gray-300 mb-2">Daily PNL ($)</label>
+                    <input
+                      type="number"
+                      id="daily-pnl"
+                      placeholder="e.g. 150.50 or -50.00"
+                      value={pnl}
+                      onChange={e => setPnl(e.target.value)}
+                      className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
+                    />
                   </div>
+
+                  {/* Add New Trade Form */}
+                  <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)]">
+                     <h3 className="text-white font-medium mb-3 text-sm">Log New Trade</h3>
+                     <div className="grid grid-cols-2 gap-3 mb-3">
+                        <select 
+                            value={tradeType}
+                            onChange={(e) => setTradeType(e.target.value)}
+                            className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                        >
+                            {tradeTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <input 
+                            type="text" 
+                            placeholder="Symbol (e.g. NQ, TSLA)"
+                            value={tradeSymbol}
+                            onChange={e => setTradeSymbol(e.target.value)}
+                            className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white uppercase"
+                        />
+                     </div>
+                     <div className="grid grid-cols-2 gap-3 mb-3">
+                         <input 
+                            type="number" 
+                            placeholder="PNL (Optional)"
+                            value={tradePnl}
+                            onChange={e => setTradePnl(e.target.value)}
+                            className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="Notes..."
+                            value={tradeNotes}
+                            onChange={e => setTradeNotes(e.target.value)}
+                            className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                        />
+                     </div>
+                     <button 
+                        onClick={handleAddTrade}
+                        disabled={!tradeSymbol}
+                        className="w-full bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/50 py-2 rounded-lg text-sm font-medium hover:bg-[var(--accent-primary)]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                     >
+                        Add Trade
+                     </button>
+                  </div>
+
+                  {/* Trades List */}
+                  {trades.length > 0 && (
+                      <div className="space-y-2">
+                          <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Today's Trades</h3>
+                          {trades.map((t) => (
+                              <div key={t.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-[color:var(--glass-border)]">
+                                  <div>
+                                      <div className="flex items-center space-x-2">
+                                        <span className={`text-xs px-2 py-0.5 rounded ${
+                                            t.type.includes('Long') || t.type.includes('Call') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+                                        }`}>{t.type}</span>
+                                        <span className="font-bold text-white text-sm">{t.symbol}</span>
+                                      </div>
+                                      {t.notes && <p className="text-gray-400 text-xs mt-1">{t.notes}</p>}
+                                  </div>
+                                  <div className="flex items-center space-x-3">
+                                      {t.pnl !== undefined && (
+                                          <span className={`font-mono text-sm ${t.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                              {t.pnl >= 0 ? '+' : ''}{t.pnl}
+                                          </span>
+                                      )}
+                                      <button onClick={() => handleRemoveTrade(t.id)} className="text-gray-500 hover:text-red-400 transition-colors">
+                                          <IconTrash className="w-4 h-4" />
+                                      </button>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  )}
               </div>
           )}
         </div>
@@ -376,7 +504,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     )}
                     <div className="flex justify-between items-center">
                         <div>
-                            {entry && activeTab === 'journal' && (
+                            {entry && (
                                 <button onClick={handleDelete} disabled={isSaving || isDeleting} className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isDeleting ? 'Deleting...' : 'Delete Entry'}
                                 </button>
@@ -384,18 +512,16 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                         </div>
                         <div className="flex space-x-3">
                             <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-white/10">Cancel</button>
-                            {activeTab === 'journal' && (
-                                <button 
-                                    onClick={handleSave} 
-                                    disabled={!selectedEmotion || isSaving || isDeleting}
-                                    title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
-                                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
-                                >
-                                    {isSaving ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
-                                    ) : 'Save Entry'}
-                                </button>
-                            )}
+                            <button 
+                                onClick={handleSave} 
+                                disabled={!selectedEmotion || isSaving || isDeleting}
+                                title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
+                                className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
+                            >
+                                {isSaving ? (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
+                                ) : 'Save Entry'}
+                            </button>
                         </div>
                     </div>
                 </>

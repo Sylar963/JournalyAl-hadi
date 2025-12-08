@@ -17,6 +17,7 @@ import { type EmotionEntry, type EmotionType } from '../types';
 import { EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
 import { getTrendsSummary } from '../services/geminiService';
 import IconSparkles from './icons/IconSparkles';
+import PNLCorrelationView from './PNLCorrelationView';
 
 ChartJS.register(
   CategoryScale,
@@ -270,93 +271,127 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         }
     }, [currentMonthEntries]);
 
+    const [activeTab, setActiveTab] = useState<'general' | 'pnl'>('general');
+
   return (
     <div className="space-y-6 animate-content-entry">
-      <h1 className="text-2xl font-bold text-white">This Month's Trends</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="glass-panel p-6 rounded-2xl">
-          <h3 className="text-sm font-medium text-gray-400">Total Entries</h3>
-          <p className="text-3xl font-bold text-white mt-1">{stats.total}</p>
-        </div>
-        <div className="glass-panel p-6 rounded-2xl">
-          <h3 className="text-sm font-medium text-gray-400">Most Frequent</h3>
-          <p className="text-3xl font-bold text-white mt-1">{stats.mostFrequent}</p>
-        </div>
-        <div className="glass-panel p-6 rounded-2xl">
-          <h3 className="text-sm font-medium text-gray-400">Avg. Intensity</h3>
-          <p className="text-3xl font-bold text-white mt-1">{stats.avgIntensity}</p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-panel p-6 rounded-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
-            <div className="h-80">
-            {currentMonthEntries.length > 0 ? (
-                <Bar options={barChartOptions as any} data={distributionChartData} />
-            ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                    No data for this month to display.
-                </div>
-            )}
-            </div>
-        </div>
-        <div className="glass-panel p-6 rounded-2xl">
-            <h3 className="text-lg font-semibold text-white mb-4">Intensity Over Time</h3>
-            <div className="h-80">
-            {currentMonthEntries.length > 0 ? (
-                <Line options={intensityChartOptions as any} data={intensityChartData} />
-            ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                    Log emotions to see intensity trends.
-                </div>
-            )}
-            </div>
-        </div>
-        <div className="glass-panel p-6 rounded-2xl lg:col-span-2">
-            <h3 className="text-lg font-semibold text-white mb-4">Emotions by Day of Week</h3>
-            <div className="h-96">
-            {currentMonthEntries.length > 0 ? (
-                <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
-            ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                    No weekly data to analyze yet.
-                </div>
-            )}
-            </div>
-        </div>
-      </div>
-
-      <div className="glass-panel p-6 rounded-2xl">
-         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-            <div>
-              <h3 className="text-lg font-semibold text-white">AI-Powered Summary</h3>
-              <p className="text-sm text-gray-400 mt-1">Get an analysis of your emotional patterns this month.</p>
-            </div>
-            <button onClick={handleGenerateSummary} disabled={isSummaryLoading || currentMonthEntries.length === 0} className="flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-                <IconSparkles className="w-5 h-5 mr-2" />
-                {isSummaryLoading ? 'Analyzing...' : 'Generate Summary'}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-white">Trends Analysis</h1>
+        
+        {/* Tab Navigation */}
+        <div className="flex p-1 bg-black/40 rounded-xl border border-[color:var(--glass-border)] w-full md:w-auto">
+            <button
+                onClick={() => setActiveTab('general')}
+                className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === 'general'
+                        ? 'bg-white/10 text-white shadow-lg'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+            >
+                General
             </button>
-         </div>
-         {isSummaryLoading && <p className="text-center text-sm text-gray-400 mt-4">The AI is analyzing your monthly data...</p>}
-         {summaryError && <p className="text-center text-sm text-red-400 mt-4">{summaryError}</p>}
-         {aiSummary && (
-             <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                <p className="text-sm text-gray-300 whitespace-pre-wrap font-light leading-relaxed">{aiSummary}</p>
-             </div>
-         )}
-         {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length > 0 && (
-             <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
-                Click "Generate Summary" to get started.
-             </p>
-         )}
-          {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length === 0 && (
-             <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
-                Log some entries for the current month to enable AI summary.
-             </p>
-         )}
+            <button
+                onClick={() => setActiveTab('pnl')}
+                 className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === 'pnl'
+                        ? 'bg-white/10 text-white shadow-lg'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+            >
+                PNL Index
+            </button>
+        </div>
       </div>
+      
+      {activeTab === 'pnl' ? (
+          <PNLCorrelationView entries={entries} />
+      ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="glass-panel p-6 rounded-2xl">
+                <h3 className="text-sm font-medium text-gray-400">Total Entries</h3>
+                <p className="text-3xl font-bold text-white mt-1">{stats.total}</p>
+                </div>
+                <div className="glass-panel p-6 rounded-2xl">
+                <h3 className="text-sm font-medium text-gray-400">Most Frequent</h3>
+                <p className="text-3xl font-bold text-white mt-1">{stats.mostFrequent}</p>
+                </div>
+                <div className="glass-panel p-6 rounded-2xl">
+                <h3 className="text-sm font-medium text-gray-400">Avg. Intensity</h3>
+                <p className="text-3xl font-bold text-white mt-1">{stats.avgIntensity}</p>
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="glass-panel p-6 rounded-2xl">
+                    <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
+                    <div className="h-80">
+                    {currentMonthEntries.length > 0 ? (
+                        <Bar options={barChartOptions as any} data={distributionChartData} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                            No data for this month to display.
+                        </div>
+                    )}
+                    </div>
+                </div>
+                <div className="glass-panel p-6 rounded-2xl">
+                    <h3 className="text-lg font-semibold text-white mb-4">Intensity Over Time</h3>
+                    <div className="h-80">
+                    {currentMonthEntries.length > 0 ? (
+                        <Line options={intensityChartOptions as any} data={intensityChartData} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                            Log emotions to see intensity trends.
+                        </div>
+                    )}
+                    </div>
+                </div>
+                <div className="glass-panel p-6 rounded-2xl lg:col-span-2">
+                    <h3 className="text-lg font-semibold text-white mb-4">Emotions by Day of Week</h3>
+                    <div className="h-96">
+                    {currentMonthEntries.length > 0 ? (
+                        <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                            No weekly data to analyze yet.
+                        </div>
+                    )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                    <div>
+                    <h3 className="text-lg font-semibold text-white">AI-Powered Summary</h3>
+                    <p className="text-sm text-gray-400 mt-1">Get an analysis of your emotional patterns this month.</p>
+                    </div>
+                    <button onClick={handleGenerateSummary} disabled={isSummaryLoading || currentMonthEntries.length === 0} className="flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                        <IconSparkles className="w-5 h-5 mr-2" />
+                        {isSummaryLoading ? 'Analyzing...' : 'Generate Summary'}
+                    </button>
+                </div>
+                {isSummaryLoading && <p className="text-center text-sm text-gray-400 mt-4">The AI is analyzing your monthly data...</p>}
+                {summaryError && <p className="text-center text-sm text-red-400 mt-4">{summaryError}</p>}
+                {aiSummary && (
+                    <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
+                        <p className="text-sm text-gray-300 whitespace-pre-wrap font-light leading-relaxed">{aiSummary}</p>
+                    </div>
+                )}
+                {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length > 0 && (
+                    <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
+                        Click "Generate Summary" to get started.
+                    </p>
+                )}
+                {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
+                        Log some entries for the current month to enable AI summary.
+                    </p>
+                )}
+            </div>
+          </>
+      )}
     </div>
   );
 };

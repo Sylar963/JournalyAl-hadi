@@ -14,6 +14,8 @@ export type Database = {
           notes: string | null;
           user_id: string;
           image_url: string | null;
+          pnl: number | null;
+          trading_data: any | null;
         };
         Insert: {
           date: string;
@@ -22,6 +24,8 @@ export type Database = {
           notes: string | null;
           user_id: string;
           image_url: string | null;
+          pnl?: number | null;
+          trading_data?: any | null;
         };
         Update: {
           date?: string;
@@ -30,6 +34,8 @@ export type Database = {
           notes?: string | null;
           user_id?: string;
           image_url?: string | null;
+          pnl?: number | null;
+          trading_data?: any | null; // using any for jsonb flexibility, or could type it purely
         };
         Relationships: [];
       };
@@ -136,6 +142,8 @@ CREATE TABLE public.entries (
   intensity INT NOT NULL CHECK (intensity >= 1 AND intensity <= 10),
   notes TEXT,
   image_url TEXT,
+  pnl NUMERIC,
+  trading_data JSONB,
   PRIMARY KEY (user_id, date) -- Ensures one entry per user per day and is used for upsert
 );
 
@@ -200,7 +208,9 @@ export async function getEntries(): Promise<Record<string, EmotionEntry>> {
                 emotion: e.emotion as EmotionType,
                 intensity: e.intensity,
                 notes: e.notes,
-                imageUrl: e.image_url ?? undefined
+                imageUrl: e.image_url ?? undefined,
+                pnl: e.pnl ?? undefined,
+                tradingData: e.trading_data || undefined
             };
         }
     }
@@ -218,7 +228,9 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
           intensity: entry.intensity,
           notes: entry.notes,
           image_url: entry.imageUrl ?? null,
-          user_id: userId
+          user_id: userId,
+          pnl: entry.pnl ?? null,
+          trading_data: entry.tradingData ?? null
       }, { onConflict: 'user_id,date' })
       .select()
       .single();
@@ -238,6 +250,8 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
         intensity: savedData.intensity,
         notes: savedData.notes,
         imageUrl: savedData.image_url ?? undefined,
+        pnl: savedData.pnl ?? undefined,
+        tradingData: savedData.trading_data || undefined
     };
 }
 

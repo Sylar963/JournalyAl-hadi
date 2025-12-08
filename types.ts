@@ -20,12 +20,27 @@ export interface ThemeConfig {
 }
 
 
+export interface TradeDetails {
+  id: string;
+  type: 'Long Future' | 'Short Future' | 'BTO Call' | 'BTO Put' | 'STC Call' | 'STC Put' | 'STO Call' | 'STO Put' | 'BTC Call' | 'BTC Put';
+  symbol: string;
+  pnl?: number;
+  entryPrice?: number;
+  exitPrice?: number;
+  contracts?: number;
+  notes?: string;
+}
+
 export interface EmotionEntry {
   date: string; // YYYY-MM-DD
   emotion: EmotionType;
   intensity: number; // 1-10
   notes: string | null;
   imageUrl?: string; // base64 encoded image
+  pnl?: number;
+  tradingData?: {
+    trades: TradeDetails[];
+  };
 }
 
 export interface ReportAnalysis {
