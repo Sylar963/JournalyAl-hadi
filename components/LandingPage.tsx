@@ -10,7 +10,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   return (
-    <div className="min-h-screen bg-[#0c0c0e] text-white font-sans selection:bg-green-500/30">
+    <div className="min-h-screen bg-bg text-white font-sans selection:bg-white/20 selection:text-white overflow-hidden relative">
       <nav className="absolute top-0 left-0 w-full z-50 px-6 py-6">
         <div className="container mx-auto flex justify-between items-center">
           <div className="text-xl font-bold tracking-tighter flex items-center gap-2">
