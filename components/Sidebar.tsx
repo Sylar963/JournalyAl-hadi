@@ -131,8 +131,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
   return (
     <div className={`hidden md:flex flex-col ${isCollapsed ? 'w-20' : 'w-64'} glass-panel border-r-0 border-t-0 border-b-0 border-l-0 border-r border-[color:var(--glass-border)] p-4 transition-all duration-300 ease-in-out z-20`}>
       <div className="flex items-center mb-8">
-        <div className="w-8 h-8 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] rounded-lg flex-shrink-0 shadow-[0_0_15px_var(--accent-primary)]"></div>
-        {!isCollapsed && <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 ml-3 whitespace-nowrap tracking-tight">Deltajournal</h1>}
+        <div className="w-8 h-8 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] rounded-lg flex-shrink-0 shadow-[0_0_15px_var(--accent-primary)] flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white">
+            <path d="M12 4L3 20H21L12 4Z" />
+          </svg>
+        </div>
+        {!isCollapsed && <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 ml-3 whitespace-nowrap tracking-tight">DeltaJournal</h1>}
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
