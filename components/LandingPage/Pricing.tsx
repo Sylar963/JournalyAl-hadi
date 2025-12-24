@@ -84,7 +84,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
       description: "Advanced psychological analytics for elite traders seeking mathematical precision in their discipline.",
       subText: "Stay tuned for launch",
       features: [
-        "Real-Time Tilt Detection",
+        "Exchange Integration (Bybit, Binance, OKX)",
         "Strategy Performance Matrices",
         "Advanced Risk-Psych Correlation",
         "Dedicated Support Roadmap",
@@ -136,6 +136,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
                 Annual
               </button>
             </div>
+            {/* 
             <AnimatePresence>
               {isAnnual && (
                 <motion.div
@@ -148,6 +149,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
                 </motion.div>
               )}
             </AnimatePresence>
+            */}
           </div>
         </motion.div>
 
