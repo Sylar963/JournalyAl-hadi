@@ -67,7 +67,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         </div>
         <div className="text-right">
              <span className="block text-gray-700 mb-1">{t('hero.version')}</span>
-             <span>2.0.4 [BETA]</span>
+             <span>2.0.9 [BETA]</span>
         </div>
       </div>
     </section>
