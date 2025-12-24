@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addLead } from '../services/dataService';
 import { getErrorMessage } from '../utils/errorHelpers';
+import { useI18n } from '../hooks/useI18n';
 
 interface EmailCaptureModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface EmailCaptureModalProps {
 }
 
 const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -79,8 +81,8 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">You're on the list!</h3>
-                    <p className="text-gray-400">We'll let you know when the PRO Terminal is ready.</p>
+                    <h3 className="text-2xl font-bold text-white mb-2">{t('email_capture.success_title')}</h3>
+                    <p className="text-gray-400">{t('email_capture.success_subtitle')}</p>
                   </motion.div>
                 ) : (
                   <>
@@ -90,9 +92,9 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                          </svg>
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-2">Get notified</h3>
+                      <h3 className="text-2xl font-bold text-white mb-2">{t('email_capture.title')}</h3>
                       <p className="text-gray-400 text-sm">
-                        Be the first to know when the PRO Terminal launches. Early access for the first 100 traders.
+                        {t('email_capture.subtitle')}
                       </p>
                     </div>
 
@@ -100,7 +102,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                       <div className="relative">
                         <input
                           type="email"
-                          placeholder="Enter your email"
+                          placeholder={t('email_capture.placeholder')}
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
@@ -124,7 +126,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                           <>
-                            Notify me
+                            {t('email_capture.button')}
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>

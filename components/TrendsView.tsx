@@ -19,6 +19,8 @@ import { getTrendsSummary } from '../services/geminiService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
 import PNLCorrelationView from './PNLCorrelationView';
+import { useI18n } from '../hooks/useI18n';
+import { TranslationKey } from '../utils/translations';
 
 ChartJS.register(
   CategoryScale,
@@ -38,6 +40,7 @@ interface TrendsViewProps {
 }
 
 const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
+    const { t, language } = useI18n();
     const [aiSummary, setAiSummary] = useState('');
     const [isSummaryLoading, setIsSummaryLoading] = useState(false);
     const [summaryError, setSummaryError] = useState('');
@@ -68,10 +71,10 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
 
         return {
             total: currentMonthEntries.length,
-            mostFrequent: mostFrequent ? EMOTIONS_CONFIG[mostFrequent].label : 'N/A',
+            mostFrequent: mostFrequent ? t(`emotion.${mostFrequent}` as TranslationKey) : 'N/A',
             avgIntensity: parseFloat((totalIntensity / currentMonthEntries.length).toFixed(1)),
         };
-    }, [currentMonthEntries]);
+    }, [currentMonthEntries, t]);
 
     const emotionColors: Record<string, {bg: string, border: string}> = {
         Happy: {bg: 'rgba(250, 204, 21, 0.5)', border: 'rgb(250, 204, 21)'}, // yellow-400
@@ -82,24 +85,23 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     };
 
     const distributionChartData = useMemo(() => {
-        const labels = Object.keys(EMOTIONS_CONFIG).map(key => EMOTIONS_CONFIG[key as EmotionType].label);
-        const data = labels.map(label => {
-            const emotionKey = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).find(key => EMOTIONS_CONFIG[key].label === label);
+        const labels = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => t(`emotion.${key}` as TranslationKey));
+        const data = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(emotionKey => {
             return currentMonthEntries.filter(e => e.emotion === emotionKey).length;
         });
 
         return {
             labels,
             datasets: [{
-                label: 'Emotion Count',
+                label: t('trends.chart_emotion_count'),
                 data,
-                backgroundColor: labels.map(l => emotionColors[l]?.bg || 'rgba(255, 255, 255, 0.5)'),
-                borderColor: labels.map(l => emotionColors[l]?.border || 'rgb(255, 255, 255)'),
+                backgroundColor: (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => emotionColors[EMOTIONS_CONFIG[key].label]?.bg || 'rgba(255, 255, 255, 0.5)'),
+                borderColor: (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => emotionColors[EMOTIONS_CONFIG[key].label]?.border || 'rgb(255, 255, 255)'),
                 borderWidth: 1,
                 borderRadius: 4,
             }]
         };
-    }, [currentMonthEntries]);
+    }, [currentMonthEntries, t]);
 
 
     const barChartOptions = {
@@ -126,7 +128,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                     label: (context: any) => {
                          const count = context.parsed.y;
                          if (count !== null) {
-                            return `${count} ${count === 1 ? 'day' : 'days'}`;
+                            return `${count} ${count === 1 ? t('trends.chart_day') : t('trends.chart_days')}`;
                          }
                          return '';
                     },
@@ -149,16 +151,16 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     const intensityChartData = useMemo(() => {
         if (currentMonthEntries.length === 0) return { labels: [], datasets: [] };
       
-        const sortedEntries = [...currentMonthEntries].sort((a, b) => new Date(a.date).getDate() - new Date(b.date).getDate());
+        const sortedEntries = [...currentMonthEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
-        const labels = sortedEntries.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        const labels = sortedEntries.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }));
         const data = sortedEntries.map(e => e.intensity);
         const pointBgColors = sortedEntries.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion].label]?.border || '#ffffff');
       
         return {
           labels,
           datasets: [{
-            label: 'Intensity',
+            label: t('trends.chart_intensity_label'),
             data,
             fill: true,
             backgroundColor: 'rgba(250, 204, 21, 0.05)',
@@ -170,7 +172,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             pointHoverRadius: 7,
           }]
         };
-    }, [currentMonthEntries]);
+    }, [currentMonthEntries, t, language]);
       
     const intensityChartOptions = {
         responsive: true,
@@ -183,10 +185,11 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                 callbacks: {
                     title: (tooltipItems: any[]) => {
                         const index = tooltipItems[0].dataIndex;
-                        const entry = [...currentMonthEntries].sort((a, b) => new Date(a.date).getDate() - new Date(b.date).getDate())[index];
-                        return `${tooltipItems[0].label} - ${EMOTIONS_CONFIG[entry.emotion].label}`;
+                        const sorted = [...currentMonthEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                        const entry = sorted[index];
+                        return `${tooltipItems[0].label} - ${t(`emotion.${entry.emotion}` as TranslationKey)}`;
                     },
-                    label: (context: any) => `Intensity: ${context.parsed.y}`,
+                    label: (context: any) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
                 }
             }
         },
@@ -213,9 +216,9 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         });
         const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
         return {
-            labels: WEEK_DAYS,
+            labels: WEEK_DAYS.map(day => t(`weekday.${day.toLowerCase()}` as TranslationKey)),
             datasets: emotionKeys.map(emotion => ({
-                label: EMOTIONS_CONFIG[emotion].label,
+                label: t(`emotion.${emotion}` as TranslationKey),
                 data: counts[emotion],
                 backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.bg,
                 borderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
@@ -226,7 +229,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                 pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
             }))
         };
-    }, [currentMonthEntries]);
+    }, [currentMonthEntries, t]);
 
     const radarChartOptions = {
         responsive: true,
@@ -238,7 +241,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                 ...barChartOptions.plugins.tooltip,
                 callbacks: {
                     title: (tooltipItems: any[]) => tooltipItems[0].label,
-                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? 'day' : 'days'}`,
+                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? t('trends.chart_day') : t('trends.chart_days')}`,
                 }
             }
         },
@@ -277,7 +280,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
   return (
     <div className="space-y-6 animate-content-entry">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-white">Trends Analysis</h1>
+        <h1 className="text-2xl font-bold text-white">{t('trends.title')}</h1>
         
         {/* Tab Navigation */}
         <div className="flex p-1 bg-black/40 rounded-xl border border-[color:var(--glass-border)] w-full md:w-auto">
@@ -289,7 +292,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                         : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                 }`}
             >
-                General
+                {t('trends.tab_general')}
             </button>
             <button
                 onClick={() => setActiveTab('pnl')}
@@ -299,7 +302,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                         : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                 }`}
             >
-                PNL Index
+                {t('trends.tab_pnl')}
             </button>
         </div>
       </div>
@@ -310,52 +313,52 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-sm font-medium text-gray-400">Total Entries</h3>
+                <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_total')}</h3>
                 <p className="text-3xl font-bold text-white mt-1">{stats.total}</p>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-sm font-medium text-gray-400">Most Frequent</h3>
+                <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_frequent')}</h3>
                 <p className="text-3xl font-bold text-white mt-1">{stats.mostFrequent}</p>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-sm font-medium text-gray-400">Avg. Intensity</h3>
+                <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_intensity')}</h3>
                 <p className="text-3xl font-bold text-white mt-1">{stats.avgIntensity}</p>
                 </div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="glass-panel p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_distribution')}</h3>
                     <div className="h-80">
                     {currentMonthEntries.length > 0 ? (
                         <Bar options={barChartOptions as any} data={distributionChartData} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-500">
-                            No data for this month to display.
+                            {t('trends.no_data')}
                         </div>
                     )}
                     </div>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">Intensity Over Time</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_intensity')}</h3>
                     <div className="h-80">
                     {currentMonthEntries.length > 0 ? (
                         <Line options={intensityChartOptions as any} data={intensityChartData} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-500">
-                            Log emotions to see intensity trends.
+                            {t('trends.no_intensity')}
                         </div>
                     )}
                     </div>
                 </div>
                 <div className="glass-panel p-6 rounded-2xl lg:col-span-2">
-                    <h3 className="text-lg font-semibold text-white mb-4">Emotions by Day of Week</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_weekly')}</h3>
                     <div className="h-96">
                     {currentMonthEntries.length > 0 ? (
                         <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-500">
-                            No weekly data to analyze yet.
+                            {t('trends.no_weekly')}
                         </div>
                     )}
                     </div>
@@ -365,15 +368,15 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             <div className="glass-panel p-6 rounded-2xl">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div>
-                    <h3 className="text-lg font-semibold text-white">AI-Powered Summary</h3>
-                    <p className="text-sm text-gray-400 mt-1">Get an analysis of your emotional patterns this month.</p>
+                    <h3 className="text-lg font-semibold text-white">{t('trends.ai_title')}</h3>
+                    <p className="text-sm text-gray-400 mt-1">{t('trends.ai_subtitle')}</p>
                     </div>
                     <button onClick={handleGenerateSummary} disabled={isSummaryLoading || currentMonthEntries.length === 0} className="flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                         <IconSparkles className="w-5 h-5 mr-2" />
-                        {isSummaryLoading ? 'Analyzing...' : 'Generate Summary'}
+                        {isSummaryLoading ? t('trends.ai_analyzing') : t('trends.ai_button')}
                     </button>
                 </div>
-                {isSummaryLoading && <p className="text-center text-sm text-gray-400 mt-4">The AI is analyzing your monthly data...</p>}
+                {isSummaryLoading && <p className="text-center text-sm text-gray-400 mt-4">{t('trends.ai_thinking')}</p>}
                 {summaryError && <p className="text-center text-sm text-red-400 mt-4">{summaryError}</p>}
                 {aiSummary && (
                     <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
@@ -382,12 +385,12 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                 )}
                 {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length > 0 && (
                     <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
-                        Click "Generate Summary" to get started.
+                        {t('trends.ai_get_started')}
                     </p>
                 )}
                 {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length === 0 && (
                     <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
-                        Log some entries for the current month to enable AI summary.
+                        {t('trends.ai_log_entries')}
                     </p>
                 )}
             </div>

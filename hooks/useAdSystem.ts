@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { AD_MESSAGES, WISDOM_QUOTES } from '../constants';
+import { useI18n } from './useI18n';
+import { TranslationKey } from '../utils/translations';
 import IconReports from '../components/icons/IconReports';
 import IconSparkles from '../components/icons/IconSparkles';
 import IconSettings from '../components/icons/IconSettings';
@@ -22,6 +24,7 @@ const AD_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function useAdSystem(isUserLoggedIn: boolean) {
+  const { t } = useI18n();
   const [isAdVisible, setIsAdVisible] = useState(false);
   const [adContent, setAdContent] = useState<AdContent | null>(null);
   const adTimerRef = useRef<number | null>(null);
@@ -30,21 +33,26 @@ export function useAdSystem(isUserLoggedIn: boolean) {
     if (!isUserLoggedIn) return;
 
     // Make the wisdom quotes dynamic
-    const adPool = [...AD_MESSAGES];
-    const quoteAdIndex = adPool.findIndex(ad => ad.title === "A Moment of Wisdom");
-    
-    if (quoteAdIndex !== -1) {
-      adPool[quoteAdIndex] = {
-        ...adPool[quoteAdIndex],
-        message: WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
-      };
-    }
+    const adPool = [
+        { titleKey: 'ads.insights_title', messageKey: 'ads.insights_message', icon: 'reports' },
+        { titleKey: 'ads.wisdom_title', messageKey: 'wisdom', icon: 'sparkles' },
+        { titleKey: 'ads.personalize_title', messageKey: 'ads.personalize_message', icon: 'settings' },
+        { titleKey: 'ads.did_you_know_title', messageKey: 'ads.did_you_know_message', icon: 'upload' },
+        { titleKey: 'ads.consistency_title', messageKey: 'ads.consistency_message', icon: 'journal' },
+    ];
 
     const randomAd = adPool[Math.floor(Math.random() * adPool.length)];
+    let finalMessage = '';
+    if (randomAd.messageKey === 'wisdom') {
+        const randomIndex = Math.floor(Math.random() * 10);
+        finalMessage = t(`ads.wisdom.${randomIndex}` as TranslationKey);
+    } else {
+        finalMessage = t(randomAd.messageKey as TranslationKey);
+    }
 
     setAdContent({
-      title: randomAd.title,
-      message: randomAd.message,
+      title: t(randomAd.titleKey as TranslationKey),
+      message: finalMessage,
       icon: AD_ICONS[randomAd.icon] || React.createElement(IconSparkles, { className: "w-6 h-6" })
     });
     setIsAdVisible(true);

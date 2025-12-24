@@ -5,6 +5,7 @@ import IconPlus from './icons/IconPlus';
 import IconLogout from './icons/IconLogout';
 import Clock from './Clock';
 import { type UserProfile } from '../types';
+import { useI18n } from '../hooks/useI18n';
 
 interface HeaderProps {
     onNewEntryClick: () => void;
@@ -23,6 +24,7 @@ const getInitials = (name: string): string => {
 };
 
 const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onQuestsClick, onSignOut }) => {
+  const { t } = useI18n();
   return (
     <header className="flex-shrink-0 glass-panel border-b-0 border-t-0 border-l-0 border-r-0 border-b border-[color:var(--glass-border)] rounded-none z-10">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
@@ -35,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
           </div>
           <input
             type="text"
-            placeholder="Search notes..."
+            placeholder={t('dashboard.header.search')}
             className="w-full pl-10 pr-4 py-2 bg-white/5 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition text-gray-200 placeholder-gray-500"
           />
         </div>
@@ -44,12 +46,12 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
         <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
           <button onClick={onNewEntryClick} className="flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-[var(--accent-primary)] shadow-[0_0_15px_var(--chart-glow-color-1)]">
             <IconPlus className="w-5 h-5 mr-2 -ml-1" />
-            New Entry
+            {t('dashboard.header.new_entry')}
           </button>
           
           <Clock />
           
-          <button id="quests-toggle-button" onClick={onQuestsClick} className="p-2 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition-colors" title="My Quests">
+          <button id="quests-toggle-button" onClick={onQuestsClick} className="p-2 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition-colors" title={t('dashboard.header.quests')}>
             <IconQuest className="w-6 h-6" />
           </button>
 
@@ -67,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
             </div>
           </button>
           
-          <button onClick={onSignOut} title="Sign Out" className="p-2 rounded-full text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-colors">
+          <button onClick={onSignOut} title={t('dashboard.sidebar.signout')} className="p-2 rounded-full text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-colors">
             <IconLogout className="w-6 h-6" />
           </button>
         </div>

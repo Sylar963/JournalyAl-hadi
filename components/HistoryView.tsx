@@ -16,6 +16,8 @@ import {
 import { type EmotionEntry, type EmotionType, type MonthlySummary } from '../types';
 import { EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
 import IconHistory from './icons/IconHistory';
+import { useI18n } from '../hooks/useI18n';
+import { TranslationKey } from '../utils/translations';
 
 ChartJS.register(
   CategoryScale,
@@ -43,6 +45,7 @@ const emotionColors: Record<string, {bg: string, border: string}> = {
 };
 
 const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEntry[] }> = ({ year, month, entries }) => {
+    const { t } = useI18n();
     const entriesMap = useMemo(() => new Map(entries.map(e => [e.date, e])), [entries]);
 
     const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -68,7 +71,7 @@ const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEn
                   key={dateKey} 
                   className={`w-full aspect-square rounded-sm ${config.solidColor}`} 
                   style={{ opacity: intensityOpacity }} 
-                  title={`${config.label} (${entry.intensity}/10) on ${date.toLocaleDateString()}`}
+                  title={`${t(`emotion.${entry.emotion}` as TranslationKey)} (${entry.intensity}/10) on ${date.toLocaleDateString()}`}
                 >
                 </div>
             );
@@ -81,7 +84,7 @@ const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEn
     return (
         <>
             <div className="grid grid-cols-7 gap-1">
-                {WEEK_DAYS.map(day => <div key={day} className="text-xs text-center text-gray-500 font-medium uppercase">{day}</div>)}
+                {WEEK_DAYS.map(day => <div key={day} className="text-xs text-center text-gray-500 font-medium uppercase">{t(`weekday.${day.toLowerCase()}` as TranslationKey)}</div>)}
             </div>
             <div className="grid grid-cols-7 gap-1 mt-2">
                 {days}
@@ -92,7 +95,8 @@ const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEn
 
 
 const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEntry[] }> = ({ summary, entries }) => {
-    const monthName = new Date(summary.year, summary.month).toLocaleString('default', { month: 'long' });
+    const { t, language } = useI18n();
+    const monthName = t(`month.${summary.month}` as TranslationKey);
     const capitalizedMonthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
     const chartOptions = {
@@ -119,7 +123,7 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                     label: (context: any) => {
                         const count = context.parsed.y;
                         if (count !== null) {
-                           return `${count} ${count === 1 ? 'day' : 'days'}`;
+                           return `${count} ${count === 1 ? t('trends.chart_day') : t('trends.chart_days')}`;
                         }
                         return '';
                    },
@@ -140,24 +144,23 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
     };
 
     const distChartData = useMemo(() => {
-        const labels = Object.keys(EMOTIONS_CONFIG).map(key => EMOTIONS_CONFIG[key as EmotionType].label);
-        const data = labels.map(label => {
-            const emotionKey = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).find(key => EMOTIONS_CONFIG[key].label === label);
-            return emotionKey ? summary.emotionCounts[emotionKey] || 0 : 0;
+        const labels = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => t(`emotion.${key}` as TranslationKey));
+        const data = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(emotionKey => {
+            return summary.emotionCounts[emotionKey] || 0;
         });
 
         return {
             labels,
             datasets: [{
-                label: 'Emotion Count',
+                label: t('trends.chart_emotion_count'),
                 data,
-                backgroundColor: labels.map(l => emotionColors[l]?.bg || 'rgba(255, 255, 255, 0.5)'),
-                borderColor: labels.map(l => emotionColors[l]?.border || 'rgb(255, 255, 255)'),
+                backgroundColor: (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => emotionColors[EMOTIONS_CONFIG[key].label]?.bg || 'rgba(255, 255, 255, 0.5)'),
+                borderColor: (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => emotionColors[EMOTIONS_CONFIG[key].label]?.border || 'rgb(255, 255, 255)'),
                 borderWidth: 1,
                 borderRadius: 4,
             }]
         };
-    }, [summary.emotionCounts]);
+    }, [summary.emotionCounts, t]);
 
     const sortedEntriesForIntensity = useMemo(() => {
         return [...entries].sort((a, b) => new Date(a.date).getDate() - new Date(b.date).getDate());
@@ -166,14 +169,14 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
     const intensityChartData = useMemo(() => {
         if (sortedEntriesForIntensity.length === 0) return { labels: [], datasets: [] };
         
-        const labels = sortedEntriesForIntensity.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+        const labels = sortedEntriesForIntensity.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }));
         const data = sortedEntriesForIntensity.map(e => e.intensity);
         const pointBgColors = sortedEntriesForIntensity.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion].label]?.border || '#ffffff');
       
         return {
           labels,
           datasets: [{
-            label: 'Intensity',
+            label: t('trends.chart_intensity_label'),
             data,
             fill: true,
             backgroundColor: 'rgba(250, 204, 21, 0.05)',
@@ -185,7 +188,7 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
             pointHoverRadius: 7,
           }]
         };
-    }, [sortedEntriesForIntensity]);
+    }, [sortedEntriesForIntensity, language, t]);
 
     const intensityChartOptions = {
         ...chartOptions,
@@ -197,9 +200,9 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                     title: (tooltipItems: any[]) => {
                         const index = tooltipItems[0].dataIndex;
                         const entry = sortedEntriesForIntensity[index];
-                        return `${tooltipItems[0].label} - ${EMOTIONS_CONFIG[entry.emotion].label}`;
+                        return `${tooltipItems[0].label} - ${t(`emotion.${entry.emotion}` as TranslationKey)}`;
                     },
-                    label: (context: any) => `Intensity: ${context.parsed.y}`,
+                    label: (context: any) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
                 }
             }
         },
@@ -217,9 +220,9 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
         });
         const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
         return {
-            labels: WEEK_DAYS,
+            labels: WEEK_DAYS.map(day => t(`weekday.${day.toLowerCase()}` as TranslationKey)),
             datasets: emotionKeys.map(emotion => ({
-                label: EMOTIONS_CONFIG[emotion].label,
+                label: t(`emotion.${emotion}` as TranslationKey),
                 data: counts[emotion],
                 backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.bg,
                 borderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
@@ -230,7 +233,7 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                 pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
             }))
         };
-    }, [entries]);
+    }, [entries, t]);
 
     const radarChartOptions = {
         responsive: true,
@@ -242,7 +245,7 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                 ...chartOptions.plugins.tooltip,
                 callbacks: {
                     title: (tooltipItems: any[]) => tooltipItems[0].label,
-                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? 'day' : 'days'}`,
+                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? t('trends.chart_day') : t('trends.chart_days')}`,
                 }
             }
         },
@@ -267,46 +270,46 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
             <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{capitalizedMonthName} {summary.year}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 mb-8">
                 <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-sm font-medium text-gray-400">Total Entries</h3>
+                    <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_total')}</h3>
                     <p className="text-2xl font-bold text-white mt-1">{summary.totalEntries}</p>
                 </div>
                 <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-sm font-medium text-gray-400">Most Frequent</h3>
-                    <p className="text-2xl font-bold text-white mt-1">{summary.mostFrequent !== 'N/A' ? EMOTIONS_CONFIG[summary.mostFrequent].label : 'N/A'}</p>
+                    <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_frequent')}</h3>
+                    <p className="text-2xl font-bold text-white mt-1">{summary.mostFrequent !== 'N/A' ? t(`emotion.${summary.mostFrequent}` as TranslationKey) : 'N/A'}</p>
                 </div>
                 <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-sm font-medium text-gray-400">Avg. Intensity</h3>
+                    <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_intensity')}</h3>
                     <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity.toFixed(1)}</p>
                     <div className="w-full bg-white/10 rounded-full h-2 mt-2">
                         <div 
                             className="bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] h-2 rounded-full shadow-[0_0_10px_var(--chart-glow-color-1)]" 
                             style={{ width: `${(summary.avgIntensity / 10) * 100}%` }}
-                            title={`Average intensity: ${summary.avgIntensity.toFixed(1)} out of 10`}
+                            title={`${t('trends.stat_intensity')}: ${summary.avgIntensity.toFixed(1)} / 10`}
                         ></div>
                     </div>
                 </div>
             </div>
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">Emotion Distribution</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_distribution')}</h3>
                     <div className="h-64">
                         <Bar options={chartOptions as any} data={distChartData} />
                     </div>
                 </div>
                 <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">Intensity Over Time</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_intensity')}</h3>
                     <div className="h-64">
                          <Line options={intensityChartOptions as any} data={intensityChartData} />
                     </div>
                 </div>
                 <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">Emotions by Day of Week</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_weekly')}</h3>
                     <div className="h-64">
                         <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
                     </div>
                 </div>
                 <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">Daily Heatmap</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">{t('history.chart_heatmap')}</h3>
                     <MonthlyHeatmap year={summary.year} month={summary.month} entries={entries} />
                 </div>
             </div>
@@ -320,6 +323,7 @@ interface MonthlyData {
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
+    const { t } = useI18n();
     const monthlyData = useMemo<MonthlyData[]>(() => {
         const groupedByMonth: Record<string, EmotionEntry[]> = {};
         const today = new Date();
@@ -378,7 +382,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
 
     return (
         <div className="space-y-6 animate-content-entry">
-            <h1 className="text-2xl font-bold text-white">Monthly History</h1>
+            <h1 className="text-2xl font-bold text-white">{t('history.title')}</h1>
             
             {monthlyData.length > 0 ? (
                 <div className="space-y-6">
@@ -389,8 +393,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
             ) : (
                 <div className="text-center p-8 bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-800">
                      <IconHistory className="w-12 h-12 mx-auto text-gray-600" />
-                     <h3 className="mt-4 text-lg font-medium text-gray-400">Your history is empty</h3>
-                     <p className="mt-1 text-sm text-gray-500">Completed monthly summaries will appear here over time. Keep logging your entries!</p>
+                     <h3 className="mt-4 text-lg font-medium text-gray-400">{t('history.empty_title')}</h3>
+                     <p className="mt-1 text-sm text-gray-500">{t('history.empty_subtitle')}</p>
                  </div>
             )}
         </div>

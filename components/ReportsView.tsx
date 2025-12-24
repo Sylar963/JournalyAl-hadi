@@ -4,6 +4,7 @@ import { getReportAnalysis } from '../services/geminiService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
 import IconCalendar from './icons/IconCalendar';
+import { useI18n } from '../hooks/useI18n';
 
 // Helper to format date to YYYY-MM-DD
 const toISODateString = (date: Date): string => {
@@ -19,6 +20,7 @@ const ReportSection: React.FC<{title: string; content: string}> = ({ title, cont
 
 
 const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
+    const { t, language } = useI18n();
     const today = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
@@ -60,13 +62,13 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
     
     return (
         <div className="space-y-6 animate-content-entry">
-            <h1 className="text-2xl font-bold text-white">Wellness Reports</h1>
+            <h1 className="text-2xl font-bold text-white">{t('reports.title')}</h1>
             
             <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-lg font-semibold text-white mb-4">Select Date Range</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">{t('reports.select_range')}</h3>
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                     <div className="relative w-full sm:w-auto">
-                        <label htmlFor="start-date" className="block text-sm font-medium text-gray-400 mb-1">Start Date</label>
+                        <label htmlFor="start-date" className="block text-sm font-medium text-gray-400 mb-1">{t('reports.start_date')}</label>
                         <input 
                             type="date"
                             id="start-date"
@@ -77,7 +79,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                         />
                     </div>
                     <div className="relative w-full sm:w-auto">
-                        <label htmlFor="end-date" className="block text-sm font-medium text-gray-400 mb-1">End Date</label>
+                        <label htmlFor="end-date" className="block text-sm font-medium text-gray-400 mb-1">{t('reports.end_date')}</label>
                          <input 
                             type="date"
                             id="end-date"
@@ -95,12 +97,12 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                             className="w-full flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                          >
                             <IconSparkles className="w-5 h-5 mr-2" />
-                            {isLoading ? 'Generating...' : 'Generate Report'}
+                            {isLoading ? t('reports.generating') : t('reports.generate_button')}
                          </button>
                     </div>
                 </div>
                  {filteredEntries.length === 0 && !isLoading && (
-                     <p className="text-sm text-[var(--accent-primary)] mt-3">No entries found for the selected date range. Adjust the dates or add new entries.</p>
+                     <p className="text-sm text-[var(--accent-primary)] mt-3">{t('reports.no_entries')}</p>
                  )}
             </div>
 
@@ -109,7 +111,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                      <div role="status" className="animate-spin inline-block w-8 h-8 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full">
                          <span className="sr-only">Loading...</span>
                      </div>
-                     <p className="mt-4 text-gray-400">The AI is analyzing your data. This may take a moment...</p>
+                     <p className="mt-4 text-gray-400">{t('reports.ai_thinking')}</p>
                  </div>
             )}
             {error && (
@@ -122,22 +124,22 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
             {report && (
                 <div className="glass-panel p-6 rounded-2xl space-y-6 animate-fade-in">
                     <div className="border-b border-[color:var(--glass-border)] pb-4">
-                        <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Wellness Report</h2>
-                        <p className="text-gray-400 text-sm">Analysis for {new Date(startDate+'T00:00:00').toLocaleDateString()} to {new Date(endDate+'T00:00:00').toLocaleDateString()}</p>
+                        <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{t('reports.title')}</h2>
+                        <p className="text-gray-400 text-sm">{t('reports.analysis_for')} {new Date(startDate+'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')} {t('reports.to')} {new Date(endDate+'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US')}</p>
                     </div>
                     
-                    <ReportSection title="Overall Summary" content={report.summary} />
-                    <ReportSection title="Emotion Frequency" content={report.emotionFrequency} />
-                    <ReportSection title="Intensity Trends" content={report.intensityTrend} />
-                    <ReportSection title="Reflective Insights" content={report.insights} />
+                    <ReportSection title={t('reports.summary')} content={report.summary} />
+                    <ReportSection title={t('reports.frequency')} content={report.emotionFrequency} />
+                    <ReportSection title={t('reports.trends')} content={report.intensityTrend} />
+                    <ReportSection title={t('reports.insights')} content={report.insights} />
                 </div>
             )}
 
             {!report && !isLoading && !error && (
                  <div className="text-center p-8 bg-white/5 rounded-2xl border-2 border-dashed border-[color:var(--glass-border)] backdrop-blur-sm">
                      <IconCalendar className="w-12 h-12 mx-auto text-gray-600" />
-                     <h3 className="mt-4 text-lg font-medium text-gray-400">Your report will appear here</h3>
-                     <p className="mt-1 text-sm text-gray-500">Select a date range and click "Generate Report" to get started.</p>
+                     <h3 className="mt-4 text-lg font-medium text-gray-400">{t('reports.placeholder_title')}</h3>
+                     <p className="mt-1 text-sm text-gray-500">{t('reports.placeholder_subtitle')}</p>
                  </div>
             )}
         </div>

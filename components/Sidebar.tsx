@@ -8,6 +8,7 @@ import IconPlus from './icons/IconPlus';
 import IconChevronsLeft from './icons/IconChevronsLeft';
 import { type ActiveView, type EmotionType, type UserProfile } from '../types';
 import { WISDOM_QUOTES } from '../constants';
+import { useI18n } from '../hooks/useI18n';
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -54,6 +55,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryClick, userProfile, onSaveProfile }) => {
+  const { t, language, setLanguage } = useI18n();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditingPurpose, setIsEditingPurpose] = useState(false);
   const [purposeText, setPurposeText] = useState(userProfile.journalPurpose || '');
@@ -140,39 +142,39 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-        {!isCollapsed && <h2 className="px-4 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Main Navigation</h2>}
+        {!isCollapsed && <h2 className="px-4 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">{t('dashboard.nav_title')}</h2>}
         <nav className="space-y-1">
           <NavItem 
             icon={<IconJournal className="w-5 h-5" />} 
-            label="Journal" 
+            label={t('dashboard.sidebar.journal')} 
             active={activeView === 'journal'} 
             onClick={() => onNavigate('journal')} 
             isCollapsed={isCollapsed} 
           />
           <NavItem 
             icon={<IconTrends className="w-5 h-5" />} 
-            label="Trends" 
+            label={t('dashboard.sidebar.trends')} 
             active={activeView === 'trends'} 
             onClick={() => onNavigate('trends')} 
             isCollapsed={isCollapsed} 
           />
           <NavItem 
             icon={<IconReports className="w-5 h-5" />} 
-            label="Reports" 
+            label={t('dashboard.sidebar.reports')} 
             active={activeView === 'reports'} 
             onClick={() => onNavigate('reports')} 
             isCollapsed={isCollapsed} 
           />
           <NavItem 
             icon={<IconHistory className="w-5 h-5" />} 
-            label="History" 
+            label={t('dashboard.sidebar.history')} 
             active={activeView === 'history'} 
             onClick={() => onNavigate('history')} 
             isCollapsed={isCollapsed} 
           />
           <NavItem 
             icon={<IconSettings className="w-5 h-5" />} 
-            label="Settings" 
+            label={t('dashboard.sidebar.settings')} 
             active={activeView === 'settings'} 
             onClick={() => onNavigate('settings')} 
             isCollapsed={isCollapsed} 
@@ -181,11 +183,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
         
         {!isCollapsed && (
           <>
-            <h2 className="px-4 mt-8 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Quick Actions</h2>
+            <h2 className="px-4 mt-8 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">{t('dashboard.sidebar.quick_actions')}</h2>
             <nav className="space-y-1">
-                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-[var(--accent-primary)]"/>} label="Log Happy" onClick={() => onNewEntryClick('happy')} />
-                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-blue-300"/>} label="Log Calm" onClick={() => onNewEntryClick('calm')} />
-                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-red-400"/>} label="Log Angry" onClick={() => onNewEntryClick('angry')} />
+                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-[var(--accent-primary)]"/>} label={t('dashboard.sidebar.log_happy')} onClick={() => onNewEntryClick('happy')} />
+                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-blue-300"/>} label={t('dashboard.sidebar.log_calm')} onClick={() => onNewEntryClick('calm')} />
+                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-red-400"/>} label={t('dashboard.sidebar.log_angry')} onClick={() => onNewEntryClick('angry')} />
             </nav>
           </>
         )}
@@ -198,7 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <h3 className="font-semibold text-white text-sm">My Journal's Purpose</h3>
+            <h3 className="font-semibold text-white text-sm">{t('dashboard.sidebar.purpose_title')}</h3>
             <div className="h-24 flex items-center justify-center">
               {isEditingPurpose ? (
                 <textarea
@@ -215,7 +217,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
                 </p>
               ) : (
                 <p className="text-sm text-gray-400 mt-1 italic text-center">
-                  {purposeText || "Click 'Edit' to set your journal's purpose."}
+                  {purposeText || t('dashboard.sidebar.purpose_placeholder')}
                 </p>
               )}
             </div>
@@ -226,13 +228,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
                     onClick={handleSaveClick}
                     className="flex-1 bg-[var(--accent-primary)] text-white py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all shadow-lg shadow-[var(--chart-glow-color-1)]"
                   >
-                    Save
+                    {t('common.save')}
                   </button>
                   <button 
                     onClick={handleCancelClick}
                     className="flex-1 bg-white/10 text-white py-2 rounded-lg text-sm font-medium hover:bg-white/20 transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </div>
               ) : (
@@ -240,20 +242,35 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
                   onClick={handleEditClick}
                   className="w-full bg-white/10 text-white py-2 rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/5"
                 >
-                  Edit
+                  {t('dashboard.sidebar.edit')}
                 </button>
               )}
             </div>
           </div>
         )}
-         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`flex items-center w-full p-2 text-gray-400 hover:bg-white/10 hover:text-white rounded-lg transition-colors ${isCollapsed ? 'justify-center' : ''}`}
-          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <IconChevronsLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed && 'rotate-180'}`} />
-          {!isCollapsed && <span className="ml-2 text-sm font-medium">Collapse</span>}
-        </button>
+         <div className="flex flex-col gap-2">
+           {!isCollapsed && (
+              <button 
+                onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+                className="flex items-center w-full p-2 text-xs font-mono text-gray-500 hover:bg-white/5 hover:text-white rounded-lg transition-all border border-white/5 group"
+              >
+                <span className="mr-auto">LANGUAGE</span>
+                <div className="flex items-center gap-2">
+                  <span className={language === 'en' ? 'text-white font-bold' : 'text-gray-600'}>EN</span>
+                  <span className="text-gray-800">/</span>
+                  <span className={language === 'es' ? 'text-white font-bold' : 'text-gray-600'}>ES</span>
+                </div>
+              </button>
+           )}
+           <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`flex items-center w-full p-2 text-gray-400 hover:bg-white/10 hover:text-white rounded-lg transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+            title={isCollapsed ? t('dashboard.sidebar.expand') : t('dashboard.sidebar.collapse')}
+          >
+            <IconChevronsLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed && 'rotate-180'}`} />
+            {!isCollapsed && <span className="ml-2 text-sm font-medium">{t('dashboard.sidebar.collapse')}</span>}
+          </button>
+         </div>
       </div>
     </div>
   );

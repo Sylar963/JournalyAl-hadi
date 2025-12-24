@@ -16,6 +16,7 @@ import Background from './components/Background';
 import GridOverlay from './components/GridOverlay';
 import CustomCursor from './components/CustomCursor';
 import { ThemeWrapper } from './components/ThemeWrapper';
+import { I18nProvider } from './hooks/useI18n';
 
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
@@ -23,7 +24,7 @@ import { useAuth } from './hooks/useAuth';
 import { useAdSystem } from './hooks/useAdSystem';
 import { useJournalData } from './hooks/useJournalData';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const { session, loading: isAuthLoading, signOut, isSupabaseConfigured } = useAuth();
   const { entries, quests, userProfile, loading: isDataLoading, error, saveEntry, deleteEntry, saveProfile, addQuest, toggleQuest, deleteQuest } = useJournalData(session, isSupabaseConfigured);
   const { isAdVisible, adContent, closeAd } = useAdSystem(!!session);
@@ -108,7 +109,8 @@ const App: React.FC = () => {
   const effectiveTheme = session ? theme : 'twilight';
 
   return (
-    <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
+
+      <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
       <CustomCursor />
       {(!showLanding || session) && (
         <>
@@ -206,7 +208,16 @@ const App: React.FC = () => {
           />
         )}
       </div>
-    </ThemeWrapper>
+      </ThemeWrapper>
+
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
   );
 };
 

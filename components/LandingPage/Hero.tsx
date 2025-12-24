@@ -1,10 +1,13 @@
 import WarpBackground from './WarpBackground';
+import { useI18n } from '../../hooks/useI18n';
 
 interface HeroProps {
   onGetStarted: () => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
+  const { t } = useI18n();
+
   return (
     <section className="relative overflow-hidden bg-bg text-white h-screen flex flex-col items-center justify-center">
       {/* Background with Warp Effect */}
@@ -25,19 +28,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         <div className="text-center mb-12 select-none relative w-full max-w-7xl">
           <div className="relative">
              <h1 className="font-heading font-bold text-[12vw] leading-[0.8] tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/50 animate-fade-in mix-blend-overlay">
-              DELTA
+              {t('hero.title.delta')}
              </h1>
              <h1 className="font-heading font-bold text-[12vw] leading-[0.8] tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/50 animate-slide-up opacity-0 absolute top-0 left-0 w-full blur-sm" style={{ animationDelay: '0.2s' }}>
-              DELTA
+              {t('hero.title.delta')}
              </h1>
           </div>
           
           <h1 className="font-heading font-bold text-[12vw] leading-[0.8] tracking-tighter text-white/90 animate-slide-up opacity-0" style={{ animationDelay: '0.1s' }}>
-            JOURNAL
+            {t('hero.title.journal')}
           </h1>
 
           <p className="font-mono text-sm md:text-base text-zinc-400 mt-8 max-w-xl mx-auto uppercase tracking-widest opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-            [ Knowledge at Scale ]
+            {t('hero.subtitle')}
           </p>
         </div>
         
@@ -48,7 +51,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             className="group relative px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-white rounded-full transition-all duration-300 backdrop-blur-md overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            <span className="relative font-mono text-sm tracking-wider">START CREATING</span>
+            <span className="relative font-mono text-sm tracking-wider">{t('hero.cta')}</span>
           </button>
         </div>
       </div>
@@ -56,14 +59,14 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       {/* Footer / Status Line */}
       <div className="absolute bottom-10 left-0 w-full px-10 flex justify-between items-end text-xs font-mono text-zinc-500 z-20">
         <div>
-           <span className="block text-zinc-700 mb-1">SYSTEM STATUS</span>
+           <span className="block text-zinc-700 mb-1">{t('hero.status')}</span>
            <span className="flex items-center gap-2 text-green-500">
              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-             OPERATIONAL
+             {t('hero.operational')}
            </span>
         </div>
         <div className="text-right">
-             <span className="block text-gray-700 mb-1">VERSION</span>
+             <span className="block text-gray-700 mb-1">{t('hero.version')}</span>
              <span>2.0.4 [BETA]</span>
         </div>
       </div>

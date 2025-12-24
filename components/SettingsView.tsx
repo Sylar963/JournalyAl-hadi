@@ -1,6 +1,8 @@
 import React from 'react';
 import { type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
+import { useI18n } from '../hooks/useI18n';
+import { TranslationKey } from '../utils/translations';
 
 interface SettingsViewProps {
   currentTheme: Theme;
@@ -8,13 +10,14 @@ interface SettingsViewProps {
 }
 
 const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange }) => {
+  const { t } = useI18n();
   return (
     <div className="space-y-6 animate-content-entry">
-      <h1 className="text-2xl font-bold text-white">Settings</h1>
+      <h1 className="text-2xl font-bold text-white">{t('settings.title')}</h1>
       
       <div className="glass-panel p-6 rounded-2xl">
-        <h2 className="text-lg font-semibold text-white mb-4">Appearance</h2>
-        <p className="text-sm text-gray-400 mb-6">Choose a theme to personalize your journal's look and feel.</p>
+        <h2 className="text-lg font-semibold text-white mb-4">{t('settings.appearance_title')}</h2>
+        <p className="text-sm text-gray-400 mb-6">{t('settings.appearance_subtitle')}</p>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {THEMES_CONFIG.map((theme) => {
@@ -30,7 +33,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 }`}
                 aria-pressed={isActive}
               >
-                <h3 className="font-semibold text-white">{theme.label}</h3>
+                <h3 className="font-semibold text-white">{t(`theme.${theme.id}` as TranslationKey)}</h3>
                 <div className="flex items-center space-x-2 mt-3">
                   <div className={`w-6 h-6 rounded-full ${theme.colors.background}`}></div>
                   <div className={`w-6 h-6 rounded-full ${theme.colors.primary}`}></div>

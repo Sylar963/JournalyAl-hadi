@@ -4,6 +4,8 @@ import { type EmotionEntry, type EmotionType, type TradeDetails } from '../types
 import { EMOTIONS_CONFIG } from '../constants';
 import { getEmotionInsight } from '../services/geminiService';
 import { getErrorMessage } from '../utils/errorHelpers';
+import { useI18n } from '../hooks/useI18n';
+import { TranslationKey } from '../utils/translations';
 import IconSparkles from './icons/IconSparkles';
 import IconUpload from './icons/IconUpload';
 import IconTrash from './icons/IconTrash';
@@ -20,6 +22,7 @@ interface EntryModalProps {
 }
 
 const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDelete, selectedDate, entry, initialEmotion }) => {
+  const { t, language } = useI18n();
   const [activeTab, setActiveTab] = useState<'journal' | 'trading'>('journal');
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(entry?.emotion ?? initialEmotion ?? null);
   const [intensity, setIntensity] = useState<number>(entry?.intensity ?? 5);
@@ -206,7 +209,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setOperationError(null);
     try {
         await onDelete();
-        showConfirmation('Entry Deleted!');
+        showConfirmation(t('modal.entry.delete'));
     } catch (err: unknown) {
         const message = getErrorMessage(err);
         setOperationError(message || 'Failed to delete entry.');
@@ -289,7 +292,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                     }`}
                 >
-                    Journal
+                    {t('modal.entry.tab_journal')}
                     {activeTab === 'journal' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050507] z-10"></div>}
                 </button>
                 <button
@@ -300,7 +303,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                     }`}
                 >
-                    Trading
+                    {t('modal.entry.tab_trading')}
                     {activeTab === 'trading' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050507] z-10"></div>}
                 </button>
                 
@@ -313,9 +316,11 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
               <div className="flex justify-between items-start">
                 <div>
                     <h2 id="entry-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
-                        {activeTab === 'journal' ? 'Your Entry' : 'Trading Log'}
+                        {activeTab === 'journal' ? t('modal.entry.title_journal') : t('modal.entry.title_trading')}
                     </h2>
-                    <p className="text-gray-400 text-sm">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p className="text-gray-400 text-sm">
+                      {selectedDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
                 </div>
               </div>
             </div>
@@ -324,7 +329,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
               {activeTab === 'journal' ? (
                   <>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">How are you feeling?</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.emotion_label')}</label>
                         <div className="grid grid-cols-5 gap-3">
                         {emotionKeys.map(key => {
                             const config = EMOTIONS_CONFIG[key];
@@ -340,7 +345,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 }`}
                                 >
                                 <span className="text-3xl filter drop-shadow-md">{config.emoji}</span>
-                                <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--accent-primary)]' : 'text-gray-400'}`}>{config.label}</span>
+                                <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--accent-primary)]' : 'text-gray-400'}`}>
+                                  {t(`emotion.${key}` as TranslationKey)}
+                                </span>
                                 </button>
                             )
                         })}
@@ -349,12 +356,12 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     
                     {!selectedEmotion && (
                         <div className="text-center text-sm text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 p-2 rounded-lg border border-[var(--accent-primary)]/20">
-                        Please select an emotion above to save your entry.
+                           {language === 'es' ? 'Por favor selecciona un sentimiento arriba para guardar tu entrada.' : 'Please select an emotion above to save your entry.'}
                         </div>
                     )}
     
                     <div>
-                        <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">Intensity: <span className="font-bold text-[var(--accent-primary)]">{intensity}</span></label>
+                        <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.intensity_label')}: <span className="font-bold text-[var(--accent-primary)]">{intensity}</span></label>
                         <input
                         type="range"
                         id="intensity"
@@ -367,13 +374,13 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     </div>
     
                     <div>
-                        <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">Notes</label>
+                        <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.notes_label')}</label>
                         <textarea
                         id="notes"
                         rows={4}
                         value={notes}
                         onChange={e => setNotes(e.target.value)}
-                        placeholder="What happened today?"
+                        placeholder={t('modal.entry.notes_placeholder')}
                         className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
                         ></textarea>
                     </div>
@@ -389,14 +396,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 className="flex items-center bg-red-500/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors backdrop-blur-md"
                                 >
                                 <IconTrash className="w-4 h-4 mr-2" />
-                                Remove Image
+                                {t('modal.entry.remove_image')}
                                 </button>
                             </div>
                             </div>
                         ) : (
                             <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[color:var(--glass-border)] rounded-xl hover:bg-white/5 hover:border-[var(--accent-primary)]/50 transition-all group">
                             <IconUpload className="w-8 h-8 text-gray-500 mb-2 group-hover:text-[var(--accent-primary)] transition-colors" />
-                            <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">Upload an image</span>
+                            <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">{t('modal.entry.upload_image')}</span>
                             <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
                             <input id="image-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
                             </label>
@@ -407,9 +414,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                         <div>
                             <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="w-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                                 <IconSparkles className="w-5 h-5 mr-2" />
-                                {isInsightLoading ? 'Generating...' : 'Get AI Insight'}
+                                {isInsightLoading ? t('modal.entry.generating') : t('modal.entry.get_insight')}
                             </button>
-                            {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2 animate-pulse">The AI is thinking...</p>}
+                            {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2 animate-pulse">{t('modal.entry.ai_thinking')}</p>}
                             {aiError && <p className="text-center text-sm text-red-400 mt-2">{aiError}</p>}
                             {aiInsight && (
                                 <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
@@ -423,7 +430,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                   <div className="space-y-6">
                      {/* Daily PNL Input */}
                       <div>
-                        <label htmlFor="daily-pnl" className="block text-sm font-medium text-gray-300 mb-2">Daily PNL ($)</label>
+                        <label htmlFor="daily-pnl" className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.daily_pnl')}</label>
                         <input
                           type="number"
                           id="daily-pnl"
@@ -441,7 +448,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     
                       {/* Add New Trade Form */}
                       <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)]">
-                         <h3 className="text-white font-medium mb-3 text-sm">Log New Trade</h3>
+                         <h3 className="text-white font-medium mb-3 text-sm">{t('modal.entry.log_new_trade')}</h3>
                          <div className="grid grid-cols-2 gap-3 mb-3">
                             <select 
                                 value={tradeType}
@@ -452,7 +459,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             </select>
                             <input 
                                 type="text" 
-                                placeholder="Symbol (e.g. NQ, TSLA)"
+                                placeholder={t('modal.entry.symbol_placeholder')}
                                 value={tradeSymbol}
                                 onChange={e => setTradeSymbol(e.target.value)}
                                 className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white uppercase"
@@ -461,14 +468,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                          <div className="grid grid-cols-2 gap-3 mb-3">
                              <input 
                                 type="number" 
-                                placeholder="PNL (Optional)"
+                                placeholder={t('modal.entry.pnl_placeholder')}
                                 value={tradePnl}
                                 onChange={e => setTradePnl(e.target.value)}
                                 className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
                             />
                             <input 
                                 type="text" 
-                                placeholder="Notes..."
+                                placeholder={t('modal.entry.notes_trade_placeholder')}
                                 value={tradeNotes}
                                 onChange={e => setTradeNotes(e.target.value)}
                                 className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
@@ -479,14 +486,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             disabled={!tradeSymbol}
                             className="w-full bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/50 py-2 rounded-lg text-sm font-medium hover:bg-[var(--accent-primary)]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                          >
-                            Add Trade
+                            {t('modal.entry.add_trade')}
                          </button>
                       </div>
     
                       {/* Trades List */}
                       {trades.length > 0 && (
                           <div className="space-y-2">
-                              <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Today's Trades</h3>
+                              <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{t('modal.entry.todays_trades')}</h3>
                               {trades.map((t) => (
                                   <div key={t.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-[color:var(--glass-border)]">
                                       <div>
@@ -528,7 +535,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     <>
                         {operationError && (
                             <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-xl text-sm backdrop-blur-sm">
-                                <p className="font-bold mb-1">Operation Failed</p>
+                                <p className="font-bold mb-1">{t('common.operation_failed')}</p>
                                 <p className="text-red-200">{operationError}</p>
                             </div>
                         )}
@@ -536,12 +543,12 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             <div>
                                 {entry && (
                                     <button onClick={handleDelete} disabled={isSaving || isDeleting} className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                                        {isDeleting ? 'Deleting...' : 'Delete Entry'}
+                                        {isDeleting ? t('modal.entry.deleting') : t('modal.entry.delete')}
                                     </button>
                                 )}
                             </div>
                             <div className="flex space-x-3">
-                                <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-white/10">Cancel</button>
+                                <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-white/10">{t('common.cancel')}</button>
                                 <button 
                                     onClick={handleSave} 
                                     disabled={!selectedEmotion || isSaving || isDeleting}
@@ -550,7 +557,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 >
                                     {isSaving ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
-                                    ) : 'Save Entry'}
+                                    ) : t('modal.entry.save')}
                                 </button>
                             </div>
                         </div>
@@ -595,7 +602,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 transition={{ delay: 0.4 }}
                 className="text-2xl font-bold text-white mb-2"
              >
-                 Journal Entry Saved
+                 {t('modal.entry.success_title')}
              </motion.h3>
              
              <motion.p 
@@ -604,7 +611,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 transition={{ delay: 0.5 }}
                 className="text-gray-400 text-sm"
              >
-                 Your thoughts have been securely recorded.
+                 {t('modal.entry.success_subtitle')}
              </motion.p>
           </motion.div>
         )}

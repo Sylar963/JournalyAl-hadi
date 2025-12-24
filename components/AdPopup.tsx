@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '../hooks/useI18n';
 
 interface AdPopupProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AdPopupProps {
 }
 
 const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon }) => {
+  const { t } = useI18n();
   const [isShowing, setIsShowing] = useState(false);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
         </div>
         <button
           onClick={onClose}
-          aria-label="Dismiss"
+          aria-label={t('common.dismiss')}
           className="ml-2 flex-shrink-0 text-gray-500 hover:text-white transition-colors"
         >
           <CloseIcon />

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { type UserProfile } from '../types';
 import IconUpload from './icons/IconUpload';
+import { useI18n } from '../hooks/useI18n';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ProfileModalProps {
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, profile }) => {
+  const { t } = useI18n();
   const [name, setName] = useState(profile.name);
   const [alias, setAlias] = useState(profile.alias);
   const [picture, setPicture] = useState<string | undefined>(profile.picture);
@@ -74,7 +76,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert("File is too large. Please select an image under 2MB.");
+        alert(t('profile.file_too_large'));
         return;
       }
       const reader = new FileReader();
@@ -104,7 +106,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
         className="glass-panel rounded-2xl shadow-2xl w-full max-w-md border border-[color:var(--glass-border)] animate-scale-in"
       >
         <div className="p-6 border-b border-[color:var(--glass-border)] flex justify-between items-center">
-          <h2 id="profile-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Edit Profile</h2>
+          <h2 id="profile-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{t('profile.title')}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none">&times;</button>
         </div>
 
@@ -124,42 +126,42 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
                     </label>
                 </div>
                 <div className="flex-1">
-                     <p className="text-lg font-bold text-white">{name || 'Your Name'}</p>
-                     <p className="text-sm text-gray-400">{alias || 'Your Alias'}</p>
+                     <p className="text-lg font-bold text-white">{name || t('profile.default_name')}</p>
+                     <p className="text-sm text-gray-400">{alias || t('profile.default_alias')}</p>
                 </div>
             </div>
 
           <div>
-            <label htmlFor="profile-name" className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+            <label htmlFor="profile-name" className="block text-sm font-medium text-gray-300 mb-2">{t('profile.name_label')}</label>
             <input
               id="profile-name"
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="e.g., John Doe"
+              placeholder={t('profile.name_placeholder')}
               className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
             />
           </div>
 
            <div>
-            <label htmlFor="profile-alias" className="block text-sm font-medium text-gray-300 mb-2">Alias</label>
+            <label htmlFor="profile-alias" className="block text-sm font-medium text-gray-300 mb-2">{t('profile.alias_label')}</label>
             <input
               id="profile-alias"
               type="text"
               value={alias}
               onChange={e => setAlias(e.target.value)}
-              placeholder="e.g., john.doe@example.com"
+              placeholder={t('profile.alias_placeholder')}
               className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
             />
           </div>
 
           <div>
-            <label htmlFor="profile-purpose" className="block text-sm font-medium text-gray-300 mb-2">Journal Purpose</label>
+            <label htmlFor="profile-purpose" className="block text-sm font-medium text-gray-300 mb-2">{t('profile.purpose_label')}</label>
             <textarea
               id="profile-purpose"
               value={journalPurpose || ''}
               onChange={e => setJournalPurpose(e.target.value)}
-              placeholder="e.g., To track my morning moods"
+              placeholder={t('profile.purpose_placeholder')}
               rows={3}
               className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
             ></textarea>
@@ -168,8 +170,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
         </div>
 
         <div className="p-6 bg-white/5 border-t border-[color:var(--glass-border)] flex justify-end items-center rounded-b-2xl space-x-3 backdrop-blur-md">
-            <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors border border-transparent hover:border-white/10">Cancel</button>
-            <button onClick={handleSave} className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)]">Save Changes</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors border border-transparent hover:border-white/10">{t('common.cancel')}</button>
+            <button onClick={handleSave} className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)]">{t('profile.save')}</button>
         </div>
       </div>
     </div>

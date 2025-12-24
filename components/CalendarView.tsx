@@ -4,6 +4,8 @@ import { WEEK_DAYS, EMOTIONS_CONFIG } from '../constants';
 import IconChevronLeft from './icons/IconChevronLeft';
 import IconChevronRight from './icons/IconChevronRight';
 import IconChevronsLeft from './icons/IconChevronsLeft';
+import { useI18n } from '../hooks/useI18n';
+import { TranslationKey } from '../utils/translations';
 
 interface CalendarViewProps {
   currentDate: Date;
@@ -19,6 +21,7 @@ const DAY_TEXT_CLASSES = [
 ];
 
 const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange, onYearChange, onGoToToday, onDateClick, entries }) => {
+  const { t } = useI18n();
   const [animatingDateKey, setAnimatingDateKey] = useState<string | null>(null);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -91,8 +94,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
           {entry && (
             <div className="mt-2 flex-grow flex flex-col justify-end">
               <span className={`text-2xl mb-1 drop-shadow-md`}>{EMOTIONS_CONFIG[entry.emotion].emoji}</span>
-              <p className={`font-bold text-lg ${EMOTIONS_CONFIG[entry.emotion].textColor} drop-shadow-sm`}>{EMOTIONS_CONFIG[entry.emotion].label}</p>
-              <p className="text-xs text-gray-400">{`Intensity: ${entry.intensity}/10`}</p>
+              <p className={`font-bold text-lg ${EMOTIONS_CONFIG[entry.emotion].textColor} drop-shadow-sm`}>
+                {t(`emotion.${entry.emotion}` as TranslationKey)}
+              </p>
+              <p className="text-xs text-gray-400">{`${t('calendar.intensity')}: ${entry.intensity}/10`}</p>
             </div>
           )}
         </div>
@@ -116,7 +121,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
     return entryDate.getMonth() === month && entryDate.getFullYear() === year;
   }).length;
 
-  const monthName = currentDate.toLocaleString('default', { month: 'long' });
+  const monthName = t(`month.${month}` as TranslationKey);
   const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
   return (
@@ -127,20 +132,20 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
             {capitalizedMonth} {year}
           </h2>
           <div className="flex items-center space-x-2">
-            <button onClick={() => onYearChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Previous Year"><IconChevronsLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Previous Month"><IconChevronLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Next Month"><IconChevronRight className="w-5 h-5" /></button>
-            <button onClick={() => onYearChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title="Next Year"><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
+            <button onClick={() => onYearChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.prev_year')}><IconChevronsLeft className="w-5 h-5" /></button>
+            <button onClick={() => onMonthChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.prev_month')}><IconChevronLeft className="w-5 h-5" /></button>
+            <button onClick={() => onMonthChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.next_month')}><IconChevronRight className="w-5 h-5" /></button>
+            <button onClick={() => onYearChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.next_year')}><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-400 hidden md:inline font-medium tracking-wide">{`${totalEntries} entries this month`}</span>
-          <button onClick={onGoToToday} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-white hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]">Today</button>
+          <span className="text-sm text-gray-400 hidden md:inline font-medium tracking-wide">{`${totalEntries} ${t('calendar.entries_count')}`}</span>
+          <button onClick={onGoToToday} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-white hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]">{t('calendar.today')}</button>
           <button
             onClick={() => setIsFolded(!isFolded)}
             className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] hover:opacity-90 text-white rounded-lg transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] flex items-center"
           >
-            {isFolded ? 'Unfold' : 'Fold'}
+            {isFolded ? t('calendar.unfold') : t('calendar.fold')}
           </button>
         </div>
       </div>
@@ -152,7 +157,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
               key={day}
               className={`py-3 text-center text-xs font-bold uppercase bg-white/5 border-r border-b border-[color:var(--glass-border)] text-gray-400 tracking-wider ${DAY_TEXT_CLASSES[index]}`}
             >
-              {day}
+              {t(`weekday.${day.toLowerCase()}` as TranslationKey)}
             </div>
           ))}
           {renderCalendarDays()}
