@@ -63,29 +63,33 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
 
   const plans = [
     {
-      name: "Free Tier",
+      name: "Free Beta Access",
       price: "$0",
-      description: "For beginners exploring the platform.",
-      subText: "forever free",
+      description: "Get full platform access during our beta phase. Experience all our high-frequency capabilities for free.",
+      subText: "LIMITED TIME BETA",
       features: [
-        "4 Widgets",
-        "3 Indicators / Chart",
-        "Limited Timeframes"
+        "Unlimited Widgets",
+        "All Premium Indicators",
+        "Full Timeframe Access",
+        "Priority Alpha Support"
       ],
-      cta: "Start for Free",
-      popular: false,
-      tag: "FREE"
+      cta: "Join Beta for Free",
+      popular: true,
+      tag: "BETA"
     },
     {
       name: "PRO Terminal",
       price: "Coming soon",
-      description: "For traders that take it seriously.",
-      subText: isAnnual ? "Stay tuned for launch" : "Stay tuned for launch",
+      description: "For the elite traders requiring dedicated resources.",
+      subText: "Stay tuned for launch",
       features: [
+        "Dedicated Data Streams",
+        "Advanced Risk Models",
+        "Custom Feature Requests"
       ],
       cta: "Notify Me",
-      popular: true,
-      tag: "Most Popular",
+      popular: false,
+      tag: "FUTURE",
       comingSoon: true
     }
   ];
