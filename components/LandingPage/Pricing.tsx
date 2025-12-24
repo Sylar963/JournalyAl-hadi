@@ -5,38 +5,54 @@ interface PricingProps {
   onGetStarted: () => void;
 }
 
-const TypewriterText: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0 }) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [cursorVisible, setCursorVisible] = useState(true);
+const TypewriterText: React.FC<{ text: string }> = ({ text }) => {
+  const [displayedText, setDisplayedText] = useState(text);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const [cursorVisible, setCursorVisible] = useState(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    if (isAnimating) {
       let currentIndex = 0;
+      setDisplayedText('');
       const interval = setInterval(() => {
-        if (currentIndex <= text.length) {
-          setDisplayedText(text.slice(0, currentIndex));
+        if (currentIndex < text.length) {
+          setDisplayedText((prev) => text.slice(0, currentIndex + 1));
           currentIndex++;
         } else {
           clearInterval(interval);
+          setIsAnimating(false);
         }
-      }, 100 + Math.random() * 50); // Random typing speed
-
+      }, 150); // Typing speed
       return () => clearInterval(interval);
-    }, delay * 1000);
-    return () => clearTimeout(timeout);
-  }, [text, delay]);
+    }
+  }, [isAnimating, text]);
 
   useEffect(() => {
+    // Blinking cursor only during or shortly after animation? 
+    // User asked for "like if they are being typed in real time". 
+    // Usually terminal cursors always blink or blink when active.
+    // I'll keep it blinking.
     const cursorInterval = setInterval(() => {
       setCursorVisible((v) => !v);
     }, 530);
     return () => clearInterval(cursorInterval);
   }, []);
 
+  const handleHover = () => {
+    if (!hasAnimated && !isAnimating) {
+      setHasAnimated(true);
+      setIsAnimating(true);
+    }
+  };
+
   return (
-    <span className="font-mono text-white bg-gray-900 px-2 rounded border border-gray-700 mx-1 inline-block min-w-[1ch]">
+    <span 
+      onMouseEnter={handleHover}
+      className="font-mono text-white bg-gray-900 px-2 py-1 rounded border border-gray-700 mx-1 inline-block min-w-[3ch] text-center cursor-default transition-colors duration-300 hover:border-gray-500"
+    >
        {displayedText}
-       <span className={`${cursorVisible ? 'opacity-100' : 'opacity-0'} text-gray-400 font-bold`}>_</span>
+       <span className={`${cursorVisible || isAnimating ? 'opacity-100' : 'opacity-0'} text-gray-400 font-bold ml-[1px]`}>_</span>
     </span>
   );
 };
@@ -86,7 +102,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6 tracking-tight">
-            Choose your <TypewriterText text="edge" delay={0.5} /> in the market
+            Choose your <TypewriterText text="edge" /> in the market
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-12">
             Transparent pricing, no hidden fees. Focus on your trading while we handle the data.
