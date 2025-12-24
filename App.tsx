@@ -104,90 +104,93 @@ const App: React.FC = () => {
     return <div className="flex h-screen w-screen items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div></div>;
   }
 
-  if (!session && isSupabaseConfigured) {
-    if (showLanding) return <LandingPage onGetStarted={() => setShowLanding(false)} />;
-    return <Auth />;
-  }
-
-  if (!session && !isSupabaseConfigured && showLanding) {
-     return <LandingPage onGetStarted={() => setShowLanding(false)} />;
-  }
-
   const entriesArray = Object.values(entries);
 
   return (
-    <ThemeWrapper theme={theme} className="flex h-screen w-screen relative">
+    <ThemeWrapper theme={theme} className="flex h-screen w-screen relative overflow-hidden">
       <CustomCursor />
       <Background theme={theme} />
       <GridOverlay />
+      
       <div className="flex h-full w-full z-10 relative">
-        <Sidebar
-          activeView={activeView}
-          onNavigate={handleNavigate}
-          onNewEntryClick={handleOpenNewEntry}
-          userProfile={userProfile}
-          onSaveProfile={saveProfile}
-        />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header
-            onNewEntryClick={() => handleOpenNewEntry()}
-            userProfile={userProfile}
-            onProfileClick={() => setIsProfileModalOpen(true)}
-            onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
-            onSignOut={signOut}
-          />
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-            {isDataLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
-              </div>
-            ) : error ? (
-              <div className="flex items-center justify-center h-full p-4">{error}</div>
+        {!session ? (
+            showLanding ? (
+                <LandingPage onGetStarted={() => setShowLanding(false)} />
             ) : (
-              <>
-                {activeView === 'journal' && (
-                  <CalendarView
-                    currentDate={currentDate}
-                    onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
-                    onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
-                    onGoToToday={() => setCurrentDate(new Date())}
-                    onDateClick={handleDateClick}
-                    entries={entries}
-                  />
-                )}
-                {activeView === 'trends' && <TrendsView entries={entriesArray} />}
-                {activeView === 'reports' && <ReportsView entries={entriesArray} />}
-                {activeView === 'history' && <HistoryView entries={entriesArray} />}
-                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} />}
-              </>
-            )}
-          </main>
-        </div>
+                <Auth />
+            )
+        ) : (
+            <>
+                <Sidebar
+                    activeView={activeView}
+                    onNavigate={handleNavigate}
+                    onNewEntryClick={handleOpenNewEntry}
+                    userProfile={userProfile}
+                    onSaveProfile={saveProfile}
+                />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <Header
+                        onNewEntryClick={() => handleOpenNewEntry()}
+                        userProfile={userProfile}
+                        onProfileClick={() => setIsProfileModalOpen(true)}
+                        onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
+                        onSignOut={signOut}
+                    />
+                    <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+                        {isDataLoading ? (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent-primary)]"></div>
+                            </div>
+                        ) : error ? (
+                            <div className="flex items-center justify-center h-full p-4">{error}</div>
+                        ) : (
+                            <>
+                                {activeView === 'journal' && (
+                                    <CalendarView
+                                        currentDate={currentDate}
+                                        onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
+                                        onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
+                                        onGoToToday={() => setCurrentDate(new Date())}
+                                        onDateClick={handleDateClick}
+                                        entries={entries}
+                                    />
+                                )}
+                                {activeView === 'trends' && <TrendsView entries={entriesArray} />}
+                                {activeView === 'reports' && <ReportsView entries={entriesArray} />}
+                                {activeView === 'history' && <HistoryView entries={entriesArray} />}
+                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} />}
+                            </>
+                        )}
+                    </main>
+                </div>
 
-        <EntryModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onSave={onSaveEntry}
-          onDelete={onDeleteEntry}
-          selectedDate={selectedDate || new Date()}
-          entry={selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined}
-          initialEmotion={initialEmotion}
-        />
-        <ProfileModal
-          isOpen={isProfileModalOpen}
-          onClose={() => setIsProfileModalOpen(false)}
-          onSave={saveProfile}
-          profile={userProfile}
-        />
-        <QuestsPopover
-          isOpen={isQuestsOpen}
-          onClose={() => setIsQuestsOpen(false)}
-          quests={quests}
-          onAddQuest={addQuest}
-          onToggleQuest={toggleQuest}
-          onDeleteQuest={deleteQuest}
-          anchorRef={questsPopoverRef}
-        />
+                <EntryModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    onSave={onSaveEntry}
+                    onDelete={onDeleteEntry}
+                    selectedDate={selectedDate || new Date()}
+                    entry={selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined}
+                    initialEmotion={initialEmotion}
+                />
+                <ProfileModal
+                    isOpen={isProfileModalOpen}
+                    onClose={() => setIsProfileModalOpen(false)}
+                    onSave={saveProfile}
+                    profile={userProfile}
+                />
+                <QuestsPopover
+                    isOpen={isQuestsOpen}
+                    onClose={() => setIsQuestsOpen(false)}
+                    quests={quests}
+                    onAddQuest={addQuest}
+                    onToggleQuest={toggleQuest}
+                    onDeleteQuest={deleteQuest}
+                    anchorRef={questsPopoverRef}
+                />
+            </>
+        )}
+        
         {adContent && (
           <AdPopup
             isOpen={isAdVisible}

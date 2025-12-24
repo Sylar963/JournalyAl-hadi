@@ -54,9 +54,9 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
           >
-            <div className="bg-[#0f1115] border border-white/10 p-8 rounded-3xl w-full max-w-md shadow-2xl pointer-events-auto relative overflow-hidden">
+            <div className="glass-panel border-[color:var(--glass-border)] p-8 rounded-3xl w-full max-w-md shadow-2xl pointer-events-auto relative overflow-hidden">
                {/* Background Glow */}
-               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-yellow-500/10 blur-[60px] pointer-events-none" />
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-[var(--accent-primary)]/10 blur-[60px] pointer-events-none" />
 
               <button 
                 onClick={onClose}
@@ -85,7 +85,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                 ) : (
                   <>
                     <div className="mb-6">
-                      <div className="w-12 h-12 bg-yellow-500/20 text-yellow-400 rounded-xl flex items-center justify-center mx-auto mb-4 border border-yellow-500/30">
+                      <div className="w-12 h-12 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] rounded-xl flex items-center justify-center mx-auto mb-4 border border-[var(--accent-primary)]/30">
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                          </svg>
@@ -104,7 +104,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
-                          className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 pl-10 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all"
+                          className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 pl-10 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--accent-primary)]/50 focus:ring-1 focus:ring-[var(--accent-primary)]/50 transition-all"
                         />
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 absolute left-3 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -118,10 +118,10 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                       <button
                         type="submit"
                         disabled={status === 'submitting'}
-                        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-bold py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.3)] hover:shadow-[0_0_30px_rgba(234,179,8,0.5)] flex items-center justify-center gap-2 group"
+                        className="w-full bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_20px_var(--chart-glow-color-1)] flex items-center justify-center gap-2 group"
                       >
                         {status === 'submitting' ? (
-                          <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                           <>
                             Notify me

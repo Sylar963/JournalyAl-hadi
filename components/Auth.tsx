@@ -67,10 +67,10 @@ const Auth: React.FC = () => {
 
     if (awaitingConfirmation) {
         return (
-            <div className="flex h-screen w-screen items-center justify-center bg-black text-white p-4">
-                <div className="w-full max-w-sm p-8 space-y-6 bg-gray-900 rounded-xl shadow-2xl border border-gray-800 text-center">
+            <div className="flex h-screen w-screen items-center justify-center bg-transparent backdrop-blur-sm p-4">
+                <div className="w-full max-w-sm p-8 space-y-6 glass-panel rounded-2xl shadow-2xl text-center">
                     <h1 className="text-2xl font-bold text-white">Check your inbox</h1>
-                    <p className="text-gray-300 leading-relaxed">
+                    <p className="text-gray-400 leading-relaxed">
                         We've sent a confirmation link to <strong className="text-white">{email}</strong>. Please click the link to complete your registration.
                     </p>
                     
@@ -78,7 +78,7 @@ const Auth: React.FC = () => {
                          <button
                             onClick={handleResend}
                             disabled={resendCooldown > 0 || isLoading}
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-black bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full flex justify-center py-2 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-[var(--accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[0_0_15px_var(--chart-glow-color-1)]"
                         >
                             {isLoading ? 'Sending...' : (resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Confirmation')}
                         </button>
@@ -98,7 +98,7 @@ const Auth: React.FC = () => {
                                 setPassword('');
                                 setError(null);
                             }}
-                            className="font-medium text-gray-400 hover:text-yellow-500 transition-colors focus:outline-none"
+                            className="font-medium text-gray-400 hover:text-[var(--accent-primary)] transition-colors focus:outline-none"
                         >
                             Back to Sign In
                         </button>
@@ -109,10 +109,10 @@ const Auth: React.FC = () => {
     }
 
     return (
-        <div className="flex h-screen w-screen items-center justify-center bg-black text-white p-4">
-            <div className="w-full max-w-sm p-8 space-y-6 bg-gray-900 rounded-xl shadow-2xl border border-gray-800">
+        <div className="flex h-screen w-screen items-center justify-center bg-transparent backdrop-blur-sm p-4">
+            <div className="w-full max-w-sm p-8 space-y-6 glass-panel rounded-2xl shadow-2xl border-[color:var(--glass-border)]">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-white">Deltajournal</h1>
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Deltajournal</h1>
                     <p className="text-gray-400 mt-2">{isLoginView ? 'Sign in to access your journal' : 'Create a new account'}</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -128,7 +128,7 @@ const Auth: React.FC = () => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+                            className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
                         />
                     </div>
 
@@ -145,7 +145,7 @@ const Auth: React.FC = () => {
                             minLength={6}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+                            className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
                         />
                     </div>
                     
@@ -155,11 +155,11 @@ const Auth: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-black bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="w-full flex justify-center py-3 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-[var(--accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[0_0_15px_var(--chart-glow-color-1)]"
                         >
                             {isLoading ? (
                                 <>
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black mr-3"></div>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                                     Processing...
                                 </>
                             ) : (isLoginView ? 'Sign In' : 'Sign Up')}
@@ -170,7 +170,7 @@ const Auth: React.FC = () => {
                     {isLoginView ? "Don't have an account?" : "Already have an account?"}
                     <button 
                         onClick={() => { setIsLoginView(!isLoginView); setError(null); }} 
-                        className="font-medium text-yellow-500 hover:underline ml-1 focus:outline-none"
+                        className="font-medium text-[var(--accent-primary)] hover:underline ml-1 focus:outline-none"
                         aria-label={isLoginView ? 'Switch to sign up page' : 'Switch to sign in page'}
                     >
                         {isLoginView ? 'Sign Up' : 'Sign In'}

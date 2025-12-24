@@ -36,17 +36,17 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
   return (
     <div
       role="alert"
-      className={`fixed bottom-5 right-5 w-full max-w-sm bg-gray-900 border border-gray-700/80 rounded-xl shadow-2xl p-4 z-50 transition-all duration-500 ease-in-out ${
+      className={`fixed bottom-5 right-5 w-full max-w-sm glass-panel border-[color:var(--glass-border)] rounded-xl shadow-2xl p-4 z-50 transition-all duration-500 ease-in-out ${
         isShowing ? 'translate-x-0 opacity-100' : 'translate-x-[110%] opacity-0'
       }`}
     >
       <div className="flex items-start">
-        <div className="flex-shrink-0 w-10 h-10 bg-yellow-400/10 rounded-lg flex items-center justify-center text-yellow-400">
+        <div className="flex-shrink-0 w-10 h-10 bg-[var(--accent-primary)]/10 rounded-lg flex items-center justify-center text-[var(--accent-primary)] shadow-[0_0_10px_var(--chart-glow-color-1)]">
           {icon}
         </div>
         <div className="ml-4 flex-1">
           <p className="text-base font-semibold text-white">{title}</p>
-          <p className="mt-1 text-sm text-gray-300">{message}</p>
+          <p className="mt-1 text-sm text-gray-400">{message}</p>
         </div>
         <button
           onClick={onClose}

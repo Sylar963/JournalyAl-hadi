@@ -95,30 +95,30 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div 
         ref={modalRef} 
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-modal-title"
-        className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-md border border-gray-800"
+        className="glass-panel rounded-2xl shadow-2xl w-full max-w-md border border-[color:var(--glass-border)] animate-scale-in"
       >
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-          <h2 id="profile-modal-title" className="text-xl font-bold text-white">Edit Profile</h2>
+        <div className="p-6 border-b border-[color:var(--glass-border)] flex justify-between items-center">
+          <h2 id="profile-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Edit Profile</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors text-2xl leading-none">&times;</button>
         </div>
 
         <div className="p-6 space-y-6">
             <div className="flex items-center space-x-4">
                 <div className="relative w-20 h-20">
-                    <div className="w-20 h-20 bg-amber-600 rounded-full flex items-center justify-center font-bold text-white text-3xl overflow-hidden">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[var(--accent-secondary)] to-[var(--accent-primary)] rounded-full flex items-center justify-center font-bold text-white text-3xl overflow-hidden shadow-inner">
                         {picture ? (
                             <img src={picture} alt="Profile Preview" className="w-full h-full object-cover" />
                         ) : (
                             <span>{getInitials(name)}</span>
                         )}
                     </div>
-                     <label htmlFor="profile-picture-upload" className="absolute -bottom-1 -right-1 bg-yellow-600 rounded-full p-1.5 cursor-pointer hover:bg-yellow-700 transition-colors border-2 border-gray-900">
+                     <label htmlFor="profile-picture-upload" className="absolute -bottom-1 -right-1 bg-[var(--accent-primary)] rounded-full p-1.5 cursor-pointer hover:opacity-90 transition-all border-2 border-[#050507] shadow-lg">
                         <IconUpload className="w-4 h-4 text-black" />
                         <input id="profile-picture-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handlePictureUpload} />
                     </label>
@@ -137,7 +137,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g., John Doe"
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+              className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
             />
           </div>
 
@@ -149,7 +149,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
               value={alias}
               onChange={e => setAlias(e.target.value)}
               placeholder="e.g., john.doe@example.com"
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+              className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
             />
           </div>
 
@@ -161,15 +161,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
               onChange={e => setJournalPurpose(e.target.value)}
               placeholder="e.g., To track my morning moods"
               rows={3}
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+              className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
             ></textarea>
           </div>
 
         </div>
 
-        <div className="p-6 bg-black/25 border-t border-gray-800 flex justify-end items-center rounded-b-xl space-x-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors">Cancel</button>
-            <button onClick={handleSave} className="px-4 py-2 text-sm font-medium bg-yellow-600 text-black hover:bg-yellow-700 rounded-lg transition-colors">Save Changes</button>
+        <div className="p-6 bg-white/5 border-t border-[color:var(--glass-border)] flex justify-end items-center rounded-b-2xl space-x-3 backdrop-blur-md">
+            <button onClick={onClose} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors border border-transparent hover:border-white/10">Cancel</button>
+            <button onClick={handleSave} className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)]">Save Changes</button>
         </div>
       </div>
     </div>
