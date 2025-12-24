@@ -65,27 +65,30 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
     {
       name: "Free Beta Access",
       price: "$0",
-      description: "Get full platform access during our beta phase. Experience all our high-frequency capabilities for free.",
+      description: "Experience the full power of Delta Journal during our beta phase. Refine your emotional edge for free.",
       subText: "LIMITED TIME BETA",
       features: [
-        "Unlimited Widgets",
-        "All Premium Indicators",
-        "Full Timeframe Access",
-        "Priority Alpha Support"
+        "Unlimited Journal Entries",
+        "Emotional Alpha Analytics",
+        "Interactive P&L Correlation",
+        "Daily Pre-Market Baselining",
+        "Secure Data Encryption"
       ],
       cta: "Join Beta for Free",
       popular: true,
       tag: "BETA"
     },
     {
-      name: "PRO Terminal",
+      name: "PRO Journal",
       price: "Coming soon",
-      description: "For the elite traders requiring dedicated resources.",
+      description: "Advanced psychological analytics for elite traders seeking mathematical precision in their discipline.",
       subText: "Stay tuned for launch",
       features: [
-        "Dedicated Data Streams",
-        "Advanced Risk Models",
-        "Custom Feature Requests"
+        "Real-Time Tilt Detection",
+        "Strategy Performance Matrices",
+        "Advanced Risk-Psych Correlation",
+        "Dedicated Support Roadmap",
+        "Custom Feature Voting"
       ],
       cta: "Notify Me",
       popular: false,
