@@ -32,7 +32,7 @@ const Testimonials: React.FC = () => {
                 {item.quote}
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-gray-700 to-zinc-600 flex items-center justify-center text-white font-bold text-sm">
                   {item.author.charAt(0)}
                 </div>
                 <div>

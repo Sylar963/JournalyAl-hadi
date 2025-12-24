@@ -65,11 +65,6 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
       description: "For traders that take it seriously.",
       subText: isAnnual ? "Stay tuned for launch" : "Stay tuned for launch",
       features: [
-        "Aggregated heatmaps",
-        "Advanced order-flow tools",
-        "Private Discord PRO role",
-        "Unlimited widgets & indicators",
-        "All timeframes"
       ],
       cta: "Notify Me",
       popular: true,

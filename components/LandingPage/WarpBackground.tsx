@@ -67,11 +67,11 @@ const WarpBackground: React.FC = () => {
           // Screenshot shows orange/blue/white streaks. Let's vary colors.
           const colorVal = Math.random();
           if (colorVal > 0.9) {
-             ctx.fillStyle = `rgba(56, 189, 248, ${opacity})`; // Cyan
+             ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`; // Pure White
           } else if (colorVal > 0.8) {
-             ctx.fillStyle = `rgba(249, 115, 22, ${opacity})`; // Orange
+             ctx.fillStyle = `rgba(212, 212, 216, ${opacity})`; // Zinc-300
           } else {
-             ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`; // White
+             ctx.fillStyle = `rgba(161, 161, 170, ${opacity})`; // Zinc-400
           }
 
           // Draw extended streak for warp feel
