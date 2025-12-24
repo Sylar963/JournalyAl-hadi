@@ -14,6 +14,8 @@ import AdPopup from './components/AdPopup';
 import LandingPage from './components/LandingPage';
 import Background from './components/Background';
 import GridOverlay from './components/GridOverlay';
+import { ThemeWrapper } from './components/ThemeWrapper';
+
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
 import { useAuth } from './hooks/useAuth';
@@ -43,16 +45,12 @@ const App: React.FC = () => {
     const savedTheme = localStorage.getItem('emotion-journal-theme') as Theme | null;
     if (savedTheme) {
       setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    } else {
-      document.documentElement.setAttribute('data-theme', 'twilight');
     }
   }, []);
 
   const handleThemeChange = useCallback((newTheme: Theme) => {
     setTheme(newTheme);
     localStorage.setItem('emotion-journal-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
   }, []);
 
   // Event Handlers
@@ -117,7 +115,7 @@ const App: React.FC = () => {
   const entriesArray = Object.values(entries);
 
   return (
-    <div className="flex h-screen w-screen relative">
+    <ThemeWrapper theme={theme} className="flex h-screen w-screen relative">
       <Background theme={theme} />
       <GridOverlay />
       <div className="flex h-full w-full z-10 relative">
@@ -198,7 +196,7 @@ const App: React.FC = () => {
           />
         )}
       </div>
-    </div>
+    </ThemeWrapper>
   );
 };
 
