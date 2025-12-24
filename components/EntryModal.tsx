@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { type EmotionEntry, type EmotionType } from '../types';
+import { AnimatePresence, motion } from 'framer-motion';
+import { type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
 import { getEmotionInsight } from '../services/geminiService';
+import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
 import IconUpload from './icons/IconUpload';
 import IconTrash from './icons/IconTrash';
-import { AnimatePresence, motion } from 'framer-motion';
 import PayoffChart from './PayoffChart';
 
 interface EntryModalProps {
@@ -28,7 +28,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   
   // Trading Tab State
   const [pnl, setPnl] = useState<string>(entry?.pnl?.toString() ?? '');
-  const [trades, setTrades] = useState<any[]>(entry?.tradingData?.trades ?? []);
+  const [trades, setTrades] = useState<TradeDetails[]>(entry?.tradingData?.trades ?? []);
   
   // New Trade Form State
   const [tradeType, setTradeType] = useState<string>('Long Future');
@@ -143,9 +143,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const handleAddTrade = () => {
     if (!tradeSymbol || !tradeType) return;
     
-    const newTrade = {
+    const newTrade: TradeDetails = {
         id: crypto.randomUUID(),
-        type: tradeType,
+        type: tradeType as TradeDetails['type'],
         symbol: tradeSymbol.toUpperCase(),
         pnl: tradePnl ? parseFloat(tradePnl) : undefined,
         notes: tradeNotes
@@ -188,14 +188,15 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
       setTimeout(() => {
         onClose();
       }, 2000);
-    } catch (error: any) {
-      let message = 'An unexpected error occurred. Please try again.';
-      if (error.message && error.message.includes('ON CONFLICT')) {
-        message = 'Database Schema Error: A unique constraint is missing on the `entries` table for `(user_id, date)`. Please follow the setup instructions in `services/supabaseService.ts` to fix this.';
-      } else if (error.message) {
-        message = `Error: ${error.message}`;
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      let displayMessage = 'An unexpected error occurred. Please try again.';
+      if (message.includes('ON CONFLICT')) {
+        displayMessage = 'Database Schema Error: A unique constraint is missing on the `entries` table for `(user_id, date)`. Please follow the setup instructions in `services/supabaseService.ts` to fix this.';
+      } else {
+        displayMessage = `Error: ${message}`;
       }
-      setOperationError(message);
+      setOperationError(displayMessage);
       setIsSaving(false);
     }
   };
@@ -206,8 +207,9 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     try {
         await onDelete();
         showConfirmation('Entry Deleted!');
-    } catch (err: any) {
-        setOperationError(err.message || 'Failed to delete entry.');
+    } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        setOperationError(message || 'Failed to delete entry.');
         setIsDeleting(false);
     }
   };

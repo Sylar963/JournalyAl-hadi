@@ -1,7 +1,7 @@
-
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { type EmotionEntry, type UserProfile, type EmotionType, type Quest } from '../types';
+import { type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
+import { getErrorMessage } from '../utils/errorHelpers';
 
 export type Database = {
   public: {
@@ -15,17 +15,7 @@ export type Database = {
           user_id: string;
           image_url: string | null;
           pnl: number | null;
-          trading_data: any | null;
-        };
-        Insert: {
-          date: string;
-          emotion: string;
-          intensity: number;
-          notes: string | null;
-          user_id: string;
-          image_url: string | null;
-          pnl?: number | null;
-          trading_data?: any | null;
+          trading_data: { trades: TradeDetails[] } | null;
         };
         Update: {
           date?: string;
@@ -35,7 +25,7 @@ export type Database = {
           user_id?: string;
           image_url?: string | null;
           pnl?: number | null;
-          trading_data?: any | null; // using any for jsonb flexibility, or could type it purely
+          trading_data?: { trades: TradeDetails[] } | null;
         };
         Relationships: [];
       };
@@ -211,27 +201,31 @@ async function getUserId(): Promise<string> {
  * Generic helper to perform a Supabase operation with standardized error handling.
  * @param operation A function that returns a Supabase promise-like object (builder)
  * @param errorMessage Context for the error message if the operation fails.
- * @param requireData Check if data must be returned (default true for fetch/insert).
+ * @param fallbackValue An optional value to return if data is null or Supabase is not configured.
  */
-async function performSupabaseOp<T>(
-    operation: () => PromiseLike<{ data: T | null; error: any }>,
-    errorMessage: string,
-    requireData: boolean = true
+export async function performSupabaseOp<T>(
+  operation: () => PromiseLike<{ data: T | null; error: any }>,
+  errorMessage: string,
+  fallbackValue?: T
 ): Promise<T> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
-    
+  if (!isSupabaseConfigured || !supabase) {
+    if (fallbackValue !== undefined) return fallbackValue;
+    throw new Error('Supabase is not configured.');
+  }
+
+  try {
     const { data, error } = await operation();
-
-    if (error) {
-        console.error(`${errorMessage}:`, error.message);
-        throw error;
-    }
-
-    if (requireData && !data) {
-        throw new Error(`${errorMessage}: No data returned.`);
-    }
-
+    if (error) throw new Error(error.message);
+    
+    // If we have a fallback and data is null, return fallback
+    if (data === null && fallbackValue !== undefined) return fallbackValue;
+    
     return data as T;
+  } catch (error: unknown) {
+    const msg = getErrorMessage(error);
+    console.error(`${errorMessage}:`, msg);
+    throw new Error(msg);
+  }
 }
 
 // --- Entry Functions ---
@@ -299,8 +293,7 @@ export async function deleteEntry(date: string): Promise<void> {
     
     await performSupabaseOp(
         () => supabase!.from('entries').delete().eq('date', date).eq('user_id', userId).select(),
-        'Error deleting entry',
-        false // Delete doesn't necessarily return data unless selected, but we just verify no error
+        'Error deleting entry'
     );
 }
 
@@ -318,8 +311,7 @@ export async function getProfile(): Promise<UserProfile> {
     try {
         const data = await performSupabaseOp(
             () => supabase!.from('profiles').select('*').eq('id', userId).single(),
-            'Error fetching profile',
-            false // Don't throw just yet if no data
+            'Error fetching profile'
         );
 
         if (data) {
@@ -451,8 +443,7 @@ export async function deleteQuest(id: string): Promise<void> {
             .eq('id', id)
             .eq('user_id', userId)
             .select(), // Select is usually needed to verify row was actually there/deleted or satisfy checking, but standard delete doesn't fail if ID missing.
-        'Error deleting quest',
-        false
+        'Error deleting quest'
     );
 }
 
@@ -482,7 +473,6 @@ export async function addLead(email: string): Promise<void> {
     // Lead capture is public, so no getUserId() needed here for RLS (policy is insert only)
     await performSupabaseOp(
         () => supabase!.from('leads').insert({ email }).select(), // Select to ensure it really happened if we care, or just to satisfy typings if reusing op
-        'Error adding lead',
-        false // We don't need the return object
+        'Error adding lead'
     );
 }

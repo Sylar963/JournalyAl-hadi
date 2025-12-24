@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addLead } from '../services/dataService';
+import { getErrorMessage } from '../utils/errorHelpers';
 
 interface EmailCaptureModalProps {
   isOpen: boolean;
@@ -25,10 +26,11 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
         setStatus('idle');
         setEmail('');
       }, 3000);
-    } catch (err: any) {
-      console.error('Failed to submit email:', err);
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err);
+      console.error('Failed to submit email:', msg);
       setStatus('error');
-      setErrorMessage(err.message || 'Something went wrong. Please try again.');
+      setErrorMessage(msg);
     }
   };
 

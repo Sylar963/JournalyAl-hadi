@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { type EmotionEntry, type ReportAnalysis } from '../types';
 import { getReportAnalysis } from '../services/geminiService';
+import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
 import IconCalendar from './icons/IconCalendar';
 
@@ -50,8 +51,8 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
         try {
             const result = await getReportAnalysis(filteredEntries, startDate, endDate);
             setReport(result);
-        } catch (err: any) {
-            setError(err.message || "An unknown error occurred while generating the report.");
+        } catch (err: unknown) {
+            setError(getErrorMessage(err));
         } finally {
             setIsLoading(false);
         }

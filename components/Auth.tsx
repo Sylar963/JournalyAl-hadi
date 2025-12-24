@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { signInWithPassword, signUp, resendConfirmationEmail } from '../services/auth';
+import { getErrorMessage } from '../utils/errorHelpers';
 
 const Auth: React.FC = () => {
     const [isLoginView, setIsLoginView] = useState(true);
@@ -56,8 +57,9 @@ const Auth: React.FC = () => {
                 // If a session is returned (e.g., if auto-confirmation is on),
                 // the onAuthStateChange listener will handle the redirect.
             }
-        } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred.');
+
+        } catch (err: unknown) {
+            setError(getErrorMessage(err));
         } finally {
             setIsLoading(false);
         }

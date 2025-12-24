@@ -43,20 +43,23 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
           setUserProfile(fetchedProfile);
           setQuests(fetchedQuests);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isMounted) return;
-        console.error("Failed to load data:", err.message);
+        const message = getErrorMessage(err); // Extract message safely used below
+        const originalMessage = message; // Keep original for checks
+
+        console.error("Failed to load data:", message);
 
         let errorComponent: React.ReactNode = (
           React.createElement('div', { className: "bg-gray-900 border border-red-500/30 rounded-lg p-6 text-center" },
             React.createElement('h2', { className: "text-xl font-bold text-red-400" }, "Failed to Load Data"),
             React.createElement('p', { className: "mt-2 text-gray-300" }, "An unexpected error occurred while loading your data from Supabase."),
-            React.createElement('p', { className: "mt-4 text-sm bg-black/20 p-2 rounded font-mono text-red-300" }, err.message)
+            React.createElement('p', { className: "mt-4 text-sm bg-black/20 p-2 rounded font-mono text-red-300" }, message)
           )
         );
 
-        if (err.message) {
-          const msg = err.message.toLowerCase();
+        if (originalMessage) {
+          const msg = originalMessage.toLowerCase();
           if (msg.includes('relation "public.profiles" does not exist')) {
             errorComponent = React.createElement(SchemaError, {
               title: "Database Setup Incomplete: 'profiles' table missing",
@@ -108,8 +111,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
           ...prev,
           [dateKey]: newEntry,
         }));
-      } catch (err: any) {
-        console.error("Failed to save entry:", err.message);
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        console.error("Failed to save entry:", message);
         throw err;
       }
   }, []);
@@ -127,8 +131,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
           delete newEntries[dateKey];
           return newEntries;
         });
-      } catch (err: any) {
-        console.error("Failed to delete entry:", err.message);
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        console.error("Failed to delete entry:", message);
         throw err;
       }
   }, []);
@@ -137,8 +142,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     try {
       const savedProfile = await db.saveProfile(profile);
       setUserProfile(savedProfile);
-    } catch (err: any) {
-      console.error('Failed to save profile:', err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
+      console.error('Failed to save profile:', message);
       throw err;
     }
   }, []);
@@ -147,8 +153,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     try {
       const newQuest = await db.addQuest(text);
       setQuests(prev => [...prev, newQuest]);
-    } catch (err: any) {
-      console.error('Error adding quest:', err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
+      console.error('Error adding quest:', message);
     }
   }, []);
 
@@ -156,8 +163,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     try {
       const updatedQuest = await db.updateQuestStatus(id, completed);
       setQuests(prev => prev.map(q => q.id === id ? updatedQuest : q));
-    } catch (err: any) {
-      console.error('Error updating quest:', err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
+      console.error('Error updating quest:', message);
     }
   }, []);
 
@@ -165,8 +173,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     try {
       await db.deleteQuest(id);
       setQuests(prev => prev.filter(q => q.id !== id));
-    } catch (err: any) {
-      console.error('Error deleting quest:', err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
+      console.error('Error deleting quest:', message);
     }
   }, []);
 

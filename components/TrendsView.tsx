@@ -16,6 +16,7 @@ import {
 import { type EmotionEntry, type EmotionType } from '../types';
 import { EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
 import { getTrendsSummary } from '../services/geminiService';
+import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
 import PNLCorrelationView from './PNLCorrelationView';
 
@@ -264,8 +265,8 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         try {
             const summary = await getTrendsSummary(currentMonthEntries);
             setAiSummary(summary);
-        } catch(error: any) {
-            setSummaryError(error.message || 'Failed to generate summary.');
+        } catch(error: unknown) {
+            setSummaryError(getErrorMessage(error));
         } finally {
             setIsSummaryLoading(false);
         }
