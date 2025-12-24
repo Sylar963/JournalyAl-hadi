@@ -97,7 +97,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
   return (
     <section id="pricing" className="py-24 relative overflow-hidden bg-bg">
       {/* Background decoration */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gray-500/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px] pointer-events-none" />
       
       <div className="container mx-auto px-6 relative z-10 text-center">
         <motion.div
@@ -109,7 +109,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
           <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6 tracking-tight">
             Choose your <TypewriterText text="edge" /> in the market
           </h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-12">
+          <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-12">
             Transparent pricing, no hidden fees. Focus on your trading while we handle the data.
           </p>
 
@@ -119,7 +119,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
               <button
                 onClick={() => setIsAnnual(false)}
                 className={`px-8 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  !isAnnual ? 'bg-white text-black shadow-lg shadow-white/10' : 'text-gray-400 hover:text-white'
+                  !isAnnual ? 'bg-white text-black shadow-lg shadow-white/10' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 Monthly
@@ -127,7 +127,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
               <button
                 onClick={() => setIsAnnual(true)}
                 className={`px-8 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isAnnual ? 'bg-gray-700 text-white shadow-lg shadow-gray-700/20' : 'text-gray-400 hover:text-white'
+                  isAnnual ? 'bg-zinc-800 text-white shadow-lg shadow-black/40' : 'text-zinc-400 hover:text-white'
                 }`}
               >
                 Annual
@@ -139,7 +139,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-gray-800 text-gray-300 text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-gray-600 tracking-widest"
+                  className="bg-black text-zinc-300 text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-zinc-700 tracking-widest"
                 >
                   Save $359
                 </motion.div>
@@ -160,37 +160,37 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
             >
               {/* Card Glow */}
               {plan.popular && (
-                <div className="absolute inset-0 bg-gray-700/20 blur-[60px] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-white/5 blur-[60px] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               )}
 
               <div className={`
                 relative h-full glass-panel energy-border rounded-3xl p-8 flex flex-col items-start text-left bg-black/40
-                ${plan.popular ? 'border-gray-600 shadow-[0_0_20px_rgba(255,255,255,0.05)]' : 'border-white/10'}
+                ${plan.popular ? 'border-zinc-600 shadow-[0_0_20px_rgba(255,255,255,0.05)]' : 'border-white/10'}
               `}>
                 {plan.tag && (
                   <div className={`
                     absolute top-6 right-6 text-[10px] uppercase font-bold px-2.5 py-1 rounded-md tracking-wider
-                    ${plan.popular ? 'bg-gray-800 text-gray-200 border border-gray-600' : 'bg-white/10 text-gray-400 border border-white/10'}
+                    ${plan.popular ? 'bg-zinc-900 text-zinc-200 border border-zinc-700' : 'bg-white/10 text-zinc-400 border border-white/10'}
                   `}>
                     {plan.tag}
                   </div>
                 )}
 
                 <div className="mb-8">
-                  <h3 className="text-xs font-mono text-gray-500 mb-4 tracking-widest">[{String(idx+1).padStart(2,'0')}] {plan.name.toUpperCase()}</h3>
+                  <h3 className="text-xs font-mono text-zinc-500 mb-4 tracking-widest">[{String(idx+1).padStart(2,'0')}] {plan.name.toUpperCase()}</h3>
                   <h4 className="text-3xl font-bold mb-4 font-heading">{plan.name}</h4>
-                  <p className="text-gray-400 text-sm mb-6 leading-relaxed">{plan.description}</p>
+                  <p className="text-zinc-400 text-sm mb-6 leading-relaxed">{plan.description}</p>
                   
                   <div className="flex flex-col gap-1 mb-2">
                     <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                    <span className="text-gray-500 text-xs font-mono uppercase tracking-tighter">{plan.subText}</span>
+                    <span className="text-zinc-500 text-xs font-mono uppercase tracking-tighter">{plan.subText}</span>
                   </div>
                 </div>
 
                 <ul className="space-y-4 mb-10 flex-1">
                   {plan.features.map((feature, fIdx) => (
-                    <li key={fIdx} className="flex items-center gap-3 text-sm text-gray-300">
-                      <div className={`w-1.5 h-1.5 rounded-full ${plan.popular ? 'bg-gray-400 shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'bg-gray-600'}`} />
+                    <li key={fIdx} className="flex items-center gap-3 text-sm text-zinc-300">
+                      <div className={`w-1.5 h-1.5 rounded-full ${plan.popular ? 'bg-zinc-400 shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'bg-zinc-600'}`} />
                       {feature}
                     </li>
                   ))}
@@ -201,7 +201,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
                   className={`
                     w-full py-4 rounded-full font-mono text-sm tracking-wider transition-all duration-300 relative overflow-hidden group/btn
                     ${plan.popular 
-                      ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 hover:border-gray-500' 
+                      ? 'bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-700 hover:border-zinc-600' 
                       : 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/30'}
                     backdrop-blur-md
                   `}
@@ -224,16 +224,16 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
         >
           <div className="flex items-center gap-4">
             <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-600 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
                 <span>$</span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-500 to-gray-400 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-zinc-500 to-zinc-400 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
                 <span>₿</span>
               </div>
             </div>
             <div className="w-px h-6 bg-white/10 hidden sm:block" />
-            <p className="text-sm text-gray-400 font-mono tracking-tight">
-              Annual Crypto payments accepted <a href="#" className="text-gray-300 hover:text-white transition-colors ml-2 font-bold underline decoration-gray-500 underline-offset-4">Get started in Discord →</a>
+            <p className="text-sm text-zinc-400 font-mono tracking-tight">
+              Annual Crypto payments accepted <a href="#" className="text-zinc-300 hover:text-white transition-colors ml-2 font-bold underline decoration-zinc-500 underline-offset-4">Get started in Discord →</a>
             </p>
           </div>
         </motion.div>
