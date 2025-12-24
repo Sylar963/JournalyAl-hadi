@@ -9,10 +9,10 @@ interface BackgroundProps {
 }
 
 const THEME_COLORS: Record<Theme, { color: string; light: string; ambient: number }> = {
-    twilight: { color: '#4A90E2', light: '#00ffff', ambient: 0.5 },
-    sunrise: { color: '#ff9a9e', light: '#fad0c4', ambient: 0.8 },
-    cyberpunk: { color: '#ff00cc', light: '#3333ff', ambient: 0.6 },
-    forest: { color: '#2d6a4f', light: '#d8f3dc', ambient: 0.4 },
+    twilight: { color: '#71717a', light: '#ffffff', ambient: 0.4 },
+    sunrise: { color: '#ffffff', light: '#a1a1aa', ambient: 0.8 },
+    cyberpunk: { color: '#71717a', light: '#ffffff', ambient: 0.6 },
+    forest: { color: '#71717a', light: '#ffffff', ambient: 0.4 },
 };
 
 const Whale: React.FC<{ theme: Theme; startPos: [number, number, number]; speed: number; scale?: number }> = ({ theme, startPos, speed, scale = 1 }) => {

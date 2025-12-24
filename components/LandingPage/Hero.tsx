@@ -36,7 +36,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             JOURNAL
           </h1>
 
-          <p className="font-mono text-sm md:text-base text-gray-400 mt-8 max-w-xl mx-auto uppercase tracking-widest opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          <p className="font-mono text-sm md:text-base text-zinc-400 mt-8 max-w-xl mx-auto uppercase tracking-widest opacity-0 animate-fade-in" style={{ animationDelay: '0.5s' }}>
             [ Knowledge at Scale ]
           </p>
         </div>
@@ -54,9 +54,9 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       </div>
 
       {/* Footer / Status Line */}
-      <div className="absolute bottom-10 left-0 w-full px-10 flex justify-between items-end text-xs font-mono text-gray-500 z-20">
+      <div className="absolute bottom-10 left-0 w-full px-10 flex justify-between items-end text-xs font-mono text-zinc-500 z-20">
         <div>
-           <span className="block text-gray-700 mb-1">SYSTEM STATUS</span>
+           <span className="block text-zinc-700 mb-1">SYSTEM STATUS</span>
            <span className="flex items-center gap-2 text-green-500">
              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
              OPERATIONAL

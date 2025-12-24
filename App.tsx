@@ -107,10 +107,14 @@ const App: React.FC = () => {
   const entriesArray = Object.values(entries);
 
   return (
-    <ThemeWrapper theme={theme} className="flex h-screen w-screen relative overflow-hidden">
+    <ThemeWrapper theme={theme} className={`flex relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
       <CustomCursor />
-      <Background theme={theme} />
-      <GridOverlay />
+      {(!showLanding || session) && (
+        <>
+          <Background theme={theme} />
+          <GridOverlay />
+        </>
+      )}
       
       <div className="flex h-full w-full z-10 relative">
         {!session ? (

@@ -50,10 +50,10 @@ const TypewriterText: React.FC<{ text: string }> = ({ text }) => {
   return (
     <span 
       onMouseEnter={handleHover}
-      className="font-mono text-white bg-gray-900 px-2 py-1 rounded border border-gray-700 mx-1 inline-block min-w-[3ch] text-center cursor-default transition-colors duration-300 hover:border-gray-500"
+      className="font-mono text-white bg-zinc-900 px-2 py-1 rounded border border-zinc-700 mx-1 inline-block min-w-[3ch] text-center cursor-default transition-colors duration-300 hover:border-zinc-500"
     >
        {displayedText}
-       <span className={`${cursorVisible || isAnimating ? 'opacity-100' : 'opacity-0'} text-gray-400 font-bold ml-[1px]`}>_</span>
+       <span className={`${cursorVisible || isAnimating ? 'opacity-100' : 'opacity-0'} text-zinc-400 font-bold ml-[1px]`}>_</span>
     </span>
   );
 };
