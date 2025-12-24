@@ -107,7 +107,7 @@ const App: React.FC = () => {
   const entriesArray = Object.values(entries);
 
   return (
-    <ThemeWrapper theme={theme} className={`flex relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
+    <ThemeWrapper theme={theme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
       <CustomCursor />
       {(!showLanding || session) && (
         <>
