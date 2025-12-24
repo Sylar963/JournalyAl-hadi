@@ -24,7 +24,7 @@ const TypewriterText: React.FC<{ text: string }> = ({ text }) => {
           clearInterval(interval);
           setIsAnimating(false);
         }
-      }, 150); // Typing speed
+      }, 50); // Faster typing for longer phrases
       return () => clearInterval(interval);
     }
   }, [isAnimating, text]);
@@ -110,7 +110,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6 tracking-tight">
-            Choose your <TypewriterText text="edge" /> in the market
+            <TypewriterText text="Choose your edge in the market" />
           </h2>
           <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-12">
             Transparent pricing, no hidden fees. Focus on your trading while we handle the data.
