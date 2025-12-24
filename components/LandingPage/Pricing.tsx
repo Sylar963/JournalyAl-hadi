@@ -1,9 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PricingProps {
   onGetStarted: () => void;
 }
+
+const TypewriterText: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0 }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [cursorVisible, setCursorVisible] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      let currentIndex = 0;
+      const interval = setInterval(() => {
+        if (currentIndex <= text.length) {
+          setDisplayedText(text.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 100 + Math.random() * 50); // Random typing speed
+
+      return () => clearInterval(interval);
+    }, delay * 1000);
+    return () => clearTimeout(timeout);
+  }, [text, delay]);
+
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setCursorVisible((v) => !v);
+    }, 530);
+    return () => clearInterval(cursorInterval);
+  }, []);
+
+  return (
+    <span className="font-mono text-white bg-gray-900 px-2 rounded border border-gray-700 mx-1 inline-block min-w-[1ch]">
+       {displayedText}
+       <span className={`${cursorVisible ? 'opacity-100' : 'opacity-0'} text-gray-400 font-bold`}>_</span>
+    </span>
+  );
+};
 
 const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
   const [isAnnual, setIsAnnual] = useState(true);
@@ -45,7 +81,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
   return (
     <section id="pricing" className="py-24 relative overflow-hidden bg-bg">
       {/* Background decoration */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sky-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gray-500/5 rounded-full blur-[120px] pointer-events-none" />
       
       <div className="container mx-auto px-6 relative z-10 text-center">
         <motion.div
@@ -55,7 +91,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl md:text-5xl font-bold font-heading mb-6 tracking-tight">
-            Choose your <span className="text-gradient">edge</span> in the market
+            Choose your <TypewriterText text="edge" delay={0.5} /> in the market
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-12">
             Transparent pricing, no hidden fees. Focus on your trading while we handle the data.
@@ -75,7 +111,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
               <button
                 onClick={() => setIsAnnual(true)}
                 className={`px-8 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isAnnual ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-gray-400 hover:text-white'
+                  isAnnual ? 'bg-gray-700 text-white shadow-lg shadow-gray-700/20' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 Annual
@@ -87,7 +123,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-green-500/10 text-green-400 text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-green-500/20 tracking-widest"
+                  className="bg-gray-800 text-gray-300 text-[10px] uppercase font-bold px-3 py-1 rounded-full border border-gray-600 tracking-widest"
                 >
                   Save $359
                 </motion.div>
@@ -108,17 +144,17 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
             >
               {/* Card Glow */}
               {plan.popular && (
-                <div className="absolute inset-0 bg-sky-500/20 blur-[60px] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gray-700/20 blur-[60px] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               )}
 
               <div className={`
                 relative h-full glass-panel energy-border rounded-3xl p-8 flex flex-col items-start text-left bg-black/40
-                ${plan.popular ? 'border-sky-500/30 shadow-[0_0_20px_rgba(56,189,248,0.05)]' : 'border-white/10'}
+                ${plan.popular ? 'border-gray-600 shadow-[0_0_20px_rgba(255,255,255,0.05)]' : 'border-white/10'}
               `}>
                 {plan.tag && (
                   <div className={`
                     absolute top-6 right-6 text-[10px] uppercase font-bold px-2.5 py-1 rounded-md tracking-wider
-                    ${plan.popular ? 'bg-sky-600/20 text-sky-400 border border-sky-500/30' : 'bg-white/10 text-gray-400 border border-white/10'}
+                    ${plan.popular ? 'bg-gray-800 text-gray-200 border border-gray-600' : 'bg-white/10 text-gray-400 border border-white/10'}
                   `}>
                     {plan.tag}
                   </div>
@@ -138,7 +174,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
                 <ul className="space-y-4 mb-10 flex-1">
                   {plan.features.map((feature, fIdx) => (
                     <li key={fIdx} className="flex items-center gap-3 text-sm text-gray-300">
-                      <div className={`w-1.5 h-1.5 rounded-full ${plan.popular ? 'bg-sky-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : 'bg-gray-600'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full ${plan.popular ? 'bg-gray-400 shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'bg-gray-600'}`} />
                       {feature}
                     </li>
                   ))}
@@ -149,7 +185,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
                   className={`
                     w-full py-4 rounded-full font-mono text-sm tracking-wider transition-all duration-300 relative overflow-hidden group/btn
                     ${plan.popular 
-                      ? 'bg-sky-500/10 hover:bg-sky-500/20 text-white border border-sky-500/30 hover:border-sky-500/50' 
+                      ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 hover:border-gray-500' 
                       : 'bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/30'}
                     backdrop-blur-md
                   `}
@@ -172,16 +208,16 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
         >
           <div className="flex items-center gap-4">
             <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
                 <span>$</span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-cyan-500 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-500 to-gray-400 flex items-center justify-center text-[10px] font-bold border border-black/50 shadow-xl">
                 <span>₿</span>
               </div>
             </div>
             <div className="w-px h-6 bg-white/10 hidden sm:block" />
             <p className="text-sm text-gray-400 font-mono tracking-tight">
-              Annual Crypto payments accepted <a href="#" className="text-sky-400 hover:text-sky-300 transition-colors ml-2 font-bold underline decoration-sky-400/30 underline-offset-4">Get started in Discord →</a>
+              Annual Crypto payments accepted <a href="#" className="text-gray-300 hover:text-white transition-colors ml-2 font-bold underline decoration-gray-500 underline-offset-4">Get started in Discord →</a>
             </p>
           </div>
         </motion.div>
