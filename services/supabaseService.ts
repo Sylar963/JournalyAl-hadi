@@ -27,6 +27,16 @@ export type Database = {
           pnl?: number | null;
           trading_data?: { trades: TradeDetails[] } | null;
         };
+        Insert: {
+          date: string;
+          emotion: string;
+          intensity: number;
+          notes?: string | null;
+          user_id: string;
+          image_url?: string | null;
+          pnl?: number | null;
+          trading_data?: { trades: TradeDetails[] } | null;
+        };
         Relationships: [];
       };
       profiles: {
@@ -113,6 +123,8 @@ export const supabase: SupabaseClient<Database> | null =
     (SUPABASE_URL && SUPABASE_ANON_KEY)
         ? createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
+
+export const isSupabaseConfigured = !!supabase;
 
 // ====================================================================================
 // SQL SETUP INSTRUCTIONS FOR SUPABASE
@@ -221,7 +233,10 @@ export async function performSupabaseOp<T>(
     if (data === null && fallbackValue !== undefined) return fallbackValue;
     
     return data as T;
-  } catch (error: unknown) {
+  } catch (error: any) {
+    // If the error has a code (Supabase error), throw it as is to allow handling specific codes like PGRST116
+    if (error?.code) throw error;
+    
     const msg = getErrorMessage(error);
     console.error(`${errorMessage}:`, msg);
     throw new Error(msg);

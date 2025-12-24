@@ -3,6 +3,7 @@ import { Session } from '@supabase/supabase-js';
 import * as db from '../services/dataService';
 import { PROFILES_TABLE_SETUP_SQL, ENTRIES_TABLE_SETUP_SQL, QUESTS_TABLE_SETUP_SQL } from '../services/supabaseService';
 import SchemaError from '../components/SchemaError';
+import { getErrorMessage } from '../utils/errorHelpers';
 import { EmotionEntry, UserProfile, Quest, EmotionType } from '../types';
 
 export function useJournalData(session: Session | null, isSupabaseConfigured: boolean) {
@@ -23,6 +24,7 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
       setEntries({});
       setQuests([]);
       setUserProfile({ name: 'Loading...', alias: '...', picture: undefined });
+      setLoading(false);
       return;
     };
 
@@ -31,17 +33,25 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     async function loadInitialData() {
       setLoading(true);
       setError(null);
+      console.log("[useJournalData] Starting initial data load...");
       try {
-        const [fetchedEntries, fetchedProfile, fetchedQuests] = await Promise.all([
-          db.getEntries(),
-          db.getProfile(),
-          db.getQuests()
-        ]);
+        console.log("[useJournalData] Fetching entries...");
+        const fetchedEntries = await db.getEntries();
+        console.log("[useJournalData] Entries fetched:", Object.keys(fetchedEntries).length);
+
+        console.log("[useJournalData] Fetching profile...");
+        const fetchedProfile = await db.getProfile();
+        console.log("[useJournalData] Profile fetched:", fetchedProfile);
+
+        console.log("[useJournalData] Fetching quests...");
+        const fetchedQuests = await db.getQuests();
+        console.log("[useJournalData] Quests fetched:", fetchedQuests.length);
         
         if (isMounted) {
           setEntries(fetchedEntries);
           setUserProfile(fetchedProfile);
           setQuests(fetchedQuests);
+          console.log("[useJournalData] State updated.");
         }
       } catch (err: unknown) {
         if (!isMounted) return;
