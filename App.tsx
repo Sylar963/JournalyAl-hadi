@@ -105,13 +105,14 @@ const App: React.FC = () => {
   }
 
   const entriesArray = Object.values(entries);
+  const effectiveTheme = session ? theme : 'twilight';
 
   return (
-    <ThemeWrapper theme={theme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
+    <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
       <CustomCursor />
       {(!showLanding || session) && (
         <>
-          <Background theme={theme} />
+          <Background theme={effectiveTheme} />
           <GridOverlay />
         </>
       )}
