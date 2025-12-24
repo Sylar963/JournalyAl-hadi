@@ -22,6 +22,8 @@ interface DataService {
     addQuest(text: string): Promise<Quest>;
     updateQuestStatus(id: string, completed: boolean): Promise<Quest>;
     deleteQuest(id: string): Promise<void>;
+    // Leads
+    addLead(email: string): Promise<void>;
 }
 
 // Conditionally select the service to use
@@ -37,6 +39,7 @@ export const getQuests = service.getQuests;
 export const addQuest = service.addQuest;
 export const updateQuestStatus = service.updateQuestStatus;
 export const deleteQuest = service.deleteQuest;
+export const addLead = service.addLead;
 
 
 // Also export a flag that the UI can use to understand the current persistence mode.

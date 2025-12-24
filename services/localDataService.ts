@@ -88,3 +88,13 @@ export async function deleteQuest(id: string): Promise<void> {
     quests = quests.filter(q => q.id !== id);
     localStorage.setItem(QUESTS_KEY, JSON.stringify(quests));
 }
+
+// --- Lead Functions ---
+export async function addLead(email: string): Promise<void> {
+    // In local mode, we just log it or store it in local storage if we really wanted to.
+    console.log(`[Local Mode] Lead captured: ${email}`);
+    // Optional: Store in localStorage
+    const leads = JSON.parse(localStorage.getItem('emotion-journal-leads') || '[]');
+    leads.push({ email, createdAt: new Date().toISOString() });
+    localStorage.setItem('emotion-journal-leads', JSON.stringify(leads));
+}

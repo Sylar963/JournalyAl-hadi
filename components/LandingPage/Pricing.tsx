@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface PricingProps {
   onGetStarted: () => void;
+  onNotifyMe?: () => void;
 }
 
 const TypewriterText: React.FC<{ text: string }> = ({ text }) => {
@@ -57,7 +58,7 @@ const TypewriterText: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
+const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
   const [isAnnual, setIsAnnual] = useState(true);
 
   const plans = [
@@ -192,7 +193,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted }) => {
                 </ul>
 
                 <button
-                  onClick={onGetStarted}
+                  onClick={plan.comingSoon ? onNotifyMe : onGetStarted}
                   className={`
                     w-full py-4 rounded-full font-mono text-sm tracking-wider transition-all duration-300 relative overflow-hidden group/btn
                     ${plan.popular 

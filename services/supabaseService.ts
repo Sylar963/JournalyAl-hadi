@@ -89,7 +89,25 @@ export type Database = {
           created_at?: string;
         };
         Relationships: [];
-      }
+      };
+      leads: {
+        Row: {
+          id: string;
+          email: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: { [key: string]: never };
     Functions: { [key: string]: never };
@@ -422,6 +440,41 @@ export async function deleteQuest(id: string): Promise<void> {
     
     if (error) {
         console.error('Error deleting quest:', error.message);
+        throw error;
+    }
+}
+
+// ====================================================================================
+// LEADS TABLE SETUP
+// ====================================================================================
+export const LEADS_TABLE_SETUP_SQL = `
+-- 1. Create the table for leads
+CREATE TABLE public.leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- 2. Enable Row Level Security (RLS)
+ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
+
+-- 3. Create policies for RLS
+-- Allow public inserts (anyone can sign up)
+CREATE POLICY "Enable insert for everyone" ON public.leads FOR INSERT WITH CHECK (true);
+
+-- Allow only authenticated admins (or no one by default if not set up) to view
+-- For now, we'll just leave read access restricted to service role or specific users
+`;
+
+export async function addLead(email: string): Promise<void> {
+    if (!supabase) throw new Error(clientNotConfiguredError);
+    
+    const { error } = await supabase
+        .from('leads')
+        .insert({ email });
+    
+    if (error) {
+        console.error('Error adding lead:', error.message);
         throw error;
     }
 }

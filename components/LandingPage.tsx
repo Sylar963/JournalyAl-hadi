@@ -4,12 +4,15 @@ import Features from './LandingPage/Features';
 import Pricing from './LandingPage/Pricing';
 import Testimonials from './LandingPage/Testimonials';
 import Footer from './LandingPage/Footer';
+import EmailCaptureModal from './EmailCaptureModal';
 
 interface LandingPageProps {
   onGetStarted: () => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+  const [isEmailModalOpen, setIsEmailModalOpen] = React.useState(false);
+
   return (
     <div className="min-h-screen bg-bg text-white font-sans selection:bg-white/20 selection:text-white overflow-hidden relative">
       <nav className="absolute top-0 left-0 w-full z-50 px-6 py-6">
@@ -38,9 +41,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
       <Hero onGetStarted={onGetStarted} />
       <Features />
-      <Pricing onGetStarted={onGetStarted} />
+      <Pricing 
+        onGetStarted={onGetStarted} 
+        onNotifyMe={() => setIsEmailModalOpen(true)}
+      />
       <Testimonials />
       <Footer />
+      
+      <EmailCaptureModal 
+        isOpen={isEmailModalOpen} 
+        onClose={() => setIsEmailModalOpen(false)} 
+      />
     </div>
   );
 };
