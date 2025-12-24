@@ -14,6 +14,7 @@ import AdPopup from './components/AdPopup';
 import LandingPage from './components/LandingPage';
 import Background from './components/Background';
 import GridOverlay from './components/GridOverlay';
+import CustomCursor from './components/CustomCursor';
 import { ThemeWrapper } from './components/ThemeWrapper';
 
 
@@ -116,6 +117,7 @@ const App: React.FC = () => {
 
   return (
     <ThemeWrapper theme={theme} className="flex h-screen w-screen relative">
+      <CustomCursor />
       <Background theme={theme} />
       <GridOverlay />
       <div className="flex h-full w-full z-10 relative">
