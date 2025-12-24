@@ -207,20 +207,46 @@ async function getUserId(): Promise<string> {
     return session.user.id;
 }
 
-// --- Entry Functions ---
-export async function getEntries(): Promise<Record<string, EmotionEntry>> {
+/**
+ * Generic helper to perform a Supabase operation with standardized error handling.
+ * @param operation A function that returns a Supabase promise-like object (builder)
+ * @param errorMessage Context for the error message if the operation fails.
+ * @param requireData Check if data must be returned (default true for fetch/insert).
+ */
+async function performSupabaseOp<T>(
+    operation: () => PromiseLike<{ data: T | null; error: any }>,
+    errorMessage: string,
+    requireData: boolean = true
+): Promise<T> {
     if (!supabase) throw new Error(clientNotConfiguredError);
-    const userId = await getUserId();
-    const { data, error } = await supabase.from('entries').select('*').eq('user_id', userId);
+    
+    const { data, error } = await operation();
+
     if (error) {
-        console.error('Error fetching entries:', error.message);
+        console.error(`${errorMessage}:`, error.message);
         throw error;
     }
+
+    if (requireData && !data) {
+        throw new Error(`${errorMessage}: No data returned.`);
+    }
+
+    return data as T;
+}
+
+// --- Entry Functions ---
+export async function getEntries(): Promise<Record<string, EmotionEntry>> {
+    const userId = await getUserId();
+    
+    const data = await performSupabaseOp(
+        () => supabase!.from('entries').select('*').eq('user_id', userId),
+        'Error fetching entries'
+    );
+
     const entriesRecord: Record<string, EmotionEntry> = {};
     if (data) {
-        for (const entry of data) {
-            // FIX: Cast entry to the correct type to resolve TS inference error.
-            const e = entry as Database['public']['Tables']['entries']['Row'];
+        const rows = data as Database['public']['Tables']['entries']['Row'][];
+        for (const e of rows) {
             entriesRecord[e.date] = {
                 date: e.date,
                 emotion: e.emotion as EmotionType,
@@ -236,31 +262,26 @@ export async function getEntries(): Promise<Record<string, EmotionEntry>> {
 }
 
 export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { data, error } = await supabase
-      .from('entries')
-      .upsert({
-          date: entry.date,
-          emotion: entry.emotion,
-          intensity: entry.intensity,
-          notes: entry.notes,
-          image_url: entry.imageUrl ?? null,
-          user_id: userId,
-          pnl: entry.pnl ?? null,
-          trading_data: entry.tradingData ?? null
-      }, { onConflict: 'user_id,date' })
-      .select()
-      .single();
+    
+    const data = await performSupabaseOp(
+        () => supabase!
+            .from('entries')
+            .upsert({
+                date: entry.date,
+                emotion: entry.emotion,
+                intensity: entry.intensity,
+                notes: entry.notes,
+                image_url: entry.imageUrl ?? null,
+                user_id: userId,
+                pnl: entry.pnl ?? null,
+                trading_data: entry.tradingData ?? null
+            }, { onConflict: 'user_id,date' })
+            .select()
+            .single(),
+        'Error saving entry'
+    );
 
-    if (error) {
-        console.error('Error saving entry:', error.message);
-        throw error;
-    }
-    if (!data) {
-        throw new Error('Could not save entry, no data returned from Supabase.');
-    }
-    // FIX: Cast data to the correct type to resolve TS inference error.
     const savedData = data as Database['public']['Tables']['entries']['Row'];
     return {
         date: savedData.date,
@@ -274,38 +295,51 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
 }
 
 export async function deleteEntry(date: string): Promise<void> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { error } = await supabase.from('entries').delete().eq('date', date).eq('user_id', userId);
-    if (error) {
-        console.error('Error deleting entry:', error.message);
-        throw error;
-    }
+    
+    await performSupabaseOp(
+        () => supabase!.from('entries').delete().eq('date', date).eq('user_id', userId).select(),
+        'Error deleting entry',
+        false // Delete doesn't necessarily return data unless selected, but we just verify no error
+    );
 }
 
 // --- Profile Functions ---
 export async function getProfile(): Promise<UserProfile> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    
+    // Helper specifically for profile fetch since it needs to return null data on fail gracefully sometimes
+    // But performSupabaseOp throws if requireData is true.
+    // We can use performSupabaseOp with requireData=false and handle null manually.
+    
+    // However, existing logic had specific check for PGRST116.
+    // Let's adapt performSupabaseOp or just call it and catch.
+    
+    try {
+        const data = await performSupabaseOp(
+            () => supabase!.from('profiles').select('*').eq('id', userId).single(),
+            'Error fetching profile',
+            false // Don't throw just yet if no data
+        );
 
-    if (error && error.code !== 'PGRST116') { // 'PGRST116' means no rows found
-         console.error('Error fetching profile:', error.message);
-         throw error;
+        if (data) {
+            const profileData = data as Database['public']['Tables']['profiles']['Row'];
+            return {
+                name: profileData.name,
+                alias: profileData.alias,
+                picture: profileData.picture ?? undefined,
+                journalPurpose: profileData.journal_purpose ?? "Click the 'Edit' button in the sidebar to set a purpose!",
+            };
+        }
+    } catch (error: any) {
+        // If it's not the "no rows" error, rethrow
+        if (error.code !== 'PGRST116') {
+             throw error;
+        }
     }
     
-    if (data) {
-        // FIX: Cast data to the correct type to resolve TS inference error.
-        const profileData = data as Database['public']['Tables']['profiles']['Row'];
-        return {
-            name: profileData.name,
-            alias: profileData.alias,
-            picture: profileData.picture ?? undefined,
-            journalPurpose: profileData.journal_purpose ?? "Click the 'Edit' button in the sidebar to set a purpose!",
-        };
-    }
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    // Fallback if no profile exists or PGRST116
+    const { data: { user } } = await supabase!.auth.getUser();
     const newUserProfile: UserProfile = {
         name: user?.email?.split('@')[0] || 'New User',
         alias: user?.email || 'No email',
@@ -316,26 +350,20 @@ export async function getProfile(): Promise<UserProfile> {
 }
 
 export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { data, error } = await supabase.from('profiles').upsert({
-        id: userId,
-        name: profile.name,
-        alias: profile.alias,
-        picture: profile.picture ?? null,
-        journal_purpose: profile.journalPurpose ?? null,
-        updated_at: new Date().toISOString()
-    }, { onConflict: 'id' }).select().single();
-
-    if (error) {
-        console.error('Error saving profile:', error.message);
-        throw error;
-    }
     
-    if (!data) {
-        throw new Error('Supabase did not return the saved profile.');
-    }
-    // FIX: Cast data to the correct type to resolve TS inference error.
+    const data = await performSupabaseOp(
+        () => supabase!.from('profiles').upsert({
+            id: userId,
+            name: profile.name,
+            alias: profile.alias,
+            picture: profile.picture ?? null,
+            journal_purpose: profile.journalPurpose ?? null,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'id' }).select().single(),
+        'Error saving profile'
+    );
+
     const savedData = data as Database['public']['Tables']['profiles']['Row'];
 
     return {
@@ -348,23 +376,19 @@ export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
 
 // --- Quest Functions ---
 export async function getQuests(): Promise<Quest[]> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { data, error } = await supabase
-        .from('quests')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true });
     
-    if (error) {
-        console.error('Error fetching quests:', error.message);
-        throw error;
-    }
-    // FIX: Handle null data case.
-    if (!data) {
-        return [];
-    }
-    // FIX: Explicitly map from DB row type to Quest interface to fix type errors.
+    const data = await performSupabaseOp(
+        () => supabase!
+            .from('quests')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true }),
+        'Error fetching quests'
+    );
+    
+    if (!data) return [];
+    
     return (data as Database['public']['Tables']['quests']['Row'][]).map(q => ({
         id: q.id,
         text: q.text,
@@ -374,23 +398,17 @@ export async function getQuests(): Promise<Quest[]> {
 }
 
 export async function addQuest(text: string): Promise<Quest> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { data, error } = await supabase
-        .from('quests')
-        .insert({ text, user_id: userId })
-        .select()
-        .single();
     
-    if (error) {
-        console.error('Error adding quest:', error.message);
-        throw error;
-    }
-    // FIX: Add null check for data.
-    if (!data) {
-        throw new Error('Could not add quest, no data returned from Supabase.');
-    }
-    // FIX: Explicitly map from DB row type to Quest interface to fix type errors.
+    const data = await performSupabaseOp(
+        () => supabase!
+            .from('quests')
+            .insert({ text, user_id: userId })
+            .select()
+            .single(),
+        'Error adding quest'
+    );
+
     const questRow = data as Database['public']['Tables']['quests']['Row'];
     return { 
         id: questRow.id,
@@ -401,25 +419,19 @@ export async function addQuest(text: string): Promise<Quest> {
 }
 
 export async function updateQuestStatus(id: string, completed: boolean): Promise<Quest> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { data, error } = await supabase
-        .from('quests')
-        .update({ completed })
-        .eq('id', id)
-        .eq('user_id', userId)
-        .select()
-        .single();
+    
+    const data = await performSupabaseOp(
+        () => supabase!
+            .from('quests')
+            .update({ completed })
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select()
+            .single(),
+        'Error updating quest'
+    );
 
-    if (error) {
-        console.error('Error updating quest:', error.message);
-        throw error;
-    }
-    // FIX: Add null check for data.
-    if (!data) {
-        throw new Error('Could not update quest, no data returned from Supabase.');
-    }
-    // FIX: Explicitly map from DB row type to Quest interface to fix type errors.
     const questRow = data as Database['public']['Tables']['quests']['Row'];
     return {
         id: questRow.id,
@@ -430,18 +442,18 @@ export async function updateQuestStatus(id: string, completed: boolean): Promise
 }
 
 export async function deleteQuest(id: string): Promise<void> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
     const userId = await getUserId();
-    const { error } = await supabase
-        .from('quests')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', userId);
     
-    if (error) {
-        console.error('Error deleting quest:', error.message);
-        throw error;
-    }
+    await performSupabaseOp(
+        () => supabase!
+            .from('quests')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select(), // Select is usually needed to verify row was actually there/deleted or satisfy checking, but standard delete doesn't fail if ID missing.
+        'Error deleting quest',
+        false
+    );
 }
 
 // ====================================================================================
@@ -467,14 +479,10 @@ CREATE POLICY "Enable insert for everyone" ON public.leads FOR INSERT WITH CHECK
 `;
 
 export async function addLead(email: string): Promise<void> {
-    if (!supabase) throw new Error(clientNotConfiguredError);
-    
-    const { error } = await supabase
-        .from('leads')
-        .insert({ email });
-    
-    if (error) {
-        console.error('Error adding lead:', error.message);
-        throw error;
-    }
+    // Lead capture is public, so no getUserId() needed here for RLS (policy is insert only)
+    await performSupabaseOp(
+        () => supabase!.from('leads').insert({ email }).select(), // Select to ensure it really happened if we care, or just to satisfy typings if reusing op
+        'Error adding lead',
+        false // We don't need the return object
+    );
 }
