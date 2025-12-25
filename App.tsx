@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import CalendarView from './components/CalendarView';
@@ -17,6 +18,11 @@ import GridOverlay from './components/GridOverlay';
 import CustomCursor from './components/CustomCursor';
 import { ThemeWrapper } from './components/ThemeWrapper';
 import { I18nProvider } from './hooks/useI18n';
+import CookieBanner from './components/CookieBanner';
+import PrivacyPolicy from './components/Legal/PrivacyPolicy';
+import TermsOfService from './components/Legal/TermsOfService';
+import { Analytics } from '@vercel/analytics/react';
+import { useConsent } from './hooks/useConsent';
 
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
@@ -39,8 +45,16 @@ const AppContent: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [initialEmotion, setInitialEmotion] = useState<EmotionType | undefined>(undefined);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  // Quests
   const [isQuestsOpen, setIsQuestsOpen] = useState(false);
   const questsPopoverRef = useRef<HTMLDivElement>(null);
+
+  // Legal Modals
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTos, setShowTos] = useState(false);
+
+  // Consent
+  const { consent } = useConsent();
 
   // Theme Logic
   useEffect(() => {
@@ -109,7 +123,7 @@ const AppContent: React.FC = () => {
   const effectiveTheme = session ? theme : 'twilight';
 
   return (
-
+    <>
       <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
       <CustomCursor />
       {(!showLanding || session) && (
@@ -122,7 +136,11 @@ const AppContent: React.FC = () => {
       <div className="flex h-full w-full z-10 relative">
         {!session ? (
             showLanding ? (
-                <LandingPage onGetStarted={() => setShowLanding(false)} />
+                <LandingPage 
+                  onGetStarted={() => setShowLanding(false)} 
+                  onOpenPrivacy={() => setShowPrivacy(true)}
+                  onOpenTerms={() => setShowTos(true)}
+                />
             ) : (
                 <Auth />
             )
@@ -209,7 +227,13 @@ const AppContent: React.FC = () => {
         )}
       </div>
       </ThemeWrapper>
-
+      <CookieBanner />
+      <AnimatePresence>
+        {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+        {showTos && <TermsOfService onClose={() => setShowTos(false)} />}
+      </AnimatePresence>
+      {consent.analytics && <Analytics />}
+    </>
   );
 };
 

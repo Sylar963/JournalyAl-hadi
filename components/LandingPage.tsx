@@ -9,9 +9,11 @@ import { useI18n } from '../hooks/useI18n';
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onOpenPrivacy: () => void;
+  onOpenTerms: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onOpenPrivacy, onOpenTerms }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = React.useState(false);
   const { t, language, setLanguage } = useI18n();
 
@@ -58,7 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         onNotifyMe={() => setIsEmailModalOpen(true)}
       />
       <Testimonials />
-      <Footer />
+      <Footer onOpenPrivacy={onOpenPrivacy} onOpenTerms={onOpenTerms} />
       
       <EmailCaptureModal 
         isOpen={isEmailModalOpen} 
