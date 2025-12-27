@@ -240,6 +240,17 @@ export const translations = {
     'theme.lavender': 'Lavender',
     'theme.nord': 'Nord',
     'theme.monochrome': 'Monochrome',
+    // Routine
+    'routine.title': 'Pre-Market Routine',
+    'routine.status': 'Status',
+    'routine.pending': 'Pending',
+    'routine.add_widget': 'Add Widget',
+    'plugin.bias.title': 'Market Bias',
+    'plugin.bias.desc': 'Define your market stance',
+    'plugin.checklist.title': 'Pre-Flight Checklist',
+    'plugin.checklist.desc': 'Ensure you are ready',
+    'plugin.correlation.title': 'Correlation Matrix',
+    'plugin.correlation.desc': 'Real-time correlation with ES',
   },
   es: {
     // Nav
@@ -428,6 +439,17 @@ export const translations = {
     'theme.lavender': 'Lavanda',
     'theme.nord': 'Nord',
     'theme.monochrome': 'Monocromo',
+    // Routine
+    'routine.title': 'Rutina Pre-Mercado',
+    'routine.status': 'Estado',
+    'routine.pending': 'Pendiente',
+    'routine.add_widget': 'Añadir Widget',
+    'plugin.bias.title': 'Sesgo de Mercado',
+    'plugin.bias.desc': 'Define tu postura de mercado',
+    'plugin.checklist.title': 'Lista de Verificación',
+    'plugin.checklist.desc': 'Asegúrate de estar listo',
+    'plugin.correlation.title': 'Matriz de Correlación',
+    'plugin.correlation.desc': 'Correlación en tiempo real con ES',
   }
 };
 

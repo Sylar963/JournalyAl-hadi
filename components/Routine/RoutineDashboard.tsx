@@ -7,6 +7,8 @@ import { correlationMatrixConfig } from './Plugins/CorrelationMatrixPlugin';
 import { dailyBiasConfig } from './Plugins/DailyBiasPlugin';
 import { checklistConfig } from './Plugins/ChecklistPlugin';
 import { RoutineLayout, RoutinePlugin } from '../../types';
+import { useI18n } from '../../hooks/useI18n';
+import { TranslationKey } from '../../utils/translations';
 
 // Register plugins (normally done at app bootstrap)
 pluginRegistry.register(correlationMatrixConfig);
@@ -14,6 +16,7 @@ pluginRegistry.register(dailyBiasConfig);
 pluginRegistry.register(checklistConfig);
 
 const RoutineDashboard: React.FC = () => {
+    const { t } = useI18n();
     // Get today's layout
     const today = new Date().toISOString().split('T')[0];
     const [layout, setLayout] = useState<RoutineLayout | null>(null);
@@ -46,7 +49,7 @@ const RoutineDashboard: React.FC = () => {
                         layout
                         className=""
                     >
-                         <RoutineWidget title={plugin.title} icon={plugin.icon}>
+                         <RoutineWidget title={t(plugin.title as TranslationKey)} icon={plugin.icon}>
                              <plugin.component 
                                 data={{}} 
                                 onUpdate={() => {}} 
@@ -64,7 +67,7 @@ const RoutineDashboard: React.FC = () => {
             >
                 <span className="flex flex-col items-center">
                     <span className="text-3xl mb-2">+</span>
-                    <span className="text-sm font-medium">Add Widget</span>
+                    <span className="text-sm font-medium">{t('routine.add_widget')}</span>
                 </span>
             </motion.button>
         </div>

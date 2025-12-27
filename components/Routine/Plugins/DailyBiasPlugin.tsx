@@ -57,8 +57,8 @@ const DailyBiasPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = 
 
 export const dailyBiasConfig = {
     id: 'daily-bias',
-    title: 'Market Bias',
-    description: 'Define your market stance',
+    title: 'plugin.bias.title',
+    description: 'plugin.bias.desc',
     defaultSize: { w: 1, h: 2 },
     component: DailyBiasPlugin,
     icon: <span className="text-lg">🧭</span>

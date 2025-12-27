@@ -17,7 +17,7 @@ const PreMarketRoutine: React.FC = () => {
         <div className="flex items-center space-x-4">
              <div className="h-10 w-1 bg-gradient-to-b from-[var(--accent-primary)] to-[var(--accent-secondary)] rounded-full"></div>
              <div>
-                <h2 className="text-xl font-bold text-white tracking-tight">Pre-Market Routine</h2>
+                <h2 className="text-xl font-bold text-white tracking-tight">{t('routine.title')}</h2>
                 <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">{dateStr}</p>
              </div>
         </div>
@@ -25,15 +25,15 @@ const PreMarketRoutine: React.FC = () => {
         <div className="flex items-center space-x-4">
            {/* Progress Indicator (Mock) */}
            <div className="hidden md:flex items-center space-x-2 text-sm text-gray-400">
-              <span>Status:</span>
-              <span className="text-orange-400 font-bold">Pending</span>
+              <span>{t('routine.status')}:</span>
+              <span className="text-orange-400 font-bold">{t('routine.pending')}</span>
            </div>
 
            <button
              onClick={() => setIsFolded(!isFolded)}
              className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-white flex items-center group"
            >
-             <span className="mr-2">{isFolded ? 'Unfold' : 'Fold'}</span>
+             <span className="mr-2">{isFolded ? t('calendar.unfold') : t('calendar.fold')}</span>
              <IconChevronRight className={`w-4 h-4 transition-transform duration-300 ${isFolded ? 'rotate-90' : '-rotate-90'}`} />
            </button>
         </div>

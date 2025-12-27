@@ -40,8 +40,8 @@ const CorrelationMatrixPlugin: React.FC<{ data: WidgetData; onUpdate: (data: any
 
 export const correlationMatrixConfig = {
     id: 'correlation-matrix',
-    title: 'Correlation Matrix',
-    description: 'Real-time correlation with ES',
+    title: 'plugin.correlation.title',
+    description: 'plugin.correlation.desc',
     defaultSize: { w: 1, h: 2 },
     component: CorrelationMatrixPlugin,
     icon: <span className="text-lg">🔗</span>

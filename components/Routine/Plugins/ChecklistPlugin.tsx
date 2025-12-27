@@ -63,8 +63,8 @@ const ChecklistPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = 
 
 export const checklistConfig = {
     id: 'checklist',
-    title: 'Pre-Flight Checklist',
-    description: 'Ensure you are ready',
+    title: 'plugin.checklist.title',
+    description: 'plugin.checklist.desc',
     defaultSize: { w: 1, h: 2 },
     component: ChecklistPlugin,
     icon: <span className="text-lg">✅</span>
