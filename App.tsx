@@ -23,6 +23,7 @@ import PrivacyPolicy from './components/Legal/PrivacyPolicy';
 import TermsOfService from './components/Legal/TermsOfService';
 import { Analytics } from '@vercel/analytics/react';
 import { useConsent } from './hooks/useConsent';
+import PreMarketRoutine from './components/Routine/PreMarketRoutine';
 
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
@@ -170,15 +171,19 @@ const AppContent: React.FC = () => {
                             <div className="flex items-center justify-center h-full p-4">{error}</div>
                         ) : (
                             <>
+
                                 {activeView === 'journal' && (
-                                    <CalendarView
-                                        currentDate={currentDate}
-                                        onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
-                                        onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
-                                        onGoToToday={() => setCurrentDate(new Date())}
-                                        onDateClick={handleDateClick}
-                                        entries={entries}
-                                    />
+                                    <>
+                                        <PreMarketRoutine />
+                                        <CalendarView
+                                            currentDate={currentDate}
+                                            onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
+                                            onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
+                                            onGoToToday={() => setCurrentDate(new Date())}
+                                            onDateClick={handleDateClick}
+                                            entries={entries}
+                                        />
+                                    </>
                                 )}
                                 {activeView === 'trends' && <TrendsView entries={entriesArray} />}
                                 {activeView === 'reports' && <ReportsView entries={entriesArray} />}

@@ -72,3 +72,34 @@ export interface Quest {
   completed: boolean;
   createdAt: string;
 }
+
+// Pre-Market Routine Types
+
+export interface WidgetData {
+  [key: string]: any;
+}
+
+export interface RoutinePlugin {
+  id: string;
+  title: string;
+  description: string;
+  defaultSize: { w: number; h: number }; // Grid units
+  component: React.ComponentType<{ data: any; onUpdate: (data: any) => void; isLocked?: boolean }>;
+  icon?: React.ReactNode;
+}
+
+export interface RoutineLayoutItem {
+  i: string; // Plugin ID instance
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  pluginId: string;
+  data: WidgetData;
+}
+
+export interface RoutineLayout {
+  items: RoutineLayoutItem[];
+  thesis: 'bullish' | 'bearish' | 'neutral' | null;
+  lastUpdated: string;
+}
