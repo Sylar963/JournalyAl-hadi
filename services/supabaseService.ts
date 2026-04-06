@@ -439,6 +439,87 @@ export function getBybitSchemaErrorMessage(): string {
     return 'Bybit tables are missing in Supabase. Run the SQL from supabase/sql/bybit_setup.sql, then refresh the app.';
 }
 
+function isResponseLike(value: unknown): value is Response {
+    return typeof Response !== 'undefined' && value instanceof Response;
+}
+
+async function readFunctionErrorPayload(response: Response): Promise<string | null> {
+    try {
+        const contentType = response.headers.get('content-type') ?? '';
+        const clonedResponse = response.clone();
+
+        if (contentType.includes('application/json')) {
+            const payload = await clonedResponse.json() as Record<string, unknown>;
+            if (typeof payload.error === 'string' && payload.error.trim()) {
+                return payload.error.trim();
+            }
+            if (typeof payload.message === 'string' && payload.message.trim()) {
+                return payload.message.trim();
+            }
+        }
+
+        const text = await clonedResponse.text();
+        return text.trim() || null;
+    } catch {
+        return null;
+    }
+}
+
+function mapFunctionSetupError(name: string, message: string, response?: Response): string {
+    if (isMissingBybitSchemaError(message)) {
+        return getBybitSchemaErrorMessage();
+    }
+
+    if (message.includes('Missing required environment variable: BYBIT_CREDENTIAL_ENCRYPTION_KEY')) {
+        return 'Supabase Edge Function secret BYBIT_CREDENTIAL_ENCRYPTION_KEY is missing. Add it in Supabase, redeploy the Bybit functions, then try again.';
+    }
+
+    if (message.includes('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY')) {
+        return 'Supabase Edge Function secret SUPABASE_SERVICE_ROLE_KEY is missing. Add it in Supabase, redeploy the Bybit functions, then try again.';
+    }
+
+    if (message.includes('Missing required environment variable: SUPABASE_URL')) {
+        return 'Supabase Edge Function secret SUPABASE_URL is missing. Add it in Supabase, redeploy the Bybit functions, then try again.';
+    }
+
+    if (response?.status === 404 || message.toLowerCase().includes('function not found')) {
+        return `Supabase Edge Function "${name}" is not deployed. Deploy the Bybit functions from supabase/functions, then try again.`;
+    }
+
+    if (response?.status === 401 || response?.status === 403 || message === 'Unauthorized') {
+        return 'Your Supabase session is not authorized to call the Bybit Edge Functions. Sign out and back in, then try again.';
+    }
+
+    if (message === 'Edge Function returned a non-2xx status code') {
+        return `Supabase Edge Function "${name}" failed, but did not return a readable error body. Check the function logs in Supabase for the exact failure.`;
+    }
+
+    if (message === 'Relay Error invoking the Edge Function') {
+        return `Supabase could not reach the Edge Function "${name}". Make sure it is deployed and healthy, then try again.`;
+    }
+
+    if (message === 'Failed to send a request to the Edge Function') {
+        return 'The app could not reach Supabase Edge Functions. Check your SUPABASE_URL, browser network access, and Supabase project status.';
+    }
+
+    return message;
+}
+
+async function getFunctionErrorMessage(name: string, error: unknown): Promise<string> {
+    const fallbackMessage = getErrorMessage(error);
+    const response = typeof error === 'object' && error !== null && 'context' in error
+        ? (error as { context?: unknown }).context
+        : undefined;
+
+    if (isResponseLike(response)) {
+        const payloadMessage = await readFunctionErrorPayload(response);
+        const resolvedMessage = payloadMessage || fallbackMessage;
+        return mapFunctionSetupError(name, resolvedMessage, response);
+    }
+
+    return mapFunctionSetupError(name, fallbackMessage);
+}
+
 type BybitTradeCacheRow = Database['public']['Tables']['bybit_trade_cache']['Row'];
 
 function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
@@ -480,7 +561,8 @@ async function invokeFunction<T>(name: string, body?: Record<string, unknown>): 
     });
 
     if (error) {
-        throw new Error(error.message || `Function invocation failed: ${name}`);
+        const message = await getFunctionErrorMessage(name, error);
+        throw new Error(message || `Function invocation failed: ${name}`);
     }
 
     return data as T;

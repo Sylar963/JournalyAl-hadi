@@ -421,6 +421,7 @@ export async function fetchAggregatedTradesForDay(input: {
   tradeDay: string;
   startTime: number;
   endTime: number;
+  symbol?: string;
 }): Promise<AggregatedTradeRow[]> {
   const executionItems = await fetchPaged<{ nextPageCursor?: string; list: ExecutionItem[] }>(
     input.environment,
@@ -429,6 +430,7 @@ export async function fetchAggregatedTradesForDay(input: {
     '/v5/execution/list',
     {
       category: 'linear',
+      symbol: input.symbol,
       startTime: input.startTime,
       endTime: input.endTime,
       limit: 100,
@@ -442,6 +444,7 @@ export async function fetchAggregatedTradesForDay(input: {
     '/v5/position/closed-pnl',
     {
       category: 'linear',
+      symbol: input.symbol,
       startTime: input.startTime,
       endTime: input.endTime,
       limit: 100,

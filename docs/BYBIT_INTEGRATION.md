@@ -16,6 +16,11 @@
    - `BYBIT_CREDENTIAL_ENCRYPTION_KEY`
 5. Deploy the Bybit functions from a non-U.S. region. Bybit documents U.S. IP restrictions and may return HTTP `403`.
 
+## Backend Shape
+- The browser talks only to Supabase Edge Functions for Bybit credential validation, storage, and sync.
+- The Edge Function decrypts the stored credentials just-in-time, signs the Bybit request server-side, and returns only normalized trade data to the UI.
+- `bybit-sync-trades` now also supports a non-persistent backend preview mode for operational testing. This lets us verify a live symbol without mutating cached trade state.
+
 ## User Flow
 1. Open `Settings`.
 2. Select `mainnet` or `testnet`.
@@ -37,6 +42,25 @@
 - HTTP `403`: Most often a region or IP restriction. Move the function to a non-U.S. region and re-test.
 - Empty trade list: The feature imports only today's `linear` trades in v1.
 - Duplicate warning when adding a manual trade: The entry already contains the Bybit trade or a matching fingerprint. Link the imported trade instead.
+
+## Smoke Test
+- Use the backend smoke test after the user has connected their Bybit API keys in the app.
+- The script authenticates as that user, invokes `bybit-sync-trades` in `previewOnly` mode, and prints only the requested symbol's trades.
+- Default symbol is `CLUSDT`.
+
+```bash
+DJ_SMOKE_EMAIL="you@example.com" \
+DJ_SMOKE_PASSWORD="your-app-password" \
+SUPABASE_URL="https://your-project.supabase.co" \
+SUPABASE_ANON_KEY="your-anon-key" \
+npm run smoke:bybit
+```
+
+- Optional environment variables:
+  - `BYBIT_SMOKE_SYMBOL` to override the symbol
+  - `BYBIT_SMOKE_DATE` in `YYYY-MM-DD`
+  - `BYBIT_SMOKE_TIMEZONE` for the journal-local day boundary
+  - `DJ_SMOKE_ACCESS_TOKEN` instead of email/password if you already have a session token
 
 ## FAQ
 - Why are only today's trades shown?
