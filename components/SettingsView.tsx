@@ -1,24 +1,137 @@
-import React from 'react';
-import { type Theme } from '../types';
+import React, { useEffect, useState } from 'react';
+import { type BybitEnvironment, type BybitValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
+import { deleteBybitConnection, getBybitConnection, saveBybitConnection, validateBybitConnection } from '../services/dataService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
 
 interface SettingsViewProps {
   currentTheme: Theme;
   onThemeChange: (theme: Theme) => void;
+  isBybitAvailable: boolean;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange }) => {
+const validationClasses: Record<BybitValidationStatus, string> = {
+  not_connected: 'bg-white/10 text-gray-300',
+  pending: 'bg-amber-500/10 text-amber-300',
+  valid: 'bg-green-500/10 text-green-300',
+  invalid: 'bg-red-500/10 text-red-300',
+  permission_denied: 'bg-red-500/10 text-red-300',
+};
+
+const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange, isBybitAvailable }) => {
   const { t } = useI18n();
+  const [environment, setEnvironment] = useState<BybitEnvironment>('mainnet');
+  const [apiKey, setApiKey] = useState('');
+  const [apiSecret, setApiSecret] = useState('');
+  const [status, setStatus] = useState<BybitValidationStatus>('not_connected');
+  const [maskedKey, setMaskedKey] = useState<string | null>(null);
+  const [lastValidatedAt, setLastValidatedAt] = useState<string | undefined>();
+  const [lastSyncAt, setLastSyncAt] = useState<string | undefined>();
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadConnection() {
+      if (!isBybitAvailable) return;
+      setIsLoading(true);
+      try {
+        const connection = await getBybitConnection();
+        if (!connection || cancelled) return;
+        setEnvironment(connection.environment);
+        setStatus(connection.validationStatus);
+        setMaskedKey(connection.apiKeyMasked);
+        setLastValidatedAt(connection.lastValidatedAt);
+        setLastSyncAt(connection.lastSyncAt);
+      } catch (error) {
+        if (!cancelled) {
+          setFeedback(error instanceof Error ? error.message : t('bybit.error.load'));
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void loadConnection();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isBybitAvailable, t]);
+
+  async function handleSaveConnection() {
+    setIsSaving(true);
+    setFeedback(null);
+    try {
+      const connection = await saveBybitConnection({
+        environment,
+        apiKey,
+        apiSecret,
+      });
+      setStatus(connection.validationStatus);
+      setMaskedKey(connection.apiKeyMasked);
+      setLastValidatedAt(connection.lastValidatedAt);
+      setLastSyncAt(connection.lastSyncAt);
+      setApiKey('');
+      setApiSecret('');
+      setFeedback(t('bybit.connect_success'));
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : t('bybit.error.save'));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleTestConnection() {
+    setIsTesting(true);
+    setFeedback(null);
+    try {
+      const connection = await validateBybitConnection({
+        environment,
+        apiKey,
+        apiSecret,
+      });
+      setStatus(connection.validationStatus);
+      setFeedback(connection.validationStatus === 'valid' ? t('bybit.test_success') : t('bybit.permission_required'));
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : t('bybit.error.validate'));
+    } finally {
+      setIsTesting(false);
+    }
+  }
+
+  async function handleDeleteConnection() {
+    setIsDeleting(true);
+    setFeedback(null);
+    try {
+      await deleteBybitConnection();
+      setStatus('not_connected');
+      setMaskedKey(null);
+      setLastValidatedAt(undefined);
+      setLastSyncAt(undefined);
+      setApiKey('');
+      setApiSecret('');
+      setFeedback(t('bybit.disconnect_success'));
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : t('bybit.error.delete'));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
   return (
     <div className="space-y-6 animate-content-entry">
       <h1 className="text-2xl font-bold text-white">{t('settings.title')}</h1>
-      
+
       <div className="glass-panel p-6 rounded-2xl">
         <h2 className="text-lg font-semibold text-white mb-4">{t('settings.appearance_title')}</h2>
         <p className="text-sm text-gray-400 mb-6">{t('settings.appearance_subtitle')}</p>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {THEMES_CONFIG.map((theme) => {
             const isActive = currentTheme === theme.id;
@@ -51,6 +164,103 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
             );
           })}
         </div>
+      </div>
+
+      <div className="glass-panel p-6 rounded-2xl space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-white">{t('bybit.settings_title')}</h2>
+            <p className="text-sm text-gray-400 mt-1">{t('bybit.settings_subtitle')}</p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${validationClasses[status]}`}>
+            {t(`bybit.status.${status}` as TranslationKey)}
+          </span>
+        </div>
+
+        {!isBybitAvailable ? (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-200">
+            {t('bybit.unavailable')}
+          </div>
+        ) : (
+          <>
+            {maskedKey && (
+              <div className="rounded-xl border border-[color:var(--glass-border)] bg-white/5 p-4 text-sm text-gray-300">
+                <p>{t('bybit.connected_key')}: <span className="font-mono text-white">{maskedKey}</span></p>
+                {lastValidatedAt && <p className="mt-1 text-gray-400">{t('bybit.last_validated')}: {new Date(lastValidatedAt).toLocaleString()}</p>}
+                {lastSyncAt && <p className="mt-1 text-gray-400">{t('bybit.last_sync')}: {new Date(lastSyncAt).toLocaleString()}</p>}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm text-gray-300">
+                <span className="block mb-2">{t('bybit.environment')}</span>
+                <select
+                  value={environment}
+                  onChange={(event) => setEnvironment(event.target.value as BybitEnvironment)}
+                  className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+                >
+                  <option value="mainnet">{t('bybit.environment.mainnet')}</option>
+                  <option value="testnet">{t('bybit.environment.testnet')}</option>
+                </select>
+              </label>
+
+              <label className="text-sm text-gray-300">
+                <span className="block mb-2">{t('bybit.api_key')}</span>
+                <input
+                  type="text"
+                  value={apiKey}
+                  onChange={(event) => setApiKey(event.target.value)}
+                  placeholder={t('bybit.api_key_placeholder')}
+                  className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+                />
+              </label>
+            </div>
+
+            <label className="text-sm text-gray-300 block">
+              <span className="block mb-2">{t('bybit.api_secret')}</span>
+              <input
+                type="password"
+                value={apiSecret}
+                onChange={(event) => setApiSecret(event.target.value)}
+                placeholder={t('bybit.api_secret_placeholder')}
+                className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+              />
+            </label>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void handleTestConnection()}
+                disabled={!apiKey || !apiSecret || isTesting || isSaving || isLoading}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTesting ? t('bybit.testing') : t('bybit.test')}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSaveConnection()}
+                disabled={!apiKey || !apiSecret || isSaving || isTesting || isLoading}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? t('bybit.connecting') : t('bybit.connect')}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteConnection()}
+                disabled={!maskedKey || isDeleting || isSaving || isTesting}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/15 text-red-300 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? t('bybit.disconnecting') : t('bybit.disconnect')}
+              </button>
+            </div>
+
+            {feedback && (
+              <div className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-4 text-sm text-gray-200">
+                {feedback}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

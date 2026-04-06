@@ -14,6 +14,7 @@ import {
 import { Scatter, Bar, Line } from 'react-chartjs-2';
 import { type EmotionEntry, type EmotionType } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
+import { buildTradingIndex } from '../services/tradingIndexService';
 
 ChartJS.register(
   CategoryScale,
@@ -32,10 +33,17 @@ interface PNLCorrelationViewProps {
 }
 
 const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
-    
-    // Filter entries that have PNL data
     const entriesWithPNL = useMemo(() => {
-        return entries.filter(e => e.pnl !== undefined && e.pnl !== null);
+        return buildTradingIndex(entries)
+            .filter(({ pnl }) => pnl !== undefined && pnl !== null)
+            .map(({ entry, pnl, trades }) => ({
+                ...entry,
+                pnl,
+                tradingData: {
+                    ...(entry.tradingData ?? { trades: [] }),
+                    trades,
+                },
+            }));
     }, [entries]);
 
     const stats = useMemo(() => {
@@ -49,9 +57,7 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
             totalPNL += val;
             if (val > 0) winDays++;
             if (val < 0) lossDays++;
-            if (e.tradingData?.trades) {
-                totalTrades += e.tradingData.trades.length;
-            }
+            totalTrades += e.tradingData?.trades?.length ?? 0;
         });
 
         return {

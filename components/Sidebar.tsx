@@ -5,6 +5,7 @@ import IconReports from './icons/IconReports';
 import IconHistory from './icons/IconHistory';
 import IconSettings from './icons/IconSettings';
 import IconPlus from './icons/IconPlus';
+import IconQuest from './icons/IconQuest';
 import IconChevronsLeft from './icons/IconChevronsLeft';
 import { type ActiveView, type EmotionType, type UserProfile } from '../types';
 import { WISDOM_QUOTES } from '../constants';
@@ -165,19 +166,26 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
             onClick={() => onNavigate('reports')} 
             isCollapsed={isCollapsed} 
           />
-          <NavItem 
-            icon={<IconHistory className="w-5 h-5" />} 
-            label={t('dashboard.sidebar.history')} 
-            active={activeView === 'history'} 
-            onClick={() => onNavigate('history')} 
-            isCollapsed={isCollapsed} 
+          <NavItem
+            icon={<IconHistory className="w-5 h-5" />}
+            label={t('dashboard.sidebar.history')}
+            active={activeView === 'history'}
+            onClick={() => onNavigate('history')}
+            isCollapsed={isCollapsed}
           />
-          <NavItem 
-            icon={<IconSettings className="w-5 h-5" />} 
-            label={t('dashboard.sidebar.settings')} 
-            active={activeView === 'settings'} 
-            onClick={() => onNavigate('settings')} 
-            isCollapsed={isCollapsed} 
+          <NavItem
+            icon={<IconQuest className="w-5 h-5" />}
+            label={t('dashboard.sidebar.review')}
+            active={activeView === 'review'}
+            onClick={() => onNavigate('review')}
+            isCollapsed={isCollapsed}
+          />
+          <NavItem
+            icon={<IconSettings className="w-5 h-5" />}
+            label={t('dashboard.sidebar.settings')}
+            active={activeView === 'settings'}
+            onClick={() => onNavigate('settings')}
+            isCollapsed={isCollapsed}
           />
         </nav>
         

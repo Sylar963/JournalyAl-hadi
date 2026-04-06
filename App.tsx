@@ -7,6 +7,13 @@ import TrendsView from './components/TrendsView';
 import ReportsView from './components/ReportsView';
 import HistoryView from './components/HistoryView';
 import SettingsView from './components/SettingsView';
+import PerformanceReviewView from './components/PerformanceReviewView';
+import IconJournal from './components/icons/IconJournal';
+import IconTrends from './components/icons/IconTrends';
+import IconReports from './components/icons/IconReports';
+import IconHistory from './components/icons/IconHistory';
+import IconQuest from './components/icons/IconQuest';
+import IconSettings from './components/icons/IconSettings';
 import EntryModal from './components/EntryModal';
 import ProfileModal from './components/ProfileModal';
 import QuestsPopover from './components/QuestsPopover';
@@ -24,6 +31,7 @@ import TermsOfService from './components/Legal/TermsOfService';
 import { Analytics } from '@vercel/analytics/react';
 import { useConsent } from './hooks/useConsent';
 import PreMarketRoutine from './components/Routine/PreMarketRoutine';
+import { useI18n } from './hooks/useI18n';
 
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
@@ -35,6 +43,7 @@ const AppContent: React.FC = () => {
   const { session, loading: isAuthLoading, signOut, isSupabaseConfigured } = useAuth();
   const { entries, quests, userProfile, loading: isDataLoading, error, saveEntry, deleteEntry, saveProfile, addQuest, toggleQuest, deleteQuest } = useJournalData(session, isSupabaseConfigured);
   const { isAdVisible, adContent, closeAd } = useAdSystem(!!session);
+  const { t } = useI18n();
 
   const [showLanding, setShowLanding] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -121,13 +130,22 @@ const AppContent: React.FC = () => {
   }
 
   const entriesArray = Object.values(entries);
-  const effectiveTheme = session ? theme : 'twilight';
+  const isAppAccessible = !!session || !isSupabaseConfigured;
+  const effectiveTheme = isAppAccessible ? theme : 'twilight';
+  const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = [
+    { view: 'journal', label: t('dashboard.sidebar.journal'), icon: <IconJournal className="w-4 h-4" /> },
+    { view: 'trends', label: t('dashboard.sidebar.trends'), icon: <IconTrends className="w-4 h-4" /> },
+    { view: 'reports', label: t('dashboard.sidebar.reports'), icon: <IconReports className="w-4 h-4" /> },
+    { view: 'history', label: t('dashboard.sidebar.history'), icon: <IconHistory className="w-4 h-4" /> },
+    { view: 'review', label: t('dashboard.sidebar.review'), icon: <IconQuest className="w-4 h-4" /> },
+    { view: 'settings', label: t('dashboard.sidebar.settings'), icon: <IconSettings className="w-4 h-4" /> },
+  ];
 
   return (
     <>
-      <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !session ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
+      <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !isAppAccessible ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
       <CustomCursor />
-      {(!showLanding || session) && (
+      {(!showLanding || isAppAccessible) && (
         <>
           <Background theme={effectiveTheme} />
           <GridOverlay />
@@ -135,7 +153,7 @@ const AppContent: React.FC = () => {
       )}
       
       <div className="flex h-full w-full z-10 relative">
-        {!session ? (
+        {!isAppAccessible ? (
             showLanding ? (
                 <LandingPage 
                   onGetStarted={() => setShowLanding(false)} 
@@ -162,6 +180,25 @@ const AppContent: React.FC = () => {
                         onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
                         onSignOut={signOut}
                     />
+                    <nav className="md:hidden border-b border-[color:var(--glass-border)] bg-black/10 backdrop-blur-xl">
+                        <div className="flex gap-2 overflow-x-auto px-4 py-3 custom-scrollbar">
+                            {mobileNavItems.map((item) => (
+                                <button
+                                    key={item.view}
+                                    onClick={() => handleNavigate(item.view)}
+                                    className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-all ${
+                                        activeView === item.view
+                                            ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/15 text-[var(--accent-primary)]'
+                                            : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                    aria-current={activeView === item.view ? 'page' : undefined}
+                                >
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
                         {isDataLoading ? (
                             <div className="flex items-center justify-center h-full">
@@ -188,7 +225,8 @@ const AppContent: React.FC = () => {
                                 {activeView === 'trends' && <TrendsView entries={entriesArray} />}
                                 {activeView === 'reports' && <ReportsView entries={entriesArray} />}
                                 {activeView === 'history' && <HistoryView entries={entriesArray} />}
-                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} />}
+                                {activeView === 'review' && <PerformanceReviewView />}
+                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={!!session && isSupabaseConfigured} />}
                             </>
                         )}
                     </main>
@@ -202,6 +240,7 @@ const AppContent: React.FC = () => {
                     selectedDate={selectedDate || new Date()}
                     entry={selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined}
                     initialEmotion={initialEmotion}
+                    isBybitAvailable={!!session && isSupabaseConfigured}
                 />
                 <ProfileModal
                     isOpen={isProfileModalOpen}

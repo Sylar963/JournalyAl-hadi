@@ -4,9 +4,14 @@ export type { Session, User };
 
 export type EmotionType = 'happy' | 'calm' | 'anxious' | 'sad' | 'angry';
 
-export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'settings';
+export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'settings' | 'review';
 
 export type Theme = 'twilight' | 'sunrise' | 'cyberpunk' | 'forest';
+export type TradeSource = 'manual' | 'bybit';
+export type BybitEnvironment = 'mainnet' | 'testnet';
+export type BybitValidationStatus = 'not_connected' | 'pending' | 'valid' | 'invalid' | 'permission_denied';
+export type TradePnlSource = 'manual' | 'linked_trades';
+export type TradeSide = 'Buy' | 'Sell' | 'Unknown';
 
 export interface ThemeConfig {
   id: Theme;
@@ -24,10 +29,21 @@ export interface TradeDetails {
   id: string;
   type: 'Long Future' | 'Short Future' | 'BTO Call' | 'BTO Put' | 'STC Call' | 'STC Put' | 'STO Call' | 'STO Put' | 'BTC Call' | 'BTC Put';
   symbol: string;
+  source?: TradeSource;
   pnl?: number;
+  closedPnl?: number;
   entryPrice?: number;
   exitPrice?: number;
   contracts?: number;
+  quantity?: number;
+  price?: number;
+  fee?: number;
+  feeCurrency?: string;
+  externalTradeId?: string;
+  orderId?: string;
+  executedAt?: string;
+  side?: TradeSide;
+  tradeFingerprint?: string;
   notes?: string;
 }
 
@@ -40,7 +56,53 @@ export interface EmotionEntry {
   pnl?: number;
   tradingData?: {
     trades: TradeDetails[];
+    pnlSource?: TradePnlSource;
   };
+}
+
+export interface BybitConnection {
+  environment: BybitEnvironment;
+  apiKeyMasked: string;
+  apiKeyLast4: string;
+  validationStatus: BybitValidationStatus;
+  permissionSnapshot: Record<string, unknown> | null;
+  lastValidatedAt?: string;
+  lastSyncAt?: string;
+  syncStatus?: 'idle' | 'syncing' | 'ready' | 'error';
+  syncError?: string | null;
+}
+
+export interface BybitCredentialInput {
+  environment: BybitEnvironment;
+  apiKey: string;
+  apiSecret: string;
+}
+
+export interface BybitCachedTrade {
+  id: string;
+  environment: BybitEnvironment;
+  tradeDay: string;
+  externalTradeId: string;
+  orderId: string;
+  symbol: string;
+  side: TradeSide;
+  executedAt: string;
+  quantity: number;
+  price: number;
+  fee?: number;
+  feeCurrency?: string;
+  closedPnl?: number;
+  type: TradeDetails['type'];
+  tradeFingerprint: string;
+  rawExecution?: Record<string, unknown>;
+  rawClosedPnl?: Record<string, unknown> | null;
+}
+
+export interface BybitTradeCacheResult {
+  trades: BybitCachedTrade[];
+  connection: BybitConnection | null;
+  refreshedAt?: string;
+  syncError?: string | null;
 }
 
 export interface ReportAnalysis {
@@ -102,4 +164,36 @@ export interface RoutineLayout {
   items: RoutineLayoutItem[];
   thesis: 'bullish' | 'bearish' | 'neutral' | null;
   lastUpdated: string;
+}
+
+// Performance Review Types
+export interface ReviewQuestion {
+  id: string;
+  text: string;
+  type: 'text' | 'textarea';
+  placeholder?: string;
+}
+
+export interface ReviewSection {
+  id: string;
+  title: string;
+  description?: string;
+  questions: ReviewQuestion[];
+}
+
+export interface ReviewAnswer {
+  questionId: string;
+  answer: string;
+}
+
+export interface PerformanceReview {
+  id?: string;
+  year: number;
+  userId: string;
+  sections: {
+    sectionId: string;
+    answers: ReviewAnswer[];
+  }[];
+  createdAt?: string;
+  updatedAt?: string;
 }

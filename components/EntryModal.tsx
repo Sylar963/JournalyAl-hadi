@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
+import { type BybitCachedTrade, type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
 import { getEmotionInsight } from '../services/geminiService';
+import { createTradeFingerprint, findDuplicateTrade } from '../services/tradingIndexService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
@@ -10,6 +11,7 @@ import IconSparkles from './icons/IconSparkles';
 import IconUpload from './icons/IconUpload';
 import IconTrash from './icons/IconTrash';
 import PayoffChart from './PayoffChart';
+import BybitTradePanel from './BybitTradePanel';
 
 interface EntryModalProps {
   isOpen: boolean;
@@ -19,9 +21,10 @@ interface EntryModalProps {
   selectedDate: Date;
   entry?: EmotionEntry;
   initialEmotion?: EmotionType;
+  isBybitAvailable: boolean;
 }
 
-const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDelete, selectedDate, entry, initialEmotion }) => {
+const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDelete, selectedDate, entry, initialEmotion, isBybitAvailable }) => {
   const { t, language } = useI18n();
   const [activeTab, setActiveTab] = useState<'journal' | 'trading'>('journal');
   const [selectedEmotion, setSelectedEmotion] = useState<EmotionType | null>(entry?.emotion ?? initialEmotion ?? null);
@@ -37,7 +40,12 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const [tradeType, setTradeType] = useState<string>('Long Future');
   const [tradeSymbol, setTradeSymbol] = useState('');
   const [tradePnl, setTradePnl] = useState('');
+  const [tradeExecutedAt, setTradeExecutedAt] = useState('');
+  const [tradeQuantity, setTradeQuantity] = useState('');
+  const [tradePrice, setTradePrice] = useState('');
   const [tradeNotes, setTradeNotes] = useState('');
+  const [cachedBybitTrades, setCachedBybitTrades] = useState<BybitCachedTrade[]>([]);
+  const [pnlSource, setPnlSource] = useState<'manual' | 'linked_trades'>(entry?.tradingData?.pnlSource ?? (entry?.pnl !== undefined ? 'manual' : 'linked_trades'));
 
   const [aiInsight, setAiInsight] = useState<string>('');
   const [isInsightLoading, setIsInsightLoading] = useState<boolean>(false);
@@ -61,6 +69,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setImage(entry?.imageUrl ?? undefined);
     setPnl(entry?.pnl?.toString() ?? '');
     setTrades(entry?.tradingData?.trades ?? []);
+    setPnlSource(entry?.tradingData?.pnlSource ?? (entry?.pnl !== undefined ? 'manual' : 'linked_trades'));
   }, [entry, initialEmotion]);
 
   // Reset UI state when modal opens
@@ -74,6 +83,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
       setIsDeleting(false);
       setConfirmation(null);
       setIsSuccess(false);
+      setTradeType('Long Future');
+      setTradeSymbol('');
+      setTradePnl('');
+      setTradeExecutedAt('');
+      setTradeQuantity('');
+      setTradePrice('');
+      setTradeNotes('');
+      setCachedBybitTrades([]);
     }
   }, [isOpen]);
 
@@ -150,20 +167,53 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
         id: crypto.randomUUID(),
         type: tradeType as TradeDetails['type'],
         symbol: tradeSymbol.toUpperCase(),
+        source: 'manual',
         pnl: tradePnl ? parseFloat(tradePnl) : undefined,
+        executedAt: tradeExecutedAt ? new Date(tradeExecutedAt).toISOString() : undefined,
+        quantity: tradeQuantity ? parseFloat(tradeQuantity) : undefined,
+        contracts: tradeQuantity ? parseFloat(tradeQuantity) : undefined,
+        price: tradePrice ? parseFloat(tradePrice) : undefined,
+        side: tradeType.includes('Short') || tradeType.includes('Put') || tradeType.includes('STO') || tradeType.includes('BTC') ? 'Sell' : 'Buy',
         notes: tradeNotes
     };
+    newTrade.tradeFingerprint = createTradeFingerprint(newTrade);
+
+    const duplicateTrade = findDuplicateTrade(newTrade, trades);
+    const duplicateCachedBybitTrade = cachedBybitTrades.find((trade) => trade.tradeFingerprint === newTrade.tradeFingerprint);
+
+    if (duplicateTrade || duplicateCachedBybitTrade) {
+      setOperationError(duplicateCachedBybitTrade
+        ? t('bybit.error.manual_duplicate')
+        : t('bybit.error.duplicate_link'));
+      return;
+    }
     
     setTrades([...trades, newTrade]);
+    setOperationError(null);
     
     // Reset form
     setTradeSymbol('');
     setTradePnl('');
+    setTradeExecutedAt('');
+    setTradeQuantity('');
+    setTradePrice('');
     setTradeNotes('');
   };
 
   const handleRemoveTrade = (id: string) => {
     setTrades(trades.filter(t => t.id !== id));
+  };
+
+  const handleAddImportedTrade = (trade: TradeDetails) => {
+    setTrades((currentTrades) => [...currentTrades, trade]);
+    if (pnlSource !== 'manual') {
+      setPnlSource('linked_trades');
+    }
+  };
+
+  const handlePnlInputChange = (value: string) => {
+    setPnl(value);
+    setPnlSource('manual');
   };
 
   const handleSave = async () => {
@@ -185,7 +235,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
           notes, 
           imageUrl: image,
           pnl: pnl ? parseFloat(pnl) : undefined,
-          tradingData: { trades }
+          tradingData: { trades, pnlSource }
       });
       setIsSuccess(true);
       setTimeout(() => {
@@ -258,6 +308,23 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
           setIsInsightLoading(false);
       }
   }, [entry, selectedEmotion, intensity, notes, image]);
+
+  const selectedDateKey = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+  const todayKey = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`;
+  const isTodayEntry = selectedDateKey === todayKey;
+
+  useEffect(() => {
+    if (pnlSource === 'manual') return;
+
+    const linkedTrades = trades.filter((trade) => trade.source === 'bybit');
+    const totalLinkedPnl = linkedTrades.reduce((sum, trade) => {
+      const pnlValue = trade.closedPnl ?? trade.pnl;
+      return typeof pnlValue === 'number' ? sum + pnlValue : sum;
+    }, 0);
+
+    const hasLinkedPnl = linkedTrades.some((trade) => typeof (trade.closedPnl ?? trade.pnl) === 'number');
+    setPnl(hasLinkedPnl ? totalLinkedPnl.toFixed(2) : '');
+  }, [pnlSource, trades]);
 
   if (!isOpen) return null;
   
@@ -428,15 +495,30 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                   </>
               ) : (
                   <div className="space-y-6">
+                     <BybitTradePanel
+                        date={selectedDateKey}
+                        isToday={isTodayEntry}
+                        isBybitAvailable={isBybitAvailable}
+                        selectedTrades={trades}
+                        onSelectTrade={handleAddImportedTrade}
+                        onCacheChange={setCachedBybitTrades}
+                        onError={setOperationError}
+                     />
+
                      {/* Daily PNL Input */}
                       <div>
-                        <label htmlFor="daily-pnl" className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.daily_pnl')}</label>
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <label htmlFor="daily-pnl" className="block text-sm font-medium text-gray-300">{t('modal.entry.daily_pnl')}</label>
+                          <span className={`text-[11px] uppercase tracking-wide px-2 py-1 rounded-full ${pnlSource === 'manual' ? 'bg-white/10 text-gray-300' : 'bg-green-500/10 text-green-300'}`}>
+                            {pnlSource === 'manual' ? t('modal.entry.pnl_source_manual') : t('modal.entry.pnl_source_linked')}
+                          </span>
+                        </div>
                         <input
                           type="number"
                           id="daily-pnl"
                           placeholder="e.g. 150.50 or -50.00"
                           value={pnl}
-                          onChange={e => setPnl(e.target.value)}
+                          onChange={e => handlePnlInputChange(e.target.value)}
                           className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
                         />
                       </div>
@@ -473,6 +555,30 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 onChange={e => setTradePnl(e.target.value)}
                                 className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
                             />
+                            <input
+                                type="datetime-local"
+                                value={tradeExecutedAt}
+                                onChange={e => setTradeExecutedAt(e.target.value)}
+                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                            />
+                         </div>
+                         <div className="grid grid-cols-2 gap-3 mb-3">
+                            <input
+                                type="number"
+                                placeholder={t('modal.entry.quantity_placeholder')}
+                                value={tradeQuantity}
+                                onChange={e => setTradeQuantity(e.target.value)}
+                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                            />
+                            <input
+                                type="number"
+                                placeholder={t('modal.entry.price_placeholder')}
+                                value={tradePrice}
+                                onChange={e => setTradePrice(e.target.value)}
+                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                            />
+                         </div>
+                         <div className="grid grid-cols-1 gap-3 mb-3">
                             <input 
                                 type="text" 
                                 placeholder={t('modal.entry.notes_trade_placeholder')}
@@ -501,14 +607,18 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                             <span className={`text-xs px-2 py-0.5 rounded ${
                                                 t.type.includes('Long') || t.type.includes('Call') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
                                             }`}>{t.type}</span>
+                                            <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.source === 'bybit' ? 'bg-blue-500/20 text-blue-300' : 'bg-white/10 text-gray-300'}`}>
+                                                {t.source === 'bybit' ? 'Bybit' : 'Manual'}
+                                            </span>
                                             <span className="font-bold text-white text-sm">{t.symbol}</span>
                                           </div>
+                                          {t.executedAt && <p className="text-gray-500 text-[11px] mt-1">{new Date(t.executedAt).toLocaleString()}</p>}
                                           {t.notes && <p className="text-gray-400 text-xs mt-1">{t.notes}</p>}
                                       </div>
                                       <div className="flex items-center space-x-3">
-                                          {t.pnl !== undefined && (
-                                              <span className={`font-mono text-sm ${t.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                  {t.pnl >= 0 ? '+' : ''}{t.pnl}
+                                          {(t.closedPnl !== undefined || t.pnl !== undefined) && (
+                                              <span className={`font-mono text-sm ${(t.closedPnl ?? t.pnl ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                  {(t.closedPnl ?? t.pnl ?? 0) >= 0 ? '+' : ''}{(t.closedPnl ?? t.pnl)?.toFixed?.(2) ?? (t.closedPnl ?? t.pnl)}
                                               </span>
                                           )}
                                           <button onClick={() => handleRemoveTrade(t.id)} className="text-gray-500 hover:text-red-400 transition-colors">

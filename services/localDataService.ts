@@ -1,8 +1,10 @@
-import { type EmotionEntry, type UserProfile, type Quest } from '../types';
+import { type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview } from '../types';
 
 const ENTRIES_KEY = 'emotion-journal-entries';
 const PROFILE_KEY = 'emotion-journal-profile';
 const QUESTS_KEY = 'emotion-journal-quests';
+const REVIEWS_KEY = 'emotion-journal-reviews';
+const LOCAL_USER_ID = 'local-user';
 
 const DEFAULT_PROFILE: UserProfile = {
     name: 'Welcome!',
@@ -97,4 +99,67 @@ export async function addLead(email: string): Promise<void> {
     const leads = JSON.parse(localStorage.getItem('emotion-journal-leads') || '[]');
     leads.push({ email, createdAt: new Date().toISOString() });
     localStorage.setItem('emotion-journal-leads', JSON.stringify(leads));
+}
+
+// --- Review Functions ---
+export async function getReviews(): Promise<PerformanceReview[]> {
+    const data = localStorage.getItem(REVIEWS_KEY);
+    const reviews: PerformanceReview[] = data ? JSON.parse(data) : [];
+    return reviews
+        .map((review) => ({ ...review, userId: review.userId || LOCAL_USER_ID }))
+        .sort((a, b) => b.year - a.year);
+}
+
+export async function getReview(year: number): Promise<PerformanceReview | null> {
+    const reviews = await getReviews();
+    return reviews.find(r => r.year === year) || null;
+}
+
+export async function saveReview(review: Omit<PerformanceReview, 'id' | 'createdAt' | 'updatedAt'>): Promise<PerformanceReview> {
+    const reviews = await getReviews();
+    const normalizedReview = { ...review, userId: review.userId || LOCAL_USER_ID };
+    const existingIndex = reviews.findIndex(r => r.year === normalizedReview.year);
+    const now = new Date().toISOString();
+    if (existingIndex >= 0) {
+        reviews[existingIndex] = { ...reviews[existingIndex], ...normalizedReview, updatedAt: now };
+    } else {
+        reviews.push({
+            ...normalizedReview,
+            id: crypto.randomUUID(),
+            createdAt: now,
+            updatedAt: now
+        });
+    }
+    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+    return reviews.find(r => r.year === normalizedReview.year)!;
+}
+
+export async function deleteReview(year: number): Promise<void> {
+    let reviews = await getReviews();
+    reviews = reviews.filter(r => r.year !== year);
+    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+}
+
+export async function getBybitConnection(): Promise<BybitConnection | null> {
+    return null;
+}
+
+export async function saveBybitConnection(_input: BybitCredentialInput): Promise<BybitConnection> {
+    throw new Error('Bybit integration requires Supabase-backed mode.');
+}
+
+export async function validateBybitConnection(_input: BybitCredentialInput): Promise<BybitConnection> {
+    throw new Error('Bybit integration requires Supabase-backed mode.');
+}
+
+export async function deleteBybitConnection(): Promise<void> {
+    // No-op in local mode.
+}
+
+export async function getCachedBybitTradesForDate(_date: string): Promise<BybitTradeCacheResult> {
+    return { trades: [], connection: null };
+}
+
+export async function refreshBybitTradesForDate(_date: string, _timezone: string): Promise<BybitTradeCacheResult> {
+    throw new Error('Bybit integration requires Supabase-backed mode.');
 }
