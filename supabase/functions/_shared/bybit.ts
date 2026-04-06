@@ -1,12 +1,6 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getEnv } from './integration-runtime.ts';
 
-type Json = Record<string, unknown>;
 type BybitEnvironment = 'mainnet' | 'testnet';
-
-export interface AuthedContext {
-  userId: string;
-  supabase: ReturnType<typeof createClient>;
-}
 
 interface BybitApiResponse<T> {
   retCode: number;
@@ -54,44 +48,6 @@ export interface UtcBounds {
   endTime: number;
 }
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const JSON_HEADERS = {
-  'Content-Type': 'application/json',
-  ...CORS_HEADERS,
-};
-
-export function corsPreflightResponse() {
-  return new Response('ok', { headers: CORS_HEADERS });
-}
-
-function getEnv(name: string): string {
-  const value = Deno.env.get(name);
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
-}
-
-function encodeBase64(bytes: Uint8Array): string {
-  let binary = '';
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
-}
-
-function decodeBase64(value: string): Uint8Array {
-  const binary = atob(value);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
-}
-
-async function deriveAesKey(secret: string) {
-  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
-  return crypto.subtle.importKey('raw', hash, 'AES-GCM', false, ['encrypt', 'decrypt']);
-}
-
 async function signHmacSha256(secret: string, payload: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
@@ -104,33 +60,6 @@ async function signHmacSha256(secret: string, payload: string): Promise<string> 
   return Array.from(new Uint8Array(signature))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('');
-}
-
-export async function encryptSecret(secret: string) {
-  const encryptionKey = await deriveAesKey(getEnv('BYBIT_CREDENTIAL_ENCRYPTION_KEY'));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
-    encryptionKey,
-    new TextEncoder().encode(secret)
-  );
-
-  return {
-    secretCiphertext: encodeBase64(new Uint8Array(ciphertext)),
-    secretIv: encodeBase64(iv),
-    secretVersion: 'v1',
-  };
-}
-
-export async function decryptSecret(secretCiphertext: string, secretIv: string): Promise<string> {
-  const encryptionKey = await deriveAesKey(getEnv('BYBIT_CREDENTIAL_ENCRYPTION_KEY'));
-  const plaintext = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: decodeBase64(secretIv) },
-    encryptionKey,
-    decodeBase64(secretCiphertext)
-  );
-
-  return new TextDecoder().decode(plaintext);
 }
 
 function getBybitBaseUrl(environment: BybitEnvironment) {
@@ -226,28 +155,6 @@ async function bybitSignedGet<T>(
   }
 
   throw new Error(`${payload.retCode}: ${payload.retMsg}`);
-}
-
-export async function getAuthedContext(req: Request): Promise<AuthedContext> {
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) throw new Error('Missing Authorization header.');
-
-  const token = authHeader.replace('Bearer ', '');
-  const supabase = createClient(getEnv('SUPABASE_URL'), getEnv('SUPABASE_SERVICE_ROLE_KEY'));
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user) throw new Error('Unauthorized');
-
-  return {
-    userId: data.user.id,
-    supabase,
-  };
-}
-
-export function jsonResponse(status: number, body: Json) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: JSON_HEADERS,
-  });
 }
 
 export async function validateBybitCredentials(
@@ -410,6 +317,54 @@ export function getUtcBoundsForDateInTimeZone(date: string, timeZone: string): U
   return {
     startTime: start.getTime(),
     endTime: end.getTime(),
+  };
+}
+
+export function mapBybitConnectionRow(row: {
+  environment: BybitEnvironment;
+  api_key_masked: string;
+  api_key_last4: string;
+  validation_status: 'not_connected' | 'pending' | 'valid' | 'invalid' | 'permission_denied';
+  permission_snapshot: Record<string, unknown> | null;
+  last_validated_at: string | null;
+  last_sync_at: string | null;
+  sync_status: 'idle' | 'syncing' | 'ready' | 'error' | null;
+  sync_error: string | null;
+}) {
+  return {
+    provider: 'bybit' as const,
+    environment: row.environment,
+    apiKeyMasked: row.api_key_masked,
+    apiKeyLast4: row.api_key_last4,
+    validationStatus: row.validation_status,
+    permissionSnapshot: row.permission_snapshot,
+    lastValidatedAt: row.last_validated_at,
+    lastSyncAt: row.last_sync_at,
+    syncStatus: row.sync_status,
+    syncError: row.sync_error,
+  };
+}
+
+export function mapBybitTradeRow(trade: AggregatedTradeRow) {
+  return {
+    id: trade.external_trade_id,
+    provider: 'bybit' as const,
+    environment: trade.environment,
+    tradeDay: trade.trade_day,
+    externalTradeId: trade.external_trade_id,
+    orderId: trade.order_id,
+    symbol: trade.symbol,
+    side: trade.side,
+    executedAt: trade.executed_at,
+    quantity: trade.exec_qty,
+    price: trade.exec_price,
+    fee: trade.exec_fee ?? undefined,
+    feeCurrency: trade.fee_currency ?? undefined,
+    closedPnl: trade.closed_pnl ?? undefined,
+    type: trade.side === 'Sell' ? 'Short Future' : 'Long Future',
+    tradeFingerprint: trade.trade_fingerprint,
+    rawExecution: trade.raw_execution,
+    rawClosedPnl: trade.raw_closed_pnl,
   };
 }
 

@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { corsPreflightResponse, getAuthedContext, jsonResponse, validateBybitCredentials } from '../_shared/bybit.ts';
+import { validateBybitCredentials } from '../_shared/bybit.ts';
+import { corsPreflightResponse, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

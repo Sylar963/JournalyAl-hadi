@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { corsPreflightResponse, encryptSecret, getAuthedContext, jsonResponse, validateBybitCredentials } from '../_shared/bybit.ts';
+import { mapBybitConnectionRow, validateBybitCredentials } from '../_shared/bybit.ts';
+import { corsPreflightResponse, encryptSecret, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -63,17 +64,7 @@ serve(async (req) => {
     }
 
     return jsonResponse(200, {
-      connection: {
-        environment: data.environment,
-        apiKeyMasked: data.api_key_masked,
-        apiKeyLast4: data.api_key_last4,
-        validationStatus: data.validation_status,
-        permissionSnapshot: data.permission_snapshot,
-        lastValidatedAt: data.last_validated_at,
-        lastSyncAt: data.last_sync_at,
-        syncStatus: data.sync_status,
-        syncError: data.sync_error,
-      },
+      connection: mapBybitConnectionRow(data),
     });
   } catch (error) {
     return jsonResponse(400, {
