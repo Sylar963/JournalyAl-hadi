@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { type BybitEnvironment, type BybitValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
 import { deleteBybitConnection, getBybitConnection, saveBybitConnection, validateBybitConnection } from '../services/dataService';
+import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage } from '../services/supabaseService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
 
@@ -33,6 +34,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [copiedSetupSql, setCopiedSetupSql] = useState(false);
+
+  const shouldShowSetupSql = feedback === getBybitSchemaErrorMessage();
+
+  const handleCopySetupSql = async () => {
+    await navigator.clipboard.writeText(BYBIT_SETUP_SQL.trim());
+    setCopiedSetupSql(true);
+    setTimeout(() => setCopiedSetupSql(false), 2000);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -257,6 +267,24 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
             {feedback && (
               <div className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-4 text-sm text-gray-200">
                 {feedback}
+              </div>
+            )}
+
+            {shouldShowSetupSql && (
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-amber-200">Run this SQL in Supabase SQL Editor, then refresh the app.</p>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopySetupSql()}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/30 text-white border border-white/10"
+                  >
+                    {copiedSetupSql ? 'Copied!' : 'Copy SQL'}
+                  </button>
+                </div>
+                <pre className="max-h-72 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-gray-200">
+                  <code>{BYBIT_SETUP_SQL.trim()}</code>
+                </pre>
               </div>
             )}
           </>

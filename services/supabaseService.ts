@@ -350,7 +350,7 @@ WITH CHECK (auth.uid() = user_id);
 
 export const BYBIT_CONNECTIONS_TABLE_SETUP_SQL = `
 -- 1. Create the table for encrypted Bybit credential metadata
-CREATE TABLE public.bybit_connections (
+CREATE TABLE IF NOT EXISTS public.bybit_connections (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   environment TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
   api_key_ciphertext TEXT NOT NULL,
@@ -372,6 +372,8 @@ CREATE TABLE public.bybit_connections (
 
 ALTER TABLE public.bybit_connections ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can manage their own bybit connection" ON public.bybit_connections;
+
 CREATE OR REPLACE FUNCTION update_bybit_connections_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -379,6 +381,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_bybit_connections_updated_at ON public.bybit_connections;
 
 CREATE TRIGGER update_bybit_connections_updated_at
     BEFORE UPDATE ON public.bybit_connections
@@ -388,7 +392,7 @@ CREATE TRIGGER update_bybit_connections_updated_at
 
 export const BYBIT_TRADE_CACHE_TABLE_SETUP_SQL = `
 -- 1. Create the cache for normalized Bybit trades
-CREATE TABLE public.bybit_trade_cache (
+CREATE TABLE IF NOT EXISTS public.bybit_trade_cache (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   environment TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
@@ -410,10 +414,12 @@ CREATE TABLE public.bybit_trade_cache (
   UNIQUE(user_id, environment, external_trade_id)
 );
 
-CREATE INDEX bybit_trade_cache_user_day_idx
+CREATE INDEX IF NOT EXISTS bybit_trade_cache_user_day_idx
 ON public.bybit_trade_cache (user_id, trade_day, executed_at DESC);
 
 ALTER TABLE public.bybit_trade_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own bybit cache" ON public.bybit_trade_cache;
 
 CREATE POLICY "Users can read their own bybit cache"
 ON public.bybit_trade_cache FOR SELECT
