@@ -54,9 +54,19 @@ export interface UtcBounds {
   endTime: number;
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 const JSON_HEADERS = {
   'Content-Type': 'application/json',
+  ...CORS_HEADERS,
 };
+
+export function corsPreflightResponse() {
+  return new Response('ok', { headers: CORS_HEADERS });
+}
 
 function getEnv(name: string): string {
   const value = Deno.env.get(name);

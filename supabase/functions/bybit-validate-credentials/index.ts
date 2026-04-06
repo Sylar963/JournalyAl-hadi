@@ -1,7 +1,10 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { getAuthedContext, jsonResponse, validateBybitCredentials } from '../_shared/bybit.ts';
+import { corsPreflightResponse, getAuthedContext, jsonResponse, validateBybitCredentials } from '../_shared/bybit.ts';
 
 serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return corsPreflightResponse();
+  }
   if (req.method !== 'POST') {
     return jsonResponse(405, { error: 'Method not allowed.' });
   }
