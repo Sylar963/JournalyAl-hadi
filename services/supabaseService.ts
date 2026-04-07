@@ -521,7 +521,7 @@ async function getFunctionErrorMessage(name: string, error: unknown): Promise<st
 }
 
 type BybitTradeCacheRow = Database['public']['Tables']['bybit_trade_cache']['Row'];
-const BYBIT_FUNCTION_REGION = FunctionRegion.CaCentral1;
+const BYBIT_FUNCTION_REGIONS = [FunctionRegion.CaCentral1, FunctionRegion.EuWest1] as const;
 
 function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
     const type = normalizeTradeTypeFromSide(row.side);
@@ -558,17 +558,32 @@ function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
 async function invokeFunction<T>(name: string, body?: Record<string, unknown>): Promise<T> {
     if (!supabase) throw new Error(clientNotConfiguredError);
 
-    const { data, error } = await supabase.functions.invoke(name, {
-        body,
-        region: name.startsWith('bybit-') ? BYBIT_FUNCTION_REGION : undefined,
-    });
+    const regions = name.startsWith('bybit-') ? [...BYBIT_FUNCTION_REGIONS] : [undefined];
+    let lastError: unknown = null;
 
-    if (error) {
+    for (const region of regions) {
+        const { data, error } = await supabase.functions.invoke(name, {
+            body,
+            region,
+        });
+
+        if (!error) {
+            return data as T;
+        }
+
+        lastError = error;
         const message = await getFunctionErrorMessage(name, error);
-        throw new Error(message || `Function invocation failed: ${name}`);
+        const shouldRetryInAnotherRegion = name.startsWith('bybit-')
+            && (message === 'The app could not reach Supabase Edge Functions. Check your SUPABASE_URL, browser network access, and Supabase project status.'
+                || message.startsWith('Supabase could not reach the Edge Function'));
+
+        if (!shouldRetryInAnotherRegion || region === regions[regions.length - 1]) {
+            throw new Error(message || `Function invocation failed: ${name}`);
+        }
     }
 
-    return data as T;
+    const message = await getFunctionErrorMessage(name, lastError);
+    throw new Error(message || `Function invocation failed: ${name}`);
 }
 
 // --- Helper Functions ---

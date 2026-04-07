@@ -33,25 +33,15 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     async function loadInitialData() {
       setLoading(true);
       setError(null);
-      console.log("[useJournalData] Starting initial data load...");
       try {
-        console.log("[useJournalData] Fetching entries...");
         const fetchedEntries = await db.getEntries();
-        console.log("[useJournalData] Entries fetched:", Object.keys(fetchedEntries).length);
-
-        console.log("[useJournalData] Fetching profile...");
         const fetchedProfile = await db.getProfile();
-        console.log("[useJournalData] Profile fetched:", fetchedProfile);
-
-        console.log("[useJournalData] Fetching quests...");
         const fetchedQuests = await db.getQuests();
-        console.log("[useJournalData] Quests fetched:", fetchedQuests.length);
         
         if (isMounted) {
           setEntries(fetchedEntries);
           setUserProfile(fetchedProfile);
           setQuests(fetchedQuests);
-          console.log("[useJournalData] State updated.");
         }
       } catch (err: unknown) {
         if (!isMounted) return;
