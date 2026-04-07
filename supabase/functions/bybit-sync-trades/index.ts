@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { corsPreflightResponse, decryptSecret, fetchAggregatedTradesForDay, getAuthedContext, getUtcBoundsForDateInTimeZone, jsonResponse } from '../_shared/bybit.ts';
+import { fetchAggregatedTradesForDay, getUtcBoundsForDateInTimeZone, mapBybitConnectionRow, mapBybitTradeRow } from '../_shared/bybit.ts';
+import { corsPreflightResponse, decryptSecret, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -63,36 +64,8 @@ serve(async (req) => {
 
     if (previewOnly === true) {
       return jsonResponse(200, {
-        connection: {
-          environment: connectionRow.environment,
-          apiKeyMasked: connectionRow.api_key_masked,
-          apiKeyLast4: connectionRow.api_key_last4,
-          validationStatus: connectionRow.validation_status,
-          permissionSnapshot: connectionRow.permission_snapshot,
-          lastValidatedAt: connectionRow.last_validated_at,
-          lastSyncAt: connectionRow.last_sync_at,
-          syncStatus: connectionRow.sync_status,
-          syncError: connectionRow.sync_error,
-        },
-        trades: trades.map((trade) => ({
-          id: trade.external_trade_id,
-          environment: trade.environment,
-          tradeDay: trade.trade_day,
-          externalTradeId: trade.external_trade_id,
-          orderId: trade.order_id,
-          symbol: trade.symbol,
-          side: trade.side,
-          executedAt: trade.executed_at,
-          quantity: trade.exec_qty,
-          price: trade.exec_price,
-          fee: trade.exec_fee ?? undefined,
-          feeCurrency: trade.fee_currency ?? undefined,
-          closedPnl: trade.closed_pnl ?? undefined,
-          type: trade.side === 'Sell' ? 'Short Future' : 'Long Future',
-          tradeFingerprint: trade.trade_fingerprint,
-          rawExecution: trade.raw_execution,
-          rawClosedPnl: trade.raw_closed_pnl,
-        })),
+        connection: mapBybitConnectionRow(connectionRow),
+        trades: trades.map(mapBybitTradeRow),
         refreshedAt: now,
         syncError: null,
         previewOnly: true,
@@ -131,36 +104,8 @@ serve(async (req) => {
     }
 
     return jsonResponse(200, {
-      connection: {
-        environment: updatedConnection.environment,
-        apiKeyMasked: updatedConnection.api_key_masked,
-        apiKeyLast4: updatedConnection.api_key_last4,
-        validationStatus: updatedConnection.validation_status,
-        permissionSnapshot: updatedConnection.permission_snapshot,
-        lastValidatedAt: updatedConnection.last_validated_at,
-        lastSyncAt: updatedConnection.last_sync_at,
-        syncStatus: updatedConnection.sync_status,
-        syncError: updatedConnection.sync_error,
-      },
-      trades: trades.map((trade) => ({
-        id: trade.external_trade_id,
-        environment: trade.environment,
-        tradeDay: trade.trade_day,
-        externalTradeId: trade.external_trade_id,
-        orderId: trade.order_id,
-        symbol: trade.symbol,
-        side: trade.side,
-        executedAt: trade.executed_at,
-        quantity: trade.exec_qty,
-        price: trade.exec_price,
-        fee: trade.exec_fee ?? undefined,
-        feeCurrency: trade.fee_currency ?? undefined,
-        closedPnl: trade.closed_pnl ?? undefined,
-        type: trade.side === 'Sell' ? 'Short Future' : 'Long Future',
-        tradeFingerprint: trade.trade_fingerprint,
-        rawExecution: trade.raw_execution,
-        rawClosedPnl: trade.raw_closed_pnl,
-      })),
+      connection: mapBybitConnectionRow(updatedConnection),
+      trades: trades.map(mapBybitTradeRow),
       refreshedAt: now,
       syncError: null,
     });

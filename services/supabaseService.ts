@@ -526,6 +526,7 @@ function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
     const type = normalizeTradeTypeFromSide(row.side);
     return {
         id: row.id,
+        provider: 'bybit',
         environment: row.environment,
         tradeDay: row.trade_day,
         externalTradeId: row.external_trade_id,

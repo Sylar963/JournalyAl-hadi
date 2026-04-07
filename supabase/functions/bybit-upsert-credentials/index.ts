@@ -26,6 +26,7 @@ serve(async (req) => {
           ? 'The API key is valid but missing derivatives permissions required for linear trade import.'
           : 'Bybit credential validation failed.',
         connection: {
+          provider: 'bybit',
           environment,
           apiKeyMasked: validation.apiKeyMasked,
           apiKeyLast4: validation.apiKeyLast4,

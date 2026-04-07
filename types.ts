@@ -8,6 +8,9 @@ export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'setting
 
 export type Theme = 'twilight' | 'sunrise' | 'cyberpunk' | 'forest';
 export type TradeSource = 'manual' | 'bybit';
+export type TradingProvider = 'bybit' | 'hyperliquid';
+export type TradingProviderCapability = 'trade_history' | 'market_data';
+export type TradingProviderAvailability = 'active' | 'planned';
 export type BybitEnvironment = 'mainnet' | 'testnet';
 export type BybitValidationStatus = 'not_connected' | 'pending' | 'valid' | 'invalid' | 'permission_denied';
 export type TradePnlSource = 'manual' | 'linked_trades';
@@ -47,6 +50,13 @@ export interface TradeDetails {
   notes?: string;
 }
 
+export interface TradingProviderDefinition {
+  id: TradingProvider;
+  label: string;
+  availability: TradingProviderAvailability;
+  capabilities: TradingProviderCapability[];
+}
+
 export interface EmotionEntry {
   date: string; // YYYY-MM-DD
   emotion: EmotionType;
@@ -60,8 +70,8 @@ export interface EmotionEntry {
   };
 }
 
-export interface BybitConnection {
-  environment: BybitEnvironment;
+export interface TradingConnection {
+  provider: TradingProvider;
   apiKeyMasked: string;
   apiKeyLast4: string;
   validationStatus: BybitValidationStatus;
@@ -72,19 +82,27 @@ export interface BybitConnection {
   syncError?: string | null;
 }
 
-export interface BybitCredentialInput {
-  environment: BybitEnvironment;
+export interface TradingCredentialInput {
+  provider: TradingProvider;
   apiKey: string;
   apiSecret: string;
 }
 
-export interface BybitCachedTrade {
-  id: string;
+export interface BybitConnection extends TradingConnection {
+  provider: 'bybit';
   environment: BybitEnvironment;
-  tradeDay: string;
+}
+
+export interface BybitCredentialInput extends Omit<TradingCredentialInput, 'provider'> {
+  provider?: 'bybit';
+  environment: BybitEnvironment;
+}
+
+export interface TradingCachedTrade {
+  provider: TradingProvider;
+  symbol: string;
   externalTradeId: string;
   orderId: string;
-  symbol: string;
   side: TradeSide;
   executedAt: string;
   quantity: number;
@@ -94,15 +112,27 @@ export interface BybitCachedTrade {
   closedPnl?: number;
   type: TradeDetails['type'];
   tradeFingerprint: string;
+}
+
+export interface BybitCachedTrade extends TradingCachedTrade {
+  provider: 'bybit';
+  id: string;
+  environment: BybitEnvironment;
+  tradeDay: string;
   rawExecution?: Record<string, unknown>;
   rawClosedPnl?: Record<string, unknown> | null;
 }
 
-export interface BybitTradeCacheResult {
-  trades: BybitCachedTrade[];
-  connection: BybitConnection | null;
+export interface TradingTradeCacheResult {
+  trades: TradingCachedTrade[];
+  connection: TradingConnection | null;
   refreshedAt?: string;
   syncError?: string | null;
+}
+
+export interface BybitTradeCacheResult extends TradingTradeCacheResult {
+  trades: BybitCachedTrade[];
+  connection: BybitConnection | null;
 }
 
 export interface ReportAnalysis {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { type BybitEnvironment, type BybitValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
-import { deleteBybitConnection, getBybitConnection, saveBybitConnection, validateBybitConnection } from '../services/dataService';
+import { getTradingProviderClient } from '../services/tradingProviderRegistry';
 import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage } from '../services/supabaseService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
@@ -22,6 +22,7 @@ const validationClasses: Record<BybitValidationStatus, string> = {
 
 const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange, isBybitAvailable }) => {
   const { t } = useI18n();
+  const bybitClient = getTradingProviderClient('bybit');
   const [environment, setEnvironment] = useState<BybitEnvironment>('mainnet');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
@@ -51,7 +52,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
       if (!isBybitAvailable) return;
       setIsLoading(true);
       try {
-        const connection = await getBybitConnection();
+        const connection = await bybitClient.getConnection();
         if (!connection || cancelled) return;
         setEnvironment(connection.environment);
         setStatus(connection.validationStatus);
@@ -72,13 +73,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
     return () => {
       cancelled = true;
     };
-  }, [isBybitAvailable, t]);
+  }, [bybitClient, isBybitAvailable, t]);
 
   async function handleSaveConnection() {
     setIsSaving(true);
     setFeedback(null);
     try {
-      const connection = await saveBybitConnection({
+      const connection = await bybitClient.saveConnection({
         environment,
         apiKey,
         apiSecret,
@@ -101,7 +102,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
     setIsTesting(true);
     setFeedback(null);
     try {
-      const connection = await validateBybitConnection({
+      const connection = await bybitClient.validateConnection({
         environment,
         apiKey,
         apiSecret,
@@ -119,7 +120,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
     setIsDeleting(true);
     setFeedback(null);
     try {
-      await deleteBybitConnection();
+      await bybitClient.deleteConnection();
       setStatus('not_connected');
       setMaskedKey(null);
       setLastValidatedAt(undefined);

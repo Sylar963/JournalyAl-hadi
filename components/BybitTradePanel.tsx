@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getBybitConnection, getCachedBybitTradesForDate, refreshBybitTradesForDate } from '../services/dataService';
 import { findDuplicateTrade, tradeFromCachedBybitTrade } from '../services/tradingIndexService';
+import { getTradingProviderClient } from '../services/tradingProviderRegistry';
 import type { BybitCachedTrade, BybitConnection, TradeDetails } from '../types';
 import { useI18n } from '../hooks/useI18n';
 
@@ -27,6 +27,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   onError,
 }) => {
   const { t } = useI18n();
+  const bybitClient = getTradingProviderClient('bybit');
   const [connection, setConnection] = useState<BybitConnection | null>(null);
   const [trades, setTrades] = useState<BybitCachedTrade[]>([]);
   const [search, setSearch] = useState('');
@@ -49,8 +50,8 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
       onError?.(null);
       try {
         const [nextConnection, cached] = await Promise.all([
-          getBybitConnection(),
-          getCachedBybitTradesForDate(date),
+          bybitClient.getConnection(),
+          bybitClient.getCachedTradesForDate(date),
         ]);
 
         if (cancelled) return;
@@ -77,7 +78,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [date, isBybitAvailable, isToday]);
+  }, [bybitClient, date, isBybitAvailable, isToday]);
 
   const filteredTrades = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -101,7 +102,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     onError?.(null);
 
     try {
-      const refreshed = await refreshBybitTradesForDate(date, Intl.DateTimeFormat().resolvedOptions().timeZone);
+      const refreshed = await bybitClient.refreshTradesForDate(date, Intl.DateTimeFormat().resolvedOptions().timeZone);
       setConnection(refreshed.connection);
       setTrades(refreshed.trades);
       onCacheChange?.(refreshed.trades);

@@ -20,6 +20,8 @@
 - The browser talks only to Supabase Edge Functions for Bybit credential validation, storage, and sync.
 - The Edge Function decrypts the stored credentials just-in-time, signs the Bybit request server-side, and returns only normalized trade data to the UI.
 - `bybit-sync-trades` now also supports a non-persistent backend preview mode for operational testing. This lets us verify a live symbol without mutating cached trade state.
+- Shared runtime concerns like auth, CORS, JSON responses, and encryption now live in a provider-agnostic Edge Function runtime module, while Bybit-specific signing and parsing stay isolated in the Bybit provider module.
+- On the frontend, provider metadata and clients are registered in [tradingProviderRegistry.ts](/home/aladhi/JournalyAl-hadi/services/tradingProviderRegistry.ts). That is the extension seam for future providers such as Hyperliquid market-data feeds.
 
 ## User Flow
 1. Open `Settings`.

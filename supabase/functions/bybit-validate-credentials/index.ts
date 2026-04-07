@@ -21,6 +21,7 @@ serve(async (req) => {
     const validation = await validateBybitCredentials(environment, apiKey, apiSecret);
     return jsonResponse(200, {
       connection: {
+        provider: 'bybit',
         environment,
         apiKeyMasked: validation.apiKeyMasked,
         apiKeyLast4: validation.apiKeyLast4,

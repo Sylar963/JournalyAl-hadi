@@ -5,6 +5,9 @@ import { I18nProvider } from '../hooks/useI18n';
 
 vi.mock('../services/dataService', () => ({
   getBybitConnection: vi.fn(),
+  saveBybitConnection: vi.fn(),
+  validateBybitConnection: vi.fn(),
+  deleteBybitConnection: vi.fn(),
   getCachedBybitTradesForDate: vi.fn(),
   refreshBybitTradesForDate: vi.fn(),
 }));
@@ -45,6 +48,7 @@ describe('BybitTradePanel', () => {
   it('loads cached trades and links a trade once', async () => {
     const onSelectTrade = vi.fn();
     mockedGetBybitConnection.mockResolvedValue({
+      provider: 'bybit',
       environment: 'mainnet',
       apiKeyMasked: 'ABCD****WXYZ',
       apiKeyLast4: 'WXYZ',
@@ -53,6 +57,7 @@ describe('BybitTradePanel', () => {
     });
     mockedGetCachedBybitTradesForDate.mockResolvedValue({
       connection: {
+        provider: 'bybit',
         environment: 'mainnet',
         apiKeyMasked: 'ABCD****WXYZ',
         apiKeyLast4: 'WXYZ',
@@ -61,6 +66,7 @@ describe('BybitTradePanel', () => {
       },
       trades: [{
         id: '1',
+        provider: 'bybit',
         environment: 'mainnet',
         tradeDay: '2026-04-06',
         externalTradeId: 'order-1',
@@ -77,6 +83,7 @@ describe('BybitTradePanel', () => {
     });
     mockedRefreshBybitTradesForDate.mockResolvedValue({
       connection: {
+        provider: 'bybit',
         environment: 'mainnet',
         apiKeyMasked: 'ABCD****WXYZ',
         apiKeyLast4: 'WXYZ',
@@ -86,6 +93,7 @@ describe('BybitTradePanel', () => {
       },
       trades: [{
         id: '1',
+        provider: 'bybit',
         environment: 'mainnet',
         tradeDay: '2026-04-06',
         externalTradeId: 'order-1',
