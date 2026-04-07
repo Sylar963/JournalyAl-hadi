@@ -42,6 +42,7 @@
 - `10005`: The key is valid but missing required permissions.
 - `10010`: The key is IP-bound and does not allow the deployed function egress IP.
 - HTTP `403`: Most often a region or IP restriction. Move the function to a non-U.S. region and re-test.
+- If the user is physically outside the U.S. but still gets HTTP `403`, the backend edge region can still be the cause. Supabase Edge Functions may execute in the nearest edge region to the caller unless a region is pinned. The app now pins Bybit function invocations to `ca-central-1` to avoid accidental U.S. egress during browser-triggered calls.
 - Empty trade list: The feature imports only today's `linear` trades in v1.
 - Duplicate warning when adding a manual trade: The entry already contains the Bybit trade or a matching fingerprint. Link the imported trade instead.
 

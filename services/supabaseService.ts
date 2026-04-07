@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, FunctionRegion, type SupabaseClient } from '@supabase/supabase-js';
 import { type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage } from '../utils/errorHelpers';
@@ -521,6 +521,7 @@ async function getFunctionErrorMessage(name: string, error: unknown): Promise<st
 }
 
 type BybitTradeCacheRow = Database['public']['Tables']['bybit_trade_cache']['Row'];
+const BYBIT_FUNCTION_REGION = FunctionRegion.CaCentral1;
 
 function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
     const type = normalizeTradeTypeFromSide(row.side);
@@ -559,6 +560,7 @@ async function invokeFunction<T>(name: string, body?: Record<string, unknown>): 
 
     const { data, error } = await supabase.functions.invoke(name, {
         body,
+        region: name.startsWith('bybit-') ? BYBIT_FUNCTION_REGION : undefined,
     });
 
     if (error) {
