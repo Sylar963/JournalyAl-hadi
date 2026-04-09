@@ -12,18 +12,28 @@ git add .
 # Get current timestamp
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 
-# Generate a summary of changes
-# We use git diff --cached --stat to get a summary of what's about to be committed
-SUMMARY=$(git diff --cached --stat | tail -n 1)
+# Arguments
+HEADER=$1
+BODY=$2
 
-# Get names of modified files for more detail
-FILES=$(git diff --cached --name-only | tr '\n' ',' | sed 's/,$//')
+# If no header is provided, use a generic one
+if [ -z "$HEADER" ]; then
+  SUMMARY=$(git diff --cached --stat | tail -n 1)
+  FILES=$(git diff --cached --name-only | tr '\n' ',' | sed 's/,$//')
+  HEADER="Changes in $FILES ($SUMMARY)"
+fi
 
-# Construct the commit message
-COMMIT_MSG="Auto-commit: $TIMESTAMP | Changes: $SUMMARY | Files: $FILES"
+# Construct the full commit message
+FULL_MSG="Auto-commit [$TIMESTAMP]: $HEADER"
+
+if [ ! -z "$BODY" ]; then
+  FULL_MSG="$FULL_MSG
+
+$BODY"
+fi
 
 # Perform the commit
-git commit -m "$COMMIT_MSG"
+git commit -m "$FULL_MSG"
 
 echo "Successfully auto-committed changes."
-echo "Message: $COMMIT_MSG"
+echo "Message header: Auto-commit [$TIMESTAMP]: $HEADER"

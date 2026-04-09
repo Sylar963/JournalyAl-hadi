@@ -8,9 +8,13 @@ This skill ensures that every time you (the agent) modify the codebase, the chan
 ## Instructions
 
 Whenever you complete a task that involving creating, modifying, or deleting files:
-1.  **Run the Commit Script**: Execute the following command in the terminal:
+1.  **Run the Commit Script**: Execute the script with a descriptive header and body.
     ```bash
-    ./scripts/agent-commit.sh
+    ./scripts/agent-commit.sh "[Descriptive Header]" "[Detailed Body]"
+    ```
+    *Example*:
+    ```bash
+    ./scripts/agent-commit.sh "feat(auth): add login validation" "Implemented email and password validation logic in the AuthService. Updated the LoginForm component to display error messages."
     ```
 2.  **Verify Success**: Ensure the script output indicates a successful commit.
 3.  **No Changes**: If the script reports "No changes to commit," you can proceed without further action.
