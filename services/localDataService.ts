@@ -154,7 +154,7 @@ export async function deleteBybitConnection(): Promise<void> {
 }
 
 export async function getCachedBybitTradesForDate(_date: string): Promise<BybitTradeCacheResult> {
-    return { trades: [], connection: null };
+    return { trades: [], positions: [], connection: null };
 }
 
 export async function refreshBybitTradesForDate(_date: string, _timezone: string): Promise<BybitTradeCacheResult> {

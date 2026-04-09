@@ -72,3 +72,36 @@ DROP POLICY IF EXISTS "Users can read their own bybit cache" ON public.bybit_tra
 CREATE POLICY "Users can read their own bybit cache"
 ON public.bybit_trade_cache FOR SELECT
 USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.bybit_position_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  environment TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
+  symbol TEXT NOT NULL,
+  side TEXT NOT NULL CHECK (side IN ('Buy', 'Sell', 'Unknown')),
+  position_status TEXT NOT NULL DEFAULT 'open' CHECK (position_status IN ('open', 'closed')),
+  size NUMERIC NOT NULL,
+  entry_price NUMERIC,
+  mark_price NUMERIC,
+  unrealized_pnl NUMERIC,
+  liquidation_price NUMERIC,
+  leverage NUMERIC,
+  position_value NUMERIC,
+  margin_mode TEXT NOT NULL DEFAULT 'unknown' CHECK (margin_mode IN ('cross', 'isolated', 'unknown')),
+  external_position_id TEXT NOT NULL,
+  updated_at TIMESTAMPTZ,
+  raw_position JSONB,
+  synced_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id, environment, external_position_id)
+);
+
+CREATE INDEX IF NOT EXISTS bybit_position_cache_user_env_idx
+ON public.bybit_position_cache (user_id, environment, symbol);
+
+ALTER TABLE public.bybit_position_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own bybit positions" ON public.bybit_position_cache;
+
+CREATE POLICY "Users can read their own bybit positions"
+ON public.bybit_position_cache FOR SELECT
+USING (auth.uid() = user_id);

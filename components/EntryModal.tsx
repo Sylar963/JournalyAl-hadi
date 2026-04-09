@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type BybitCachedTrade, type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
@@ -326,6 +326,17 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setPnl(hasLinkedPnl ? totalLinkedPnl.toFixed(2) : '');
   }, [pnlSource, trades]);
 
+  const payoffPreviewTrade = useMemo(() => {
+    const previewCandidates = [...trades].reverse();
+    return previewCandidates.find((trade) =>
+      (trade.type === 'Long Future' || trade.type === 'Short Future')
+      && (trade.entryPrice !== undefined || trade.price !== undefined)
+      && (trade.markPrice !== undefined || trade.liquidationPrice !== undefined || trade.unrealizedPnl !== undefined)
+    ) ?? null;
+  }, [trades]);
+
+  const payoffChartType = payoffPreviewTrade?.type ?? tradeType;
+
   if (!isOpen) return null;
   
   const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
@@ -525,7 +536,11 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     
                       {/* Payoff Chart */}
                       <AnimatePresence mode="wait">
-                        <PayoffChart key={tradeType} type={tradeType} />
+                        <PayoffChart
+                          key={payoffPreviewTrade ? `${payoffPreviewTrade.id}-${payoffPreviewTrade.markPrice ?? 'na'}-${payoffPreviewTrade.liquidationPrice ?? 'na'}` : tradeType}
+                          type={payoffChartType}
+                          trade={payoffPreviewTrade}
+                        />
                       </AnimatePresence>
     
                       {/* Add New Trade Form */}
@@ -602,19 +617,39 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                               <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{t('modal.entry.todays_trades')}</h3>
                               {trades.map((t) => (
                                   <div key={t.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-[color:var(--glass-border)]">
-                                      <div>
-                                          <div className="flex items-center space-x-2">
-                                            <span className={`text-xs px-2 py-0.5 rounded ${
-                                                t.type.includes('Long') || t.type.includes('Call') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-                                            }`}>{t.type}</span>
-                                            <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.source === 'bybit' ? 'bg-blue-500/20 text-blue-300' : 'bg-white/10 text-gray-300'}`}>
-                                                {t.source === 'bybit' ? 'Bybit' : 'Manual'}
-                                            </span>
-                                            <span className="font-bold text-white text-sm">{t.symbol}</span>
-                                          </div>
-                                          {t.executedAt && <p className="text-gray-500 text-[11px] mt-1">{new Date(t.executedAt).toLocaleString()}</p>}
-                                          {t.notes && <p className="text-gray-400 text-xs mt-1">{t.notes}</p>}
-                                      </div>
+                                       <div>
+                                           <div className="flex items-center space-x-2">
+                                             <span className={`text-xs px-2 py-0.5 rounded ${
+                                                 t.type.includes('Long') || t.type.includes('Call') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+                                             }`}>{t.type}</span>
+                                             <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.source === 'bybit' ? 'bg-blue-500/20 text-blue-300' : 'bg-white/10 text-gray-300'}`}>
+                                                 {t.source === 'bybit' ? 'Bybit' : 'Manual'}
+                                             </span>
+                                             {t.status && (
+                                               <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.status === 'open' ? 'bg-cyan-500/20 text-cyan-200' : t.status === 'closed' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-gray-300'}`}>
+                                                 {t.status}
+                                               </span>
+                                             )}
+                                             <span className="font-bold text-white text-sm">{t.symbol}</span>
+                                           </div>
+                                           {t.executedAt && <p className="text-gray-500 text-[11px] mt-1">{new Date(t.executedAt).toLocaleString()}</p>}
+                                           {(t.markPrice !== undefined || t.liquidationPrice !== undefined || t.unrealizedPnl !== undefined) && (
+                                             <div className="flex flex-wrap gap-2 mt-2 text-[11px] text-gray-300">
+                                               {t.markPrice !== undefined && (
+                                                 <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-cyan-100">Mark {t.markPrice.toFixed(4)}</span>
+                                               )}
+                                               {t.liquidationPrice !== undefined && (
+                                                 <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-200">Liq {t.liquidationPrice.toFixed(4)}</span>
+                                               )}
+                                               {t.unrealizedPnl !== undefined && (
+                                                 <span className={`rounded-full px-2 py-0.5 ${t.unrealizedPnl >= 0 ? 'bg-emerald-500/10 text-emerald-200' : 'bg-red-500/10 text-red-200'}`}>
+                                                   UPNL {t.unrealizedPnl >= 0 ? '+' : ''}{t.unrealizedPnl.toFixed(2)}
+                                                 </span>
+                                               )}
+                                             </div>
+                                           )}
+                                           {t.notes && <p className="text-gray-400 text-xs mt-1">{t.notes}</p>}
+                                       </div>
                                       <div className="flex items-center space-x-3">
                                           {(t.closedPnl !== undefined || t.pnl !== undefined) && (
                                               <span className={`font-mono text-sm ${(t.closedPnl ?? t.pnl ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>

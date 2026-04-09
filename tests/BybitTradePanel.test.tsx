@@ -64,6 +64,7 @@ describe('BybitTradePanel', () => {
         validationStatus: 'valid',
         permissionSnapshot: {},
       },
+      positions: [],
       trades: [{
         id: '1',
         provider: 'bybit',
@@ -91,6 +92,7 @@ describe('BybitTradePanel', () => {
         permissionSnapshot: {},
         lastSyncAt: '2026-04-06T12:00:00.000Z',
       },
+      positions: [],
       trades: [{
         id: '1',
         provider: 'bybit',
@@ -118,6 +120,88 @@ describe('BybitTradePanel', () => {
     expect(mockedRefreshBybitTradesForDate).toHaveBeenCalledWith('2026-04-06', expect.any(String));
 
     fireEvent.click(screen.getByRole('button', { name: /link trade/i }));
+    expect(onSelectTrade).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows live positions and registers a snapshot', async () => {
+    const onSelectTrade = vi.fn();
+    mockedGetBybitConnection.mockResolvedValue({
+      provider: 'bybit',
+      environment: 'mainnet',
+      apiKeyMasked: 'ABCD****WXYZ',
+      apiKeyLast4: 'WXYZ',
+      validationStatus: 'valid',
+      permissionSnapshot: {},
+    });
+    mockedGetCachedBybitTradesForDate.mockResolvedValue({
+      connection: {
+        provider: 'bybit',
+        environment: 'mainnet',
+        apiKeyMasked: 'ABCD****WXYZ',
+        apiKeyLast4: 'WXYZ',
+        validationStatus: 'valid',
+        permissionSnapshot: {},
+      },
+      trades: [],
+      positions: [{
+        id: 'position-1',
+        provider: 'bybit',
+        environment: 'mainnet',
+        symbol: 'ETHUSDT',
+        side: 'Buy',
+        status: 'open',
+        quantity: 2,
+        entryPrice: 3200,
+        markPrice: 3225,
+        unrealizedPnl: 50,
+        liquidationPrice: 2900,
+        leverage: 5,
+        positionValue: 6450,
+        marginMode: 'cross',
+        updatedAt: '2026-04-06T12:00:00.000Z',
+        externalPositionId: 'position:ETHUSDT:Buy',
+        type: 'Long Future',
+      }],
+    });
+    mockedRefreshBybitTradesForDate.mockResolvedValue({
+      connection: {
+        provider: 'bybit',
+        environment: 'mainnet',
+        apiKeyMasked: 'ABCD****WXYZ',
+        apiKeyLast4: 'WXYZ',
+        validationStatus: 'valid',
+        permissionSnapshot: {},
+        lastSyncAt: '2026-04-06T12:00:00.000Z',
+      },
+      trades: [],
+      positions: [{
+        id: 'position-1',
+        provider: 'bybit',
+        environment: 'mainnet',
+        symbol: 'ETHUSDT',
+        side: 'Buy',
+        status: 'open',
+        quantity: 2,
+        entryPrice: 3200,
+        markPrice: 3225,
+        unrealizedPnl: 50,
+        liquidationPrice: 2900,
+        leverage: 5,
+        positionValue: 6450,
+        marginMode: 'cross',
+        updatedAt: '2026-04-06T12:00:00.000Z',
+        externalPositionId: 'position:ETHUSDT:Buy',
+        type: 'Long Future',
+      }],
+    });
+
+    renderPanel({ onSelectTrade });
+
+    await waitFor(() => {
+      expect(screen.getByText('ETHUSDT')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /register snapshot/i }));
     expect(onSelectTrade).toHaveBeenCalledTimes(1);
   });
 });

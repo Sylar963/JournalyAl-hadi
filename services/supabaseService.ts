@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview } from '../types';
+import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage } from '../utils/errorHelpers';
 import { createTradeFingerprint, normalizeTradeTypeFromSide } from './tradingIndexService';
@@ -259,6 +259,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      bybit_position_cache: {
+        Row: {
+          id: string;
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          symbol: string;
+          side: 'Buy' | 'Sell' | 'Unknown';
+          position_status: 'open' | 'closed';
+          size: number;
+          entry_price: number | null;
+          mark_price: number | null;
+          unrealized_pnl: number | null;
+          liquidation_price: number | null;
+          leverage: number | null;
+          position_value: number | null;
+          margin_mode: 'cross' | 'isolated' | 'unknown';
+          external_position_id: string;
+          updated_at: string | null;
+          raw_position: Record<string, unknown> | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          symbol: string;
+          side: 'Buy' | 'Sell' | 'Unknown';
+          position_status?: 'open' | 'closed';
+          size: number;
+          entry_price?: number | null;
+          mark_price?: number | null;
+          unrealized_pnl?: number | null;
+          liquidation_price?: number | null;
+          leverage?: number | null;
+          position_value?: number | null;
+          margin_mode?: 'cross' | 'isolated' | 'unknown';
+          external_position_id: string;
+          updated_at?: string | null;
+          raw_position?: Record<string, unknown> | null;
+          synced_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          environment?: 'mainnet' | 'testnet';
+          symbol?: string;
+          side?: 'Buy' | 'Sell' | 'Unknown';
+          position_status?: 'open' | 'closed';
+          size?: number;
+          entry_price?: number | null;
+          mark_price?: number | null;
+          unrealized_pnl?: number | null;
+          liquidation_price?: number | null;
+          leverage?: number | null;
+          position_value?: number | null;
+          margin_mode?: 'cross' | 'isolated' | 'unknown';
+          external_position_id?: string;
+          updated_at?: string | null;
+          raw_position?: Record<string, unknown> | null;
+          synced_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: { [key: string]: never };
     Functions: { [key: string]: never };
@@ -426,17 +489,56 @@ ON public.bybit_trade_cache FOR SELECT
 USING (auth.uid() = user_id);
 `;
 
+export const BYBIT_POSITION_CACHE_TABLE_SETUP_SQL = `
+-- 1. Create the cache for live Bybit positions
+CREATE TABLE IF NOT EXISTS public.bybit_position_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  environment TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
+  symbol TEXT NOT NULL,
+  side TEXT NOT NULL CHECK (side IN ('Buy', 'Sell', 'Unknown')),
+  position_status TEXT NOT NULL DEFAULT 'open' CHECK (position_status IN ('open', 'closed')),
+  size NUMERIC NOT NULL,
+  entry_price NUMERIC,
+  mark_price NUMERIC,
+  unrealized_pnl NUMERIC,
+  liquidation_price NUMERIC,
+  leverage NUMERIC,
+  position_value NUMERIC,
+  margin_mode TEXT NOT NULL DEFAULT 'unknown' CHECK (margin_mode IN ('cross', 'isolated', 'unknown')),
+  external_position_id TEXT NOT NULL,
+  updated_at TIMESTAMPTZ,
+  raw_position JSONB,
+  synced_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id, environment, external_position_id)
+);
+
+CREATE INDEX IF NOT EXISTS bybit_position_cache_user_env_idx
+ON public.bybit_position_cache (user_id, environment, symbol);
+
+ALTER TABLE public.bybit_position_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own bybit positions" ON public.bybit_position_cache;
+
+CREATE POLICY "Users can read their own bybit positions"
+ON public.bybit_position_cache FOR SELECT
+USING (auth.uid() = user_id);
+`;
+
 const clientNotConfiguredError = 'Supabase client is not initialized. Check your environment variables.';
-export const BYBIT_SETUP_SQL = `${BYBIT_CONNECTIONS_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_TRADE_CACHE_TABLE_SETUP_SQL.trim()}`;
+export const BYBIT_SETUP_SQL = `${BYBIT_CONNECTIONS_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_TRADE_CACHE_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_POSITION_CACHE_TABLE_SETUP_SQL.trim()}`;
 
 export function isMissingBybitSchemaError(message: string): boolean {
     const normalized = message.toLowerCase();
     return normalized.includes('relation "public.bybit_connections" does not exist')
         || normalized.includes('relation "public.bybit_trade_cache" does not exist')
+        || normalized.includes('relation "public.bybit_position_cache" does not exist')
         || (normalized.includes('bybit_connections') && normalized.includes('column') && normalized.includes('does not exist'))
         || (normalized.includes('bybit_trade_cache') && normalized.includes('column') && normalized.includes('does not exist'))
+        || (normalized.includes('bybit_position_cache') && normalized.includes('column') && normalized.includes('does not exist'))
         || (normalized.includes('bybit_connections') && normalized.includes('schema cache'))
-        || (normalized.includes('bybit_trade_cache') && normalized.includes('schema cache'));
+        || (normalized.includes('bybit_trade_cache') && normalized.includes('schema cache'))
+        || (normalized.includes('bybit_position_cache') && normalized.includes('schema cache'));
 }
 
 export function getBybitSchemaErrorMessage(): string {
@@ -545,6 +647,7 @@ async function getFunctionErrorMessage(name: string, error: unknown): Promise<st
 }
 
 type BybitTradeCacheRow = Database['public']['Tables']['bybit_trade_cache']['Row'];
+type BybitPositionCacheRow = Database['public']['Tables']['bybit_position_cache']['Row'];
 const BYBIT_FUNCTION_REGIONS = ['ca-central-1', 'eu-west-1'] as const;
 
 function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
@@ -576,6 +679,30 @@ function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
         }),
         rawExecution: row.raw_execution ?? undefined,
         rawClosedPnl: row.raw_closed_pnl ?? undefined,
+    };
+}
+
+function mapBybitPosition(row: BybitPositionCacheRow): BybitCachedPosition {
+    const type = normalizeTradeTypeFromSide(row.side);
+    return {
+        id: row.id,
+        provider: 'bybit',
+        environment: row.environment,
+        symbol: row.symbol,
+        side: row.side,
+        status: row.position_status,
+        quantity: Number(row.size),
+        entryPrice: row.entry_price ?? undefined,
+        markPrice: row.mark_price ?? undefined,
+        unrealizedPnl: row.unrealized_pnl ?? undefined,
+        liquidationPrice: row.liquidation_price ?? undefined,
+        leverage: row.leverage ?? undefined,
+        positionValue: row.position_value ?? undefined,
+        marginMode: row.margin_mode,
+        updatedAt: row.updated_at ?? undefined,
+        externalPositionId: row.external_position_id,
+        type,
+        rawPosition: row.raw_position ?? undefined,
     };
 }
 
@@ -986,7 +1113,7 @@ export async function deleteBybitConnection(): Promise<void> {
 export async function getCachedBybitTradesForDate(date: string): Promise<BybitTradeCacheResult> {
     const userId = await getUserId();
     try {
-        const [connection, trades] = await Promise.all([
+        const [connection, trades, positions] = await Promise.all([
             getBybitConnection(),
             performSupabaseOp(
                 () => supabase!
@@ -997,12 +1124,22 @@ export async function getCachedBybitTradesForDate(date: string): Promise<BybitTr
                     .order('executed_at', { ascending: false }),
                 'Error fetching Bybit trade cache',
                 []
+            ),
+            performSupabaseOp(
+                () => supabase!
+                    .from('bybit_position_cache')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('updated_at', { ascending: false, nullsFirst: false }),
+                'Error fetching Bybit position cache',
+                []
             )
         ]);
 
         return {
             connection,
             trades: (trades as BybitTradeCacheRow[]).map(mapBybitTrade),
+            positions: (positions as BybitPositionCacheRow[]).map(mapBybitPosition),
             refreshedAt: connection?.lastSyncAt,
             syncError: connection?.syncError,
         };
@@ -1025,6 +1162,7 @@ export async function refreshBybitTradesForDate(date: string, timezone: string):
         return {
             ...result,
             trades: result.trades ?? [],
+            positions: result.positions ?? [],
         };
     } catch (error) {
         const message = getErrorMessage(error);

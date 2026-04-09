@@ -15,6 +15,7 @@ export type BybitEnvironment = 'mainnet' | 'testnet';
 export type BybitValidationStatus = 'not_connected' | 'pending' | 'valid' | 'invalid' | 'permission_denied';
 export type TradePnlSource = 'manual' | 'linked_trades';
 export type TradeSide = 'Buy' | 'Sell' | 'Unknown';
+export type TradeStatus = 'open' | 'closed' | 'unknown';
 
 export interface ThemeConfig {
   id: Theme;
@@ -46,6 +47,13 @@ export interface TradeDetails {
   orderId?: string;
   executedAt?: string;
   side?: TradeSide;
+  status?: TradeStatus;
+  markPrice?: number;
+  unrealizedPnl?: number;
+  liquidationPrice?: number;
+  leverage?: number;
+  positionValue?: number;
+  marginMode?: 'cross' | 'isolated' | 'unknown';
   tradeFingerprint?: string;
   notes?: string;
 }
@@ -114,6 +122,24 @@ export interface TradingCachedTrade {
   tradeFingerprint: string;
 }
 
+export interface TradingCachedPosition {
+  provider: TradingProvider;
+  symbol: string;
+  side: TradeSide;
+  status: Extract<TradeStatus, 'open' | 'closed'>;
+  quantity: number;
+  entryPrice?: number;
+  markPrice?: number;
+  unrealizedPnl?: number;
+  liquidationPrice?: number;
+  leverage?: number;
+  positionValue?: number;
+  marginMode?: 'cross' | 'isolated' | 'unknown';
+  updatedAt?: string;
+  externalPositionId: string;
+  type: TradeDetails['type'];
+}
+
 export interface BybitCachedTrade extends TradingCachedTrade {
   provider: 'bybit';
   id: string;
@@ -123,8 +149,16 @@ export interface BybitCachedTrade extends TradingCachedTrade {
   rawClosedPnl?: Record<string, unknown> | null;
 }
 
+export interface BybitCachedPosition extends TradingCachedPosition {
+  provider: 'bybit';
+  id: string;
+  environment: BybitEnvironment;
+  rawPosition?: Record<string, unknown>;
+}
+
 export interface TradingTradeCacheResult {
   trades: TradingCachedTrade[];
+  positions?: TradingCachedPosition[];
   connection: TradingConnection | null;
   refreshedAt?: string;
   syncError?: string | null;
@@ -132,6 +166,7 @@ export interface TradingTradeCacheResult {
 
 export interface BybitTradeCacheResult extends TradingTradeCacheResult {
   trades: BybitCachedTrade[];
+  positions: BybitCachedPosition[];
   connection: BybitConnection | null;
 }
 

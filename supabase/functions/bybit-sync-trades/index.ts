@@ -1,5 +1,12 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
-import { fetchAggregatedTradesForDay, getUtcBoundsForDateInTimeZone, mapBybitConnectionRow, mapBybitTradeRow } from '../_shared/bybit.ts';
+import {
+  fetchActivePositions,
+  fetchAggregatedTradesForDay,
+  getUtcBoundsForDateInTimeZone,
+  mapBybitConnectionRow,
+  mapBybitPositionRow,
+  mapBybitTradeRow,
+} from '../_shared/bybit.ts';
 import { corsPreflightResponse, decryptSecret, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
 
 serve(async (req) => {
@@ -49,16 +56,25 @@ serve(async (req) => {
 
     const apiKey = await decryptSecret(connectionRow.api_key_ciphertext, connectionRow.api_key_iv);
     const apiSecret = await decryptSecret(connectionRow.secret_ciphertext, connectionRow.secret_iv);
-    const trades = await fetchAggregatedTradesForDay({
-      userId,
-      environment: connectionRow.environment,
-      apiKey,
-      apiSecret,
-      tradeDay: date,
-      startTime,
-      endTime,
-      symbol: normalizedSymbol,
-    });
+    const [trades, positions] = await Promise.all([
+      fetchAggregatedTradesForDay({
+        userId,
+        environment: connectionRow.environment,
+        apiKey,
+        apiSecret,
+        tradeDay: date,
+        startTime,
+        endTime,
+        symbol: normalizedSymbol,
+      }),
+      fetchActivePositions({
+        userId,
+        environment: connectionRow.environment,
+        apiKey,
+        apiSecret,
+        symbol: normalizedSymbol,
+      }),
+    ]);
 
     const now = new Date().toISOString();
 
@@ -66,6 +82,7 @@ serve(async (req) => {
       return jsonResponse(200, {
         connection: mapBybitConnectionRow(connectionRow),
         trades: trades.map(mapBybitTradeRow),
+        positions: positions.map(mapBybitPositionRow),
         refreshedAt: now,
         syncError: null,
         previewOnly: true,
@@ -78,10 +95,24 @@ serve(async (req) => {
       .eq('trade_day', date)
       .eq('environment', connectionRow.environment);
 
+    await supabase.from('bybit_position_cache').delete()
+      .eq('user_id', userId)
+      .eq('environment', connectionRow.environment);
+
     if (trades.length > 0) {
       const { error: upsertError } = await supabase
         .from('bybit_trade_cache')
         .insert(trades);
+
+      if (upsertError) {
+        throw new Error(upsertError.message);
+      }
+    }
+
+    if (positions.length > 0) {
+      const { error: upsertError } = await supabase
+        .from('bybit_position_cache')
+        .insert(positions);
 
       if (upsertError) {
         throw new Error(upsertError.message);
@@ -106,6 +137,7 @@ serve(async (req) => {
     return jsonResponse(200, {
       connection: mapBybitConnectionRow(updatedConnection),
       trades: trades.map(mapBybitTradeRow),
+      positions: positions.map(mapBybitPositionRow),
       refreshedAt: now,
       syncError: null,
     });

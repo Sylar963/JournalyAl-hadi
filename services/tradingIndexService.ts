@@ -1,4 +1,4 @@
-import type { BybitCachedTrade, EmotionEntry, TradeDetails, TradeSource } from '../types';
+import type { BybitCachedPosition, BybitCachedTrade, EmotionEntry, TradeDetails, TradeSource } from '../types';
 
 export interface IndexedTrade extends TradeDetails {
   source: TradeSource;
@@ -68,6 +68,40 @@ export function tradeFromCachedBybitTrade(trade: BybitCachedTrade): TradeDetails
     executedAt: trade.executedAt,
     side: trade.side,
     tradeFingerprint: trade.tradeFingerprint,
+    status: trade.closedPnl !== undefined ? 'closed' : 'unknown',
+  };
+}
+
+export function tradeFromCachedBybitPosition(position: BybitCachedPosition): TradeDetails {
+  return {
+    id: position.externalPositionId,
+    type: position.type,
+    symbol: position.symbol,
+    source: 'bybit',
+    entryPrice: position.entryPrice,
+    price: position.entryPrice,
+    quantity: position.quantity,
+    contracts: position.quantity,
+    side: position.side,
+    status: position.status,
+    executedAt: position.updatedAt,
+    externalTradeId: position.externalPositionId,
+    orderId: position.externalPositionId,
+    markPrice: position.markPrice,
+    unrealizedPnl: position.unrealizedPnl,
+    liquidationPrice: position.liquidationPrice,
+    leverage: position.leverage,
+    positionValue: position.positionValue,
+    marginMode: position.marginMode,
+    tradeFingerprint: createTradeFingerprint({
+      source: 'bybit',
+      symbol: position.symbol,
+      type: position.type,
+      side: position.side,
+      executedAt: position.updatedAt,
+      quantity: position.quantity,
+      price: position.entryPrice,
+    }),
   };
 }
 

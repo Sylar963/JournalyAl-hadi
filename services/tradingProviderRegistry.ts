@@ -60,6 +60,7 @@ const providerClients: Partial<Record<TradingProvider, TradingProviderClient>> =
   bybit: bybitProviderClient,
 };
 
+export function getTradingProviderClient(provider: 'bybit'): TradingProviderClient<BybitConnection, BybitCredentialInput, BybitTradeCacheResult>;
 export function getTradingProviderClient(provider: TradingProvider): TradingProviderClient {
   const client = providerClients[provider];
   if (!client) {

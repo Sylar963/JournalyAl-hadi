@@ -43,6 +43,26 @@ export interface AggregatedTradeRow {
   synced_at: string;
 }
 
+export interface AggregatedPositionRow {
+  user_id: string;
+  environment: BybitEnvironment;
+  symbol: string;
+  side: 'Buy' | 'Sell' | 'Unknown';
+  position_status: 'open' | 'closed';
+  size: number;
+  entry_price: number | null;
+  mark_price: number | null;
+  unrealized_pnl: number | null;
+  liquidation_price: number | null;
+  leverage: number | null;
+  position_value: number | null;
+  margin_mode: 'cross' | 'isolated' | 'unknown';
+  external_position_id: string;
+  updated_at: string | null;
+  raw_position: Record<string, unknown>;
+  synced_at: string;
+}
+
 export interface UtcBounds {
   startTime: number;
   endTime: number;
@@ -200,6 +220,33 @@ interface ClosedPnlItem {
   orderId: string;
   closedPnl?: string;
   [key: string]: unknown;
+}
+
+interface PositionItem {
+  symbol: string;
+  side?: 'Buy' | 'Sell' | 'None' | '';
+  size?: string;
+  avgPrice?: string;
+  markPrice?: string;
+  unrealisedPnl?: string;
+  liqPrice?: string;
+  leverage?: string;
+  positionValue?: string;
+  tradeMode?: number;
+  updatedTime?: string;
+  [key: string]: unknown;
+}
+
+function toOptionalNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function resolveMarginMode(tradeMode: unknown): 'cross' | 'isolated' | 'unknown' {
+  if (tradeMode === 0 || tradeMode === '0') return 'cross';
+  if (tradeMode === 1 || tradeMode === '1') return 'isolated';
+  return 'unknown';
 }
 
 async function fetchPaged<T extends { nextPageCursor?: string; list: Record<string, unknown>[] }>(
@@ -366,6 +413,83 @@ export function mapBybitTradeRow(trade: AggregatedTradeRow) {
     rawExecution: trade.raw_execution,
     rawClosedPnl: trade.raw_closed_pnl,
   };
+}
+
+export function mapBybitPositionRow(position: AggregatedPositionRow) {
+  return {
+    id: position.external_position_id,
+    provider: 'bybit' as const,
+    environment: position.environment,
+    symbol: position.symbol,
+    side: position.side,
+    status: position.position_status,
+    quantity: position.size,
+    entryPrice: position.entry_price ?? undefined,
+    markPrice: position.mark_price ?? undefined,
+    unrealizedPnl: position.unrealized_pnl ?? undefined,
+    liquidationPrice: position.liquidation_price ?? undefined,
+    leverage: position.leverage ?? undefined,
+    positionValue: position.position_value ?? undefined,
+    marginMode: position.margin_mode,
+    updatedAt: position.updated_at ?? undefined,
+    externalPositionId: position.external_position_id,
+    type: position.side === 'Sell' ? 'Short Future' : 'Long Future',
+    rawPosition: position.raw_position,
+  };
+}
+
+export async function fetchActivePositions(input: {
+  userId: string;
+  environment: BybitEnvironment;
+  apiKey: string;
+  apiSecret: string;
+  symbol?: string;
+}): Promise<AggregatedPositionRow[]> {
+  const positions = await fetchPaged<{ nextPageCursor?: string; list: PositionItem[] }>(
+    input.environment,
+    input.apiKey,
+    input.apiSecret,
+    '/v5/position/list',
+    {
+      category: 'linear',
+      settleCoin: input.symbol ? undefined : 'USDT',
+      symbol: input.symbol,
+      limit: 200,
+    }
+  ) as PositionItem[];
+
+  const now = new Date().toISOString();
+  return positions
+    .filter((position) => {
+      const size = Number(position.size || 0);
+      return Number.isFinite(size) && size > 0 && position.side !== 'None' && position.side !== '';
+    })
+    .map((position) => {
+      const side = position.side === 'Sell' ? 'Sell' : position.side === 'Buy' ? 'Buy' : 'Unknown';
+      const updatedAt = position.updatedTime
+        ? new Date(Number(position.updatedTime)).toISOString()
+        : null;
+
+      return {
+        user_id: input.userId,
+        environment: input.environment,
+        symbol: position.symbol,
+        side,
+        position_status: 'open',
+        size: Number(position.size || 0),
+        entry_price: toOptionalNumber(position.avgPrice),
+        mark_price: toOptionalNumber(position.markPrice),
+        unrealized_pnl: toOptionalNumber(position.unrealisedPnl),
+        liquidation_price: toOptionalNumber(position.liqPrice),
+        leverage: toOptionalNumber(position.leverage),
+        position_value: toOptionalNumber(position.positionValue),
+        margin_mode: resolveMarginMode(position.tradeMode),
+        external_position_id: `position:${position.symbol}:${side}`,
+        updated_at: updatedAt,
+        raw_position: position as Record<string, unknown>,
+        synced_at: now,
+      };
+    });
 }
 
 export async function fetchAggregatedTradesForDay(input: {

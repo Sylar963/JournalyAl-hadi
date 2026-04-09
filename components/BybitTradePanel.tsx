@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { findDuplicateTrade, tradeFromCachedBybitTrade } from '../services/tradingIndexService';
+import { findDuplicateTrade, tradeFromCachedBybitPosition, tradeFromCachedBybitTrade } from '../services/tradingIndexService';
 import { getTradingProviderClient } from '../services/tradingProviderRegistry';
-import type { BybitCachedTrade, BybitConnection, TradeDetails } from '../types';
+import type { BybitCachedPosition, BybitCachedTrade, BybitConnection, TradeDetails } from '../types';
 import { useI18n } from '../hooks/useI18n';
 
 interface BybitTradePanelProps {
@@ -30,6 +30,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   const bybitClient = getTradingProviderClient('bybit');
   const [connection, setConnection] = useState<BybitConnection | null>(null);
   const [trades, setTrades] = useState<BybitCachedTrade[]>([]);
+  const [positions, setPositions] = useState<BybitCachedPosition[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -42,6 +43,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
       if (!isBybitAvailable || !isToday) {
         setConnection(null);
         setTrades([]);
+        setPositions([]);
         onCacheChange?.([]);
         return;
       }
@@ -58,6 +60,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
         const resolvedConnection = cached.connection ?? nextConnection;
         setConnection(resolvedConnection);
         setTrades(cached.trades);
+        setPositions(cached.positions ?? []);
         onCacheChange?.(cached.trades);
 
         const isStale = !resolvedConnection?.lastSyncAt
@@ -78,7 +81,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [bybitClient, date, isBybitAvailable, isToday]);
+  }, [bybitClient, date, isBybitAvailable, isToday, onCacheChange, onError, t]);
 
   const filteredTrades = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -89,6 +92,15 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
       || trade.externalTradeId.toLowerCase().includes(term)
     );
   }, [search, trades]);
+
+  const filteredPositions = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return positions;
+    return positions.filter((position) =>
+      position.symbol.toLowerCase().includes(term)
+      || position.externalPositionId.toLowerCase().includes(term)
+    );
+  }, [positions, search]);
 
   async function handleRefresh(isBackground = false, connectionOverride?: BybitConnection | null) {
     const activeConnection = connectionOverride ?? connection;
@@ -105,6 +117,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
       const refreshed = await bybitClient.refreshTradesForDate(date, Intl.DateTimeFormat().resolvedOptions().timeZone);
       setConnection(refreshed.connection);
       setTrades(refreshed.trades);
+      setPositions(refreshed.positions ?? []);
       onCacheChange?.(refreshed.trades);
     } catch (error) {
       onError?.(error instanceof Error ? error.message : t('bybit.error.refresh'));
@@ -115,6 +128,18 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
 
   function handleSelectTrade(trade: BybitCachedTrade) {
     const normalized = tradeFromCachedBybitTrade(trade);
+    const duplicate = findDuplicateTrade(normalized, selectedTrades);
+    if (duplicate) {
+      onError?.(t('bybit.error.duplicate_link'));
+      return;
+    }
+
+    onError?.(null);
+    onSelectTrade(normalized);
+  }
+
+  function handleSelectPosition(position: BybitCachedPosition) {
+    const normalized = tradeFromCachedBybitPosition(position);
     const duplicate = findDuplicateTrade(normalized, selectedTrades);
     if (duplicate) {
       onError?.(t('bybit.error.duplicate_link'));
@@ -191,50 +216,145 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
         />
       </div>
 
-      <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-        {isLoading ? (
-          <div className="text-sm text-gray-400">{t('bybit.loading')}</div>
-        ) : filteredTrades.length === 0 ? (
-          <div className="text-sm text-gray-400">{t('bybit.empty')}</div>
-        ) : (
-          filteredTrades.map((trade) => {
-            const duplicate = !!findDuplicateTrade(tradeFromCachedBybitTrade(trade), selectedTrades);
-            const pnlValue = trade.closedPnl;
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">{t('bybit.executions_title')}</h4>
+          <span className="text-[11px] text-gray-500">{filteredTrades.length}</span>
+        </div>
+        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+          {isLoading ? (
+            <div className="text-sm text-gray-400">{t('bybit.loading')}</div>
+          ) : filteredTrades.length === 0 ? (
+            <div className="text-sm text-gray-400">{t('bybit.empty')}</div>
+          ) : (
+            filteredTrades.map((trade) => {
+              const duplicate = !!findDuplicateTrade(tradeFromCachedBybitTrade(trade), selectedTrades);
+              const pnlValue = trade.closedPnl;
 
-            return (
-              <div key={trade.externalTradeId} className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded ${trade.side === 'Sell' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
-                        {trade.side}
-                      </span>
-                      <span className="font-semibold text-white text-sm">{trade.symbol}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(trade.executedAt).toLocaleTimeString()} • {trade.quantity} @ {trade.price}
-                    </p>
-                    <p className="text-[11px] text-gray-500 mt-1">{trade.orderId}</p>
-                  </div>
-                  <div className="text-right space-y-2">
-                    {typeof pnlValue === 'number' && (
-                      <div className={`text-sm font-mono ${pnlValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {pnlValue >= 0 ? '+' : ''}{pnlValue.toFixed(2)}
+              return (
+                <div key={trade.externalTradeId} className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded ${trade.side === 'Sell' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
+                          {trade.side}
+                        </span>
+                        <span className="font-semibold text-white text-sm">{trade.symbol}</span>
                       </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleSelectTrade(trade)}
-                      disabled={duplicate}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {duplicate ? t('bybit.linked') : t('bybit.link_trade')}
-                    </button>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(trade.executedAt).toLocaleTimeString()} • {trade.quantity} @ {trade.price}
+                      </p>
+                      <p className="text-[11px] text-gray-500 mt-1">{trade.orderId}</p>
+                    </div>
+                    <div className="text-right space-y-2">
+                      {typeof pnlValue === 'number' && (
+                        <div className={`text-sm font-mono ${pnlValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {pnlValue >= 0 ? '+' : ''}{pnlValue.toFixed(2)}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectTrade(trade)}
+                        disabled={duplicate}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {duplicate ? t('bybit.linked') : t('bybit.link_trade')}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/80">{t('bybit.positions_title')}</h4>
+          <span className="text-[11px] text-gray-500">{filteredPositions.length}</span>
+        </div>
+
+        {filteredPositions.length === 0 ? (
+          <div className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-3 text-sm text-gray-400">
+            {t('bybit.positions_empty')}
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+            {filteredPositions.map((position) => {
+              const duplicate = !!findDuplicateTrade(tradeFromCachedBybitPosition(position), selectedTrades);
+              const pnlValue = position.unrealizedPnl;
+
+              return (
+                <div
+                  key={position.externalPositionId}
+                  className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_45%),rgba(255,255,255,0.03)] p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded ${position.side === 'Sell' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
+                          {position.side}
+                        </span>
+                        <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-200">
+                          {t('bybit.status_open')}
+                        </span>
+                        <span className="font-semibold text-white text-sm">{position.symbol}</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-300 sm:grid-cols-3">
+                        <div className="rounded-lg bg-black/20 px-3 py-2">
+                          <div className="text-gray-500">{t('bybit.entry_price')}</div>
+                          <div className="font-mono text-white">{position.entryPrice?.toFixed(4) ?? '--'}</div>
+                        </div>
+                        <div className="rounded-lg bg-black/20 px-3 py-2">
+                          <div className="text-gray-500">{t('bybit.mark_price')}</div>
+                          <div className="font-mono text-white">{position.markPrice?.toFixed(4) ?? '--'}</div>
+                        </div>
+                        <div className="rounded-lg bg-black/20 px-3 py-2">
+                          <div className="text-gray-500">{t('bybit.liquidation_price')}</div>
+                          <div className="font-mono text-amber-200">{position.liquidationPrice?.toFixed(4) ?? '--'}</div>
+                        </div>
+                        <div className="rounded-lg bg-black/20 px-3 py-2">
+                          <div className="text-gray-500">{t('bybit.position_size')}</div>
+                          <div className="font-mono text-white">{position.quantity}</div>
+                        </div>
+                        <div className="rounded-lg bg-black/20 px-3 py-2">
+                          <div className="text-gray-500">{t('bybit.leverage_short')}</div>
+                          <div className="font-mono text-white">{position.leverage ? `${position.leverage}x` : '--'}</div>
+                        </div>
+                        <div className="rounded-lg bg-black/20 px-3 py-2">
+                          <div className="text-gray-500">{t('bybit.margin_mode')}</div>
+                          <div className="font-medium text-white capitalize">{position.marginMode ?? 'unknown'}</div>
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] text-gray-500">
+                        {position.updatedAt ? `${t('bybit.updated')}: ${new Date(position.updatedAt).toLocaleString()}` : position.externalPositionId}
+                      </div>
+                    </div>
+
+                    <div className="min-w-[112px] text-right space-y-2">
+                      <div className={`text-sm font-mono ${typeof pnlValue === 'number' && pnlValue < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                        {typeof pnlValue === 'number'
+                          ? `${pnlValue >= 0 ? '+' : ''}${pnlValue.toFixed(2)}`
+                          : '--'}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wide text-gray-500">{t('bybit.unrealized_pnl')}</div>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectPosition(position)}
+                        disabled={duplicate}
+                        className="w-full px-3 py-2 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-100 border border-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {duplicate ? t('bybit.linked') : t('bybit.register_snapshot')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
