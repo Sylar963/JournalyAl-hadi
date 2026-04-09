@@ -1,4 +1,4 @@
-import { createClient, FunctionRegion, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage } from '../utils/errorHelpers';
@@ -432,7 +432,11 @@ export const BYBIT_SETUP_SQL = `${BYBIT_CONNECTIONS_TABLE_SETUP_SQL.trim()}\n\n$
 export function isMissingBybitSchemaError(message: string): boolean {
     const normalized = message.toLowerCase();
     return normalized.includes('relation "public.bybit_connections" does not exist')
-        || normalized.includes('relation "public.bybit_trade_cache" does not exist');
+        || normalized.includes('relation "public.bybit_trade_cache" does not exist')
+        || (normalized.includes('bybit_connections') && normalized.includes('column') && normalized.includes('does not exist'))
+        || (normalized.includes('bybit_trade_cache') && normalized.includes('column') && normalized.includes('does not exist'))
+        || (normalized.includes('bybit_connections') && normalized.includes('schema cache'))
+        || (normalized.includes('bybit_trade_cache') && normalized.includes('schema cache'));
 }
 
 export function getBybitSchemaErrorMessage(): string {
@@ -470,6 +474,10 @@ function mapFunctionSetupError(name: string, message: string, response?: Respons
         return getBybitSchemaErrorMessage();
     }
 
+    if (message === 'Missing Authorization header.' || message === 'User not authenticated. Could not get user ID.') {
+        return 'Your Supabase session is missing or expired. Sign out and back in, then try the Bybit action again.';
+    }
+
     if (message.includes('Missing required environment variable: BYBIT_CREDENTIAL_ENCRYPTION_KEY')) {
         return 'Supabase Edge Function secret BYBIT_CREDENTIAL_ENCRYPTION_KEY is missing. Add it in Supabase, redeploy the Bybit functions, then try again.';
     }
@@ -488,6 +496,22 @@ function mapFunctionSetupError(name: string, message: string, response?: Respons
 
     if (response?.status === 401 || response?.status === 403 || message === 'Unauthorized') {
         return 'Your Supabase session is not authorized to call the Bybit Edge Functions. Sign out and back in, then try again.';
+    }
+
+    if (message.startsWith('10003:') || message.startsWith('10004:')) {
+        return 'Bybit rejected the API key or signature. Double-check the key/secret pair and make sure the selected environment matches the key (mainnet vs testnet).';
+    }
+
+    if (message.startsWith('10005:')) {
+        return 'The Bybit API key is valid but missing the permissions required for linear trade import.';
+    }
+
+    if (message.startsWith('10010:')) {
+        return 'Bybit rejected the request because the API key is IP-restricted. Either remove the IP binding or allow the Supabase Edge Function egress IP for the deployed region.';
+    }
+
+    if (message.includes('HTTP 403')) {
+        return 'Bybit rejected the request with HTTP 403. This usually means IP restrictions or a U.S. edge region. Keep the function deployed in a non-U.S. region and verify the key IP whitelist.';
     }
 
     if (message === 'Edge Function returned a non-2xx status code') {
@@ -521,7 +545,7 @@ async function getFunctionErrorMessage(name: string, error: unknown): Promise<st
 }
 
 type BybitTradeCacheRow = Database['public']['Tables']['bybit_trade_cache']['Row'];
-const BYBIT_FUNCTION_REGIONS = [FunctionRegion.CaCentral1, FunctionRegion.EuWest1] as const;
+const BYBIT_FUNCTION_REGIONS = ['ca-central-1', 'eu-west-1'] as const;
 
 function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
     const type = normalizeTradeTypeFromSide(row.side);
@@ -555,35 +579,107 @@ function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
     };
 }
 
-async function invokeFunction<T>(name: string, body?: Record<string, unknown>): Promise<T> {
+async function getAccessToken(): Promise<string | undefined> {
     if (!supabase) throw new Error(clientNotConfiguredError);
 
-    const regions = name.startsWith('bybit-') ? [...BYBIT_FUNCTION_REGIONS] : [undefined];
+    const {
+        data: { session },
+        error,
+    } = await supabase.auth.getSession();
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return session?.access_token;
+}
+
+async function invokeBrowserSafeRegionalFunction<T>(
+    name: string,
+    body: Record<string, unknown> | undefined,
+    regions: readonly string[]
+): Promise<T> {
+    if (!supabase) throw new Error(clientNotConfiguredError);
+
+    const accessToken = await getAccessToken();
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+    };
+
+    if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     let lastError: unknown = null;
 
     for (const region of regions) {
-        const { data, error } = await supabase.functions.invoke(name, {
-            body,
-            region,
-        });
+        try {
+            const url = new URL(`${SUPABASE_URL}/functions/v1/${name}`);
+            url.searchParams.set('forceFunctionRegion', region);
 
-        if (!error) {
-            return data as T;
-        }
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers,
+                body: body ? JSON.stringify(body) : JSON.stringify({}),
+            });
 
-        lastError = error;
-        const message = await getFunctionErrorMessage(name, error);
-        const shouldRetryInAnotherRegion = name.startsWith('bybit-')
-            && (message === 'The app could not reach Supabase Edge Functions. Check your SUPABASE_URL, browser network access, and Supabase project status.'
-                || message.startsWith('Supabase could not reach the Edge Function'));
+            const contentType = response.headers.get('content-type') ?? '';
+            const payload = contentType.includes('application/json')
+                ? await response.json()
+                : await response.text();
 
-        if (!shouldRetryInAnotherRegion || region === regions[regions.length - 1]) {
-            throw new Error(message || `Function invocation failed: ${name}`);
+            if (!response.ok) {
+                const errorMessage =
+                    typeof payload === 'object' && payload !== null && 'error' in payload
+                        ? String((payload as { error: unknown }).error)
+                        : typeof payload === 'string'
+                            ? payload
+                            : `Function invocation failed: ${name}`;
+                throw new Error(mapFunctionSetupError(name, errorMessage, response));
+            }
+
+            return payload as T;
+        } catch (error) {
+            lastError = error;
+            const message = getErrorMessage(error);
+            const shouldRetryInAnotherRegion =
+                message === 'Failed to fetch'
+                || message === 'NetworkError when attempting to fetch resource.'
+                || message.includes('Load failed')
+                || message.includes('ERR_FAILED');
+
+            if (!shouldRetryInAnotherRegion || region === regions[regions.length - 1]) {
+                throw new Error(message || `Function invocation failed: ${name}`);
+            }
         }
     }
 
-    const message = await getFunctionErrorMessage(name, lastError);
-    throw new Error(message || `Function invocation failed: ${name}`);
+    throw new Error(getErrorMessage(lastError) || `Function invocation failed: ${name}`);
+}
+
+async function invokeFunction<T>(name: string, body?: Record<string, unknown>): Promise<T> {
+    if (!supabase) throw new Error(clientNotConfiguredError);
+
+    if (name.startsWith('bybit-')) {
+        try {
+            return await invokeBrowserSafeRegionalFunction(name, body, BYBIT_FUNCTION_REGIONS);
+        } catch (error) {
+            const message = getErrorMessage(error);
+            throw new Error(mapFunctionSetupError(name, message));
+        }
+    }
+
+    const { data, error } = await supabase.functions.invoke(name, {
+        body,
+    });
+
+    if (error) {
+        const message = await getFunctionErrorMessage(name, error);
+        throw new Error(message || `Function invocation failed: ${name}`);
+    }
+
+    return data as T;
 }
 
 // --- Helper Functions ---

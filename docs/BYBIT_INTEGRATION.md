@@ -22,6 +22,7 @@
 - `bybit-sync-trades` now also supports a non-persistent backend preview mode for operational testing. This lets us verify a live symbol without mutating cached trade state.
 - Shared runtime concerns like auth, CORS, JSON responses, and encryption now live in a provider-agnostic Edge Function runtime module, while Bybit-specific signing and parsing stay isolated in the Bybit provider module.
 - On the frontend, provider metadata and clients are registered in [tradingProviderRegistry.ts](/home/aladhi/JournalyAl-hadi/services/tradingProviderRegistry.ts). That is the extension seam for future providers such as Hyperliquid market-data feeds.
+- Browser-triggered Bybit function calls use Supabase's `forceFunctionRegion` query parameter instead of the `x-region` header. Supabase documents `forceFunctionRegion` as the browser/CORS-safe regional invocation path.
 
 ## User Flow
 1. Open `Settings`.
@@ -42,7 +43,7 @@
 - `10005`: The key is valid but missing required permissions.
 - `10010`: The key is IP-bound and does not allow the deployed function egress IP.
 - HTTP `403`: Most often a region or IP restriction. Move the function to a non-U.S. region and re-test.
-- If the user is physically outside the U.S. but still gets HTTP `403`, the backend edge region can still be the cause. Supabase Edge Functions may execute in the nearest edge region to the caller unless a region is pinned. The app now pins Bybit function invocations to `ca-central-1` to avoid accidental U.S. egress during browser-triggered calls.
+- If the user is physically outside the U.S. but still gets HTTP `403`, the backend edge region can still be the cause. Supabase Edge Functions may execute in the nearest edge region to the caller unless a region is pinned. The app now routes browser-triggered Bybit function calls with `forceFunctionRegion=ca-central-1`, and falls back to `eu-west-1`, to avoid accidental U.S. egress.
 - Empty trade list: The feature imports only today's `linear` trades in v1.
 - Duplicate warning when adding a manual trade: The entry already contains the Bybit trade or a matching fingerprint. Link the imported trade instead.
 
@@ -60,9 +61,12 @@ npm run smoke:bybit
 ```
 
 - Optional environment variables:
+  - `BYBIT_SMOKE_MODE` as `sync` (default), `validate`, or `upsert`
   - `BYBIT_SMOKE_SYMBOL` to override the symbol
   - `BYBIT_SMOKE_DATE` in `YYYY-MM-DD`
   - `BYBIT_SMOKE_TIMEZONE` for the journal-local day boundary
+  - `BYBIT_API_KEY`, `BYBIT_API_SECRET`, and `BYBIT_ENVIRONMENT` when using `BYBIT_SMOKE_MODE=validate` or `BYBIT_SMOKE_MODE=upsert`
+  - `BYBIT_SMOKE_REGIONS` as a comma-separated override for the default `ca-central-1,eu-west-1`
   - `DJ_SMOKE_ACCESS_TOKEN` instead of email/password if you already have a session token
 
 ## FAQ
