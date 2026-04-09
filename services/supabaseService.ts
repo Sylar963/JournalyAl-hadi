@@ -643,11 +643,13 @@ async function invokeBrowserSafeRegionalFunction<T>(
         } catch (error) {
             lastError = error;
             const message = getErrorMessage(error);
+            const isRegionalBlock = message.includes('HTTP 403') || message.includes('Forbidden');
             const shouldRetryInAnotherRegion =
                 message === 'Failed to fetch'
                 || message === 'NetworkError when attempting to fetch resource.'
                 || message.includes('Load failed')
-                || message.includes('ERR_FAILED');
+                || message.includes('ERR_FAILED')
+                || isRegionalBlock;
 
             if (!shouldRetryInAnotherRegion || region === regions[regions.length - 1]) {
                 throw new Error(message || `Function invocation failed: ${name}`);
@@ -960,12 +962,12 @@ export async function getBybitConnection(): Promise<BybitConnection | null> {
 }
 
 export async function saveBybitConnection(input: BybitCredentialInput): Promise<BybitConnection> {
-    const result = await invokeFunction<{ connection: BybitConnection }>('bybit-upsert-credentials', input);
+    const result = await invokeFunction<{ connection: BybitConnection }>('bybit-upsert-credentials', input as unknown as Record<string, unknown>);
     return result.connection;
 }
 
 export async function validateBybitConnection(input: BybitCredentialInput): Promise<BybitConnection> {
-    const result = await invokeFunction<{ connection: BybitConnection }>('bybit-validate-credentials', input);
+    const result = await invokeFunction<{ connection: BybitConnection }>('bybit-validate-credentials', input as unknown as Record<string, unknown>);
     return result.connection;
 }
 
