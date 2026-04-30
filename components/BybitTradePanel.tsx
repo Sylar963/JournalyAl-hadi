@@ -11,6 +11,7 @@ interface BybitTradePanelProps {
   selectedTrades: TradeDetails[];
   onSelectTrade: (trade: TradeDetails) => void;
   onCacheChange?: (trades: BybitCachedTrade[]) => void;
+  onPositionCacheChange?: (positions: BybitCachedPosition[]) => void;
   onError?: (message: string | null) => void;
 }
 
@@ -24,6 +25,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   selectedTrades,
   onSelectTrade,
   onCacheChange,
+  onPositionCacheChange,
   onError,
 }) => {
   const { t } = useI18n();
@@ -45,6 +47,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
         setTrades([]);
         setPositions([]);
         onCacheChange?.([]);
+        onPositionCacheChange?.([]);
         return;
       }
 
@@ -62,6 +65,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
         setTrades(cached.trades);
         setPositions(cached.positions ?? []);
         onCacheChange?.(cached.trades);
+        onPositionCacheChange?.(cached.positions ?? []);
 
         const isStale = !resolvedConnection?.lastSyncAt
           || Date.now() - new Date(resolvedConnection.lastSyncAt).getTime() > STALE_AFTER_MS;
@@ -81,7 +85,21 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [bybitClient, date, isBybitAvailable, isToday, onCacheChange, onError, t]);
+  }, [bybitClient, date, isBybitAvailable, isToday, onCacheChange, onError, onPositionCacheChange, t]);
+
+  useEffect(() => {
+    if (!isBybitAvailable || !isToday || connection?.validationStatus !== 'valid') {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void handleRefresh(true);
+    }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [connection, isBybitAvailable, isToday]);
 
   const filteredTrades = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -119,6 +137,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
       setTrades(refreshed.trades);
       setPositions(refreshed.positions ?? []);
       onCacheChange?.(refreshed.trades);
+      onPositionCacheChange?.(refreshed.positions ?? []);
     } catch (error) {
       onError?.(error instanceof Error ? error.message : t('bybit.error.refresh'));
     } finally {

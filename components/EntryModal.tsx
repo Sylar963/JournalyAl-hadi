@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { type BybitCachedTrade, type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
+import { type BybitCachedPosition, type BybitCachedTrade, type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
 import { getEmotionInsight } from '../services/geminiService';
 import { createTradeFingerprint, findDuplicateTrade } from '../services/tradingIndexService';
@@ -45,6 +45,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const [tradePrice, setTradePrice] = useState('');
   const [tradeNotes, setTradeNotes] = useState('');
   const [cachedBybitTrades, setCachedBybitTrades] = useState<BybitCachedTrade[]>([]);
+  const [cachedBybitPositions, setCachedBybitPositions] = useState<BybitCachedPosition[]>([]);
   const [pnlSource, setPnlSource] = useState<'manual' | 'linked_trades'>(entry?.tradingData?.pnlSource ?? (entry?.pnl !== undefined ? 'manual' : 'linked_trades'));
 
   const [aiInsight, setAiInsight] = useState<string>('');
@@ -91,6 +92,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
       setTradePrice('');
       setTradeNotes('');
       setCachedBybitTrades([]);
+      setCachedBybitPositions([]);
     }
   }, [isOpen]);
 
@@ -328,12 +330,52 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
 
   const payoffPreviewTrade = useMemo(() => {
     const previewCandidates = [...trades].reverse();
-    return previewCandidates.find((trade) =>
+    const selectedPreviewTrade = previewCandidates.find((trade) =>
       (trade.type === 'Long Future' || trade.type === 'Short Future')
       && (trade.entryPrice !== undefined || trade.price !== undefined)
-      && (trade.markPrice !== undefined || trade.liquidationPrice !== undefined || trade.unrealizedPnl !== undefined)
+      && (
+        trade.markPrice !== undefined
+        || trade.liquidationPrice !== undefined
+        || trade.unrealizedPnl !== undefined
+        || (trade.source === 'bybit' && trade.status === 'open')
+      )
     ) ?? null;
-  }, [trades]);
+
+    if (!selectedPreviewTrade || selectedPreviewTrade.source !== 'bybit') {
+      return selectedPreviewTrade;
+    }
+
+    const matchingPosition = cachedBybitPositions.find((position) =>
+      position.externalPositionId === selectedPreviewTrade.externalTradeId
+      || (
+        position.symbol === selectedPreviewTrade.symbol
+        && position.side === selectedPreviewTrade.side
+        && position.status === 'open'
+      )
+    );
+
+    if (!matchingPosition) {
+      return selectedPreviewTrade;
+    }
+
+    return {
+      ...selectedPreviewTrade,
+      entryPrice: matchingPosition.entryPrice ?? selectedPreviewTrade.entryPrice ?? selectedPreviewTrade.price,
+      price: matchingPosition.entryPrice ?? selectedPreviewTrade.price,
+      quantity: matchingPosition.quantity ?? selectedPreviewTrade.quantity,
+      contracts: matchingPosition.quantity ?? selectedPreviewTrade.contracts,
+      status: matchingPosition.status,
+      executedAt: matchingPosition.updatedAt ?? selectedPreviewTrade.executedAt,
+      externalTradeId: matchingPosition.externalPositionId,
+      orderId: matchingPosition.externalPositionId,
+      markPrice: matchingPosition.markPrice,
+      unrealizedPnl: matchingPosition.unrealizedPnl,
+      liquidationPrice: matchingPosition.liquidationPrice,
+      leverage: matchingPosition.leverage,
+      positionValue: matchingPosition.positionValue,
+      marginMode: matchingPosition.marginMode,
+    } satisfies TradeDetails;
+  }, [cachedBybitPositions, trades]);
 
   const payoffChartType = payoffPreviewTrade?.type ?? tradeType;
 
@@ -513,6 +555,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                         selectedTrades={trades}
                         onSelectTrade={handleAddImportedTrade}
                         onCacheChange={setCachedBybitTrades}
+                        onPositionCacheChange={setCachedBybitPositions}
                         onError={setOperationError}
                      />
 
