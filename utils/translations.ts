@@ -148,6 +148,7 @@ export const translations = {
     'calendar.fold': 'Fold',
     'calendar.entries_count': 'entries this month',
     'calendar.intensity': 'Intensity',
+    'calendar.synced': 'Synced',
     'calendar.prev_year': 'Previous Year',
     'calendar.next_year': 'Next Year',
     'calendar.prev_month': 'Previous Month',

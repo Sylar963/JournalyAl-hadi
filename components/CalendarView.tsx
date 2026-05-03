@@ -68,12 +68,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
 
       const entry = entries[dateKey];
       const isToday = date.getTime() === today.getTime();
+      const hasTrades = entry?.tradingData?.trades && entry.tradingData.trades.length > 0;
+      const hasValidEmotion = entry && entry.emotion && EMOTIONS_CONFIG[entry.emotion];
 
       let cellClasses = 'relative border-r border-b border-[color:var(--glass-border)] p-2 text-left cursor-pointer transition-all duration-300 min-h-[120px] flex flex-col group hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]';
       let dayNumberClasses = 'font-semibold transition-colors duration-300';
 
-      if (entry && entry.emotion && EMOTIONS_CONFIG[entry.emotion]) {
+      if (hasValidEmotion) {
         cellClasses += ` ${EMOTIONS_CONFIG[entry.emotion].hoverColor} bg-white/5 hover:bg-white/10 backdrop-blur-sm`;
+      } else if (hasTrades) {
+        cellClasses += ' bg-emerald-500/10 hover:bg-emerald-500/20 border-l-2 border-l-emerald-400/50';
       } else {
         cellClasses += ' bg-transparent hover:bg-white/5';
       }
@@ -98,6 +102,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
                 {t(`emotion.${entry.emotion}` as TranslationKey)}
               </p>
               <p className="text-xs text-gray-400">{`${t('calendar.intensity')}: ${entry.intensity}/10`}</p>
+            </div>
+          )}
+          {hasTrades && !hasValidEmotion && (
+            <div className="mt-2 flex-grow flex flex-col justify-end">
+              <span className="text-xl mb-1 drop-shadow-md">📈</span>
+              <p className="font-bold text-lg text-emerald-400 drop-shadow-sm">
+                {entry.tradingData?.trades?.length} {entry.tradingData?.trades?.length === 1 ? 'Trade' : 'Trades'}
+              </p>
+              <p className="text-xs text-gray-400">{t('calendar.synced')}</p>
             </div>
           )}
         </div>
