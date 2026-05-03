@@ -36,6 +36,7 @@ interface DataService {
     deleteBybitConnection(): Promise<void>;
     getCachedBybitTradesForDate(date: string): Promise<BybitTradeCacheResult>;
     refreshBybitTradesForDate(date: string, timezone: string): Promise<BybitTradeCacheResult>;
+    bulkRefreshBybitTrades(startDate: string, endDate: string, timezone: string): Promise<{ date: string; result: BybitTradeCacheResult }[]>;
 }
 
 // Conditionally select the service to use
@@ -62,6 +63,7 @@ export const validateBybitConnection = service.validateBybitConnection;
 export const deleteBybitConnection = service.deleteBybitConnection;
 export const getCachedBybitTradesForDate = service.getCachedBybitTradesForDate;
 export const refreshBybitTradesForDate = service.refreshBybitTradesForDate;
+export const bulkRefreshBybitTrades = service.bulkRefreshBybitTrades;
 
 
 // Also export a flag that the UI can use to understand the current persistence mode.

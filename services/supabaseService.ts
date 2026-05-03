@@ -1174,6 +1174,28 @@ export async function refreshBybitTradesForDate(date: string, timezone: string):
     }
 }
 
+export async function bulkRefreshBybitTrades(
+    startDate: string,
+    endDate: string,
+    timezone: string
+): Promise<{ date: string; result: BybitTradeCacheResult }[]> {
+    const results: { date: string; result: BybitTradeCacheResult }[] = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        try {
+            const result = await refreshBybitTradesForDate(dateStr, timezone);
+            results.push({ date: dateStr, result });
+        } catch (error) {
+            results.push({ date: dateStr, result: { trades: [], positions: [], connection: null, syncError: (error as Error).message } });
+        }
+    }
+    
+    return results;
+}
+
 // ====================================================================================
 // REVIEWS TABLE SETUP
 // ====================================================================================

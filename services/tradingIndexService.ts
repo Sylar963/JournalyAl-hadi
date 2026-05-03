@@ -209,10 +209,14 @@ export function getResolvedEntryPnl(entry: EmotionEntry): number | undefined {
 
   const indexedTrades = getEntryTradingIndex(entry);
   const total = indexedTrades.reduce((sum, trade) => {
-    return typeof trade.effectivePnl === 'number' ? sum + trade.effectivePnl : sum;
+    const pnlValue = trade.effectivePnl ?? trade.unrealizedPnl;
+    return typeof pnlValue === 'number' ? sum + pnlValue : sum;
   }, 0);
 
-  return indexedTrades.some((trade) => typeof trade.effectivePnl === 'number') ? total : undefined;
+  const hasAnyPnl = indexedTrades.some((trade) => 
+    typeof (trade.effectivePnl ?? trade.unrealizedPnl) === 'number'
+  );
+  return hasAnyPnl ? total : undefined;
 }
 
 export function buildTradingIndex(entries: EmotionEntry[]) {

@@ -176,3 +176,11 @@ export async function getCachedBybitTradesForDate(_date: string): Promise<BybitT
 export async function refreshBybitTradesForDate(_date: string, _timezone: string): Promise<BybitTradeCacheResult> {
     throw new Error('Bybit integration requires Supabase-backed mode.');
 }
+
+export async function bulkRefreshBybitTrades(
+    _startDate: string,
+    _endDate: string,
+    _timezone: string
+): Promise<{ date: string; result: BybitTradeCacheResult }[]> {
+    throw new Error('Bybit integration requires Supabase-backed mode.');
+}

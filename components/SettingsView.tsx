@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { type BybitEnvironment, type BybitValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
 import { getTradingProviderClient } from '../services/tradingProviderRegistry';
+import { bulkRefreshBybitTrades } from '../services/dataService';
 import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage } from '../services/supabaseService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
@@ -27,14 +28,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [status, setStatus] = useState<BybitValidationStatus>('not_connected');
-  const [maskedKey, setMaskedKey] = useState<string | null>(null);
-  const [lastValidatedAt, setLastValidatedAt] = useState<string | undefined>();
-  const [lastSyncAt, setLastSyncAt] = useState<string | undefined>();
-  const [feedback, setFeedback] = useState<string | null>(null);
+const [maskedKey, setMaskedKey] = useState<string | null>(null);
+  const [lastValidatedAt, setLastValidatedAt] = useState<string | null>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [bulkImportProgress, setBulkImportProgress] = useState<string>('');
+  const [bulkImportStart, setBulkImportStart] = useState('');
+  const [bulkImportEnd, setBulkImportEnd] = useState('');
+  const [bulkImportResults, setBulkImportResults] = useState<{ date: string; trades: number; pnl: number }[]>([]);
   const [copiedSetupSql, setCopiedSetupSql] = useState(false);
 
   const shouldShowSetupSql = feedback === getBybitSchemaErrorMessage();
@@ -132,6 +137,33 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
       setFeedback(error instanceof Error ? error.message : t('bybit.error.delete'));
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleBulkImport() {
+    if (!bulkImportStart || !bulkImportEnd) {
+      setFeedback('Please select start and end dates');
+      return;
+    }
+    setIsBulkImporting(true);
+    setBulkImportProgress('Starting...');
+    setBulkImportResults([]);
+    setFeedback(null);
+    try {
+      const results = await bulkRefreshBybitTrades(bulkImportStart, bulkImportEnd, Intl.DateTimeFormat().resolvedOptions().timeZone);
+      const summary = results.map(r => ({
+        date: r.date,
+        trades: r.result.trades.length,
+        pnl: r.result.trades.reduce((sum, t) => sum + (t.closedPnl ?? 0), 0)
+      }));
+      setBulkImportResults(summary);
+      const totalTrades = summary.reduce((s, r) => s + r.trades, 0);
+      const totalPnl = summary.reduce((s, r) => s + r.pnl, 0);
+      setBulkImportProgress(`Done! ${results.length} days, ${totalTrades} trades, PnL: $${totalPnl.toFixed(2)}`);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'Bulk import failed');
+    } finally {
+      setIsBulkImporting(false);
     }
   }
 
@@ -263,6 +295,67 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
               >
                 {isDeleting ? t('bybit.disconnecting') : t('bybit.disconnect')}
               </button>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-[color:var(--glass-border)]">
+              <h3 className="text-sm font-medium text-white mb-3">Bulk Import History</h3>
+              <p className="text-xs text-gray-400 mb-3">Pull all Bybit trades for a date range. Creates journal entries with trades filled in.</p>
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <label className="text-xs text-gray-300">
+                  <span className="block mb-1">Start Date</span>
+                  <input
+                    type="date"
+                    value={bulkImportStart}
+                    onChange={(e) => setBulkImportStart(e.target.value)}
+                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-2 text-white text-xs"
+                  />
+                </label>
+                <label className="text-xs text-gray-300">
+                  <span className="block mb-1">End Date</span>
+                  <input
+                    type="date"
+                    value={bulkImportEnd}
+                    onChange={(e) => setBulkImportEnd(e.target.value)}
+                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-2 text-white text-xs"
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleBulkImport()}
+                disabled={!bulkImportStart || !bulkImportEnd || isBulkImporting}
+                className="w-full px-4 py-2 rounded-xl text-sm font-medium bg-blue-600/80 text-white border border-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isBulkImporting ? 'Importing...' : 'Import All Trades'}
+              </button>
+              {bulkImportProgress && (
+                <p className="mt-2 text-xs text-green-400">{bulkImportProgress}</p>
+              )}
+              {bulkImportResults.length > 0 && (
+                <div className="mt-3 max-h-32 overflow-auto rounded-lg bg-black/30 text-xs">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-gray-400 border-b border-white/10">
+                        <th className="p-2 text-left">Date</th>
+                        <th className="p-2 text-right">Trades</th>
+                        <th className="p-2 text-right">PnL</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bulkImportResults.slice(0, 10).map(r => (
+                        <tr key={r.date} className="border-b border-white/5">
+                          <td className="p-2 text-gray-300">{r.date}</td>
+                          <td className="p-2 text-right text-gray-300">{r.trades}</td>
+                          <td className={`p-2 text-right ${r.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>{r.pnl >= 0 ? '+' : ''}{r.pnl.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {bulkImportResults.length > 10 && (
+                    <p className="p-2 text-center text-gray-500 text-xs">+ {bulkImportResults.length - 10} more days</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {feedback && (
