@@ -7,7 +7,7 @@ const CorrelationMatrixPlugin: React.FC<{ data: WidgetData; onUpdate: (data: any
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAssetCorrelations('ES', ['US500', 'XYZ100', 'BTC']).then(data => {
+    getAssetCorrelations('SP500', ['XYZ100', 'BTC']).then(data => {
       setPairs(data);
       setLoading(false);
     }).catch(() => {
@@ -20,7 +20,7 @@ const CorrelationMatrixPlugin: React.FC<{ data: WidgetData; onUpdate: (data: any
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-2 text-xs text-gray-400 border-b border-white/5 pb-1">
           <span>Asset</span>
-          <span className="text-right">Corr (ES)</span>
+          <span className="text-right">Corr (SP500)</span>
           <span className="text-right">Status</span>
         </div>
         {[1, 2, 3, 4].map(i => (
@@ -38,7 +38,7 @@ const CorrelationMatrixPlugin: React.FC<{ data: WidgetData; onUpdate: (data: any
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2 text-xs text-gray-400 border-b border-white/5 pb-1">
          <span>Asset</span>
-         <span className="text-right">Corr (ES)</span>
+         <span className="text-right">Corr (SP500)</span>
          <span className="text-right">Status</span>
       </div>
       

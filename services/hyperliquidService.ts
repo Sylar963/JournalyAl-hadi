@@ -62,11 +62,11 @@ async function fetchCandles(coin: string, interval: string = '1d', days: number 
 
   return data.map((c: any[]) => ({
     time: c[0],
-    open: parseFloat(c[1]),
-    high: parseFloat(c[2]),
-    low: parseFloat(c[3]),
-    close: parseFloat(c[4]),
-    volume: parseFloat(c[5]),
+    open: parseFloat(c[4]),
+    high: parseFloat(c[5]),
+    low: parseFloat(c[6]),
+    close: parseFloat(c[7]),
+    volume: parseFloat(c[8]),
   }));
 }
 
@@ -83,7 +83,7 @@ const SYMBOL_NAMES: Record<string, string> = {
   'APT': 'Aptos',
   'ARB': 'Arbitrum',
   'ES': 'E-Mini S&P',
-  'US500': 'S&P 500',
+  'SP500': 'S&P 500',
   'XYZ100': 'Nasdaq 100',
 };
 
