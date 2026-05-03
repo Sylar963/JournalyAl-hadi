@@ -72,7 +72,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       let cellClasses = 'relative border-r border-b border-[color:var(--glass-border)] p-2 text-left cursor-pointer transition-all duration-300 min-h-[120px] flex flex-col group hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]';
       let dayNumberClasses = 'font-semibold transition-colors duration-300';
 
-      if (entry) {
+      if (entry && entry.emotion && EMOTIONS_CONFIG[entry.emotion]) {
         cellClasses += ` ${EMOTIONS_CONFIG[entry.emotion].hoverColor} bg-white/5 hover:bg-white/10 backdrop-blur-sm`;
       } else {
         cellClasses += ' bg-transparent hover:bg-white/5';
@@ -91,7 +91,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       days.push(
         <div key={dateKey} className={cellClasses} onClick={() => handleCellClick(date)}>
           <div className={dayNumberClasses}>{day}</div>
-          {entry && (
+          {entry && entry.emotion && EMOTIONS_CONFIG[entry.emotion] && (
             <div className="mt-2 flex-grow flex flex-col justify-end">
               <span className={`text-2xl mb-1 drop-shadow-md`}>{EMOTIONS_CONFIG[entry.emotion].emoji}</span>
               <p className={`font-bold text-lg ${EMOTIONS_CONFIG[entry.emotion].textColor} drop-shadow-sm`}>

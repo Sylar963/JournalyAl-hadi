@@ -88,7 +88,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   }, [bybitClient, date, isBybitAvailable, isToday, onCacheChange, onError, onPositionCacheChange, t]);
 
   useEffect(() => {
-    if (!isBybitAvailable || !isToday || connection?.validationStatus !== 'valid') {
+    if (!isBybitAvailable || connection?.validationStatus !== 'valid') {
       return;
     }
 
@@ -173,14 +173,6 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     return (
       <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] text-sm text-gray-400">
         {t('bybit.unavailable')}
-      </div>
-    );
-  }
-
-  if (!isToday) {
-    return (
-      <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] text-sm text-gray-400">
-        {t('bybit.today_only')}
       </div>
     );
   }

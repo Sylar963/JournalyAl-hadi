@@ -164,7 +164,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         
         const labels = sortedEntries.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }));
         const data = sortedEntries.map(e => e.intensity);
-        const pointBgColors = sortedEntries.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion].label]?.border || '#ffffff');
+        const pointBgColors = sortedEntries.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion]?.label]?.border || '#ffffff');
       
         return {
           labels,
@@ -229,13 +229,13 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             datasets: emotionKeys.map(emotion => ({
                 label: t(`emotion.${emotion}` as TranslationKey),
                 data: counts[emotion],
-                backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.bg,
-                borderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.bg,
+                borderColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.border,
                 borderWidth: 1.5,
-                pointBackgroundColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                pointBackgroundColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.border,
                 pointBorderColor: '#fff',
                 pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion].label]?.border,
+                pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.border,
             }))
         };
     }, [currentMonthEntries, t]);
