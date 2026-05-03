@@ -172,7 +172,7 @@ const AppContent: React.FC = () => {
                     userProfile={userProfile}
                     onSaveProfile={saveProfile}
                 />
-                <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 flex flex-col overflow-hidden z-10">
                     <Header
                         onNewEntryClick={() => handleOpenNewEntry()}
                         userProfile={userProfile}

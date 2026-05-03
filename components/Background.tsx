@@ -109,7 +109,7 @@ const TradingChart: React.FC<{ theme: Theme }> = ({ theme }) => {
                 const newCandle = generateCandle(prev[prev.length - 1].close, prevDirection);
                 return [...prev.slice(1), newCandle];
             });
-        }, 800);
+        }, 180);
         return () => clearInterval(interval);
     }, []);
 
@@ -131,7 +131,7 @@ const TradingChart: React.FC<{ theme: Theme }> = ({ theme }) => {
     });
 
     return (
-        <group ref={groupRef} scale={[0.6, 0.6, 0.6]} position={[0, 0, -4]}>
+        <group ref={groupRef} scale={[0.5, 0.5, 0.5]} position={[0, 0, -10]}>
             {candles.map((candle, i) => {
                 const x = (i - 15) * candleSpacing;
                 const y = (candle.high + candle.low) / 2 - priceRange.mid;
@@ -166,13 +166,17 @@ const Background: React.FC<BackgroundProps> = ({ theme = 'twilight' }) => {
                 left: 0,
                 width: '100vw',
                 height: '100vh',
-                zIndex: -2,
+                zIndex: -100,
                 pointerEvents: 'none',
                 transition: 'background 1s ease-in-out',
             }}
             className={theme === 'twilight' || theme === 'cyberpunk' || theme === 'forest' ? 'bg-gray-900' : 'bg-gray-100'}
         >
-            <Canvas camera={{ position: [0, 0, 10], fov: 45 }} eventSource={document.body}>
+            <Canvas 
+                style={{ pointerEvents: 'none' }}
+                camera={{ position: [0, 0, 10], fov: 45 }} 
+                eventSource={document.body}
+            >
                 <ambientLight intensity={themeConfig.ambient} />
                 <directionalLight position={[10, 10, 5]} intensity={1} color={themeConfig.light} />
                 <pointLight position={[-10, -10, -5]} intensity={1} color={themeConfig.color} />
