@@ -62,7 +62,7 @@ const MonthlyHeatmap: React.FC<{ year: number; month: number; entries: EmotionEn
         const entry = entriesMap.get(dateKey);
 
         let cell;
-        if (entry) {
+        if (entry && entry.emotion && EMOTIONS_CONFIG[entry.emotion]) {
             const config = EMOTIONS_CONFIG[entry.emotion];
             const intensityOpacity = 0.2 + (entry.intensity / 10) * 0.8;
             
@@ -196,11 +196,11 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
             ...chartOptions.plugins,
             tooltip: {
                 ...chartOptions.plugins.tooltip,
-                callbacks: {
+callbacks: {
                     title: (tooltipItems: any[]) => {
                         const index = tooltipItems[0].dataIndex;
                         const entry = sortedEntriesForIntensity[index];
-                        return `${tooltipItems[0].label} - ${t(`emotion.${entry.emotion}` as TranslationKey)}`;
+                        return `${tooltipItems[0].label} - ${entry?.emotion ? t(`emotion.${entry.emotion}` as TranslationKey) : 'N/A'}`;
                     },
                     label: (context: any) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
                 }
@@ -215,6 +215,7 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
     const dayOfWeekChartData = useMemo(() => {
         const counts: Record<EmotionType, number[]> = { happy: [0,0,0,0,0,0,0], calm: [0,0,0,0,0,0,0], anxious: [0,0,0,0,0,0,0], sad: [0,0,0,0,0,0,0], angry: [0,0,0,0,0,0,0] };
         entries.forEach(entry => {
+            if (!entry.emotion || !counts[entry.emotion]) return;
             const dayIndex = new Date(entry.date + 'T00:00:00').getDay();
             counts[entry.emotion][dayIndex]++;
         });
@@ -348,6 +349,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
             let totalIntensity = 0;
 
             for (const entry of monthEntries) {
+                if (!entry.emotion || !EMOTIONS_CONFIG[entry.emotion]) continue;
                 emotionCounts[entry.emotion] = (emotionCounts[entry.emotion] || 0) + 1;
                 totalIntensity += entry.intensity;
             }

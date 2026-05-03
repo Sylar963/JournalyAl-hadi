@@ -72,6 +72,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         let totalIntensity = 0;
 
         for (const entry of currentMonthEntries) {
+            if (!entry.emotion || !EMOTIONS_CONFIG[entry.emotion]) continue;
             emotionCounts[entry.emotion] = (emotionCounts[entry.emotion] || 0) + 1;
             totalIntensity += entry.intensity;
         }
@@ -196,7 +197,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                         const index = tooltipItems[0].dataIndex;
                         const sorted = [...currentMonthEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                         const entry = sorted[index];
-                        return `${tooltipItems[0].label} - ${t(`emotion.${entry.emotion}` as TranslationKey)}`;
+                        return `${tooltipItems[0].label} - ${entry?.emotion ? t(`emotion.${entry.emotion}` as TranslationKey) : 'N/A'}`;
                     },
                     label: (context: any) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
                 }
@@ -220,6 +221,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     const dayOfWeekChartData = useMemo(() => {
         const counts: Record<EmotionType, number[]> = { happy: [0,0,0,0,0,0,0], calm: [0,0,0,0,0,0,0], anxious: [0,0,0,0,0,0,0], sad: [0,0,0,0,0,0,0], angry: [0,0,0,0,0,0,0] };
         currentMonthEntries.forEach(entry => {
+            if (!entry.emotion || !counts[entry.emotion]) return;
             const dayIndex = new Date(entry.date + 'T00:00:00').getDay();
             counts[entry.emotion][dayIndex]++;
         });
