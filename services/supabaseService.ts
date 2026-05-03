@@ -335,7 +335,35 @@ export type Database = {
 // This prevents a crash on module load if the app is intended to run in local-only mode.
 export const supabase: SupabaseClient<Database> | null =
     (SUPABASE_URL && SUPABASE_ANON_KEY)
-        ? createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY)
+        ? createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+              persistSession: true,
+              storageKey: 'dj-supabase-session',
+              storage: {
+                getItem: (key: string) => {
+                  try {
+                    return localStorage.getItem(key) ?? null;
+                  } catch {
+                    return null;
+                  }
+                },
+                setItem: (_key: string, _value: string) => {
+                  try {
+                    localStorage.setItem(_key, _value);
+                  } catch {
+                    // Ignore storage errors (e.g., private browsing)
+                  }
+                },
+                removeItem: (key: string) => {
+                  try {
+                    localStorage.removeItem(key);
+                  } catch {
+                    // Ignore
+                  }
+                },
+              },
+            },
+          })
         : null;
 
 export const isSupabaseConfigured = !!supabase;

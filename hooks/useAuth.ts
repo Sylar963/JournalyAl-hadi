@@ -13,7 +13,7 @@ export function useAuth() {
       return;
     }
 
-    // Get initial session
+    // Get initial session (Supabase client now uses localStorage for persistence)
     auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
