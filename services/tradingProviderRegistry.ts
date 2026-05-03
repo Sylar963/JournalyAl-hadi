@@ -41,7 +41,7 @@ export const tradingProviderDefinitions: TradingProviderDefinition[] = [
   {
     id: 'hyperliquid',
     label: 'Hyperliquid',
-    availability: 'planned',
+    availability: 'active',
     capabilities: ['market_data'],
   },
 ];
