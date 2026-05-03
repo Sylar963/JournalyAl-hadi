@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import IconJournal from './icons/IconJournal';
 import IconTrends from './icons/IconTrends';
 import IconReports from './icons/IconReports';
@@ -284,4 +284,4 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
   );
 };
 
-export default memo(Sidebar);
+export default Sidebar;

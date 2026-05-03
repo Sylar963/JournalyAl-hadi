@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 
 const GridOverlay: React.FC = () => {
     return (
@@ -25,4 +25,4 @@ const GridOverlay: React.FC = () => {
     );
 };
 
-export default memo(GridOverlay);
+export default GridOverlay;

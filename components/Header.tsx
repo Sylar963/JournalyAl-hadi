@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 import IconQuest from './icons/IconQuest';
 import IconPlus from './icons/IconPlus';
 import IconLogout from './icons/IconLogout';
@@ -78,4 +78,4 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
   );
 };
 
-export default memo(Header);
+export default Header;
