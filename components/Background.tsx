@@ -124,9 +124,20 @@ const Whale: React.FC<{ theme: Theme; startPos: [number, number, number]; speed:
 const Background: React.FC<BackgroundProps> = ({ theme = 'twilight' }) => {
     const themeConfig = THEME_COLORS[theme] || THEME_COLORS.twilight;
 
-    // Generate a school of whales
+    const visualDensity = useMemo(() => {
+        if (typeof window === 'undefined') {
+            return { whaleCount: 4, starCount: 2500 };
+        }
+
+        const isCompactViewport = window.innerWidth < 1024;
+        return {
+            whaleCount: isCompactViewport ? 3 : 5,
+            starCount: isCompactViewport ? 1200 : 2800,
+        };
+    }, []);
+
     const whales = useMemo(() => {
-        return Array.from({ length: 5 }).map((_, i) => ({
+        return Array.from({ length: visualDensity.whaleCount }).map((_, i) => ({
             startPos: [
                 (Math.random() - 0.5) * 20, // Random X
                 (Math.random() - 0.5) * 8,  // Random Y
@@ -135,7 +146,7 @@ const Background: React.FC<BackgroundProps> = ({ theme = 'twilight' }) => {
             speed: 0.5 + Math.random() * 1.5, // Random speed
             scale: 0.5 + Math.random() * 0.5, // Random size
         }));
-    }, []);
+    }, [visualDensity.whaleCount]);
 
     return (
         <div
@@ -151,7 +162,11 @@ const Background: React.FC<BackgroundProps> = ({ theme = 'twilight' }) => {
             }}
             className={theme === 'twilight' || theme === 'cyberpunk' || theme === 'forest' ? 'bg-gray-900' : 'bg-gray-100'}
         >
-            <Canvas camera={{ position: [0, 0, 10], fov: 45 }} eventSource={document.body}>
+            <Canvas
+                camera={{ position: [0, 0, 10], fov: 45 }}
+                dpr={[1, 1.5]}
+                gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
+            >
                 <ambientLight intensity={themeConfig.ambient} />
                 <directionalLight position={[10, 10, 5]} intensity={1} color={themeConfig.light} />
                 <pointLight position={[-10, -10, -5]} intensity={1} color={themeConfig.color} />
@@ -161,7 +176,7 @@ const Background: React.FC<BackgroundProps> = ({ theme = 'twilight' }) => {
                 ))}
 
                 {/* Add some floating particles/bubbles for atmosphere */}
-                <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+                <Stars radius={100} depth={50} count={visualDensity.starCount} factor={4} saturation={0} fade speed={1} />
             </Canvas>
         </div>
     );
