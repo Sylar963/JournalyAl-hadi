@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { memo, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type BybitCachedPosition, type BybitCachedTrade, type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
@@ -805,4 +805,4 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   );
 };
 
-export default EntryModal;
+export default memo(EntryModal);

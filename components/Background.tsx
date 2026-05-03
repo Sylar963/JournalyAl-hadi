@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { memo, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Sphere, MeshDistortMaterial, useTexture, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -167,4 +167,4 @@ const Background: React.FC<BackgroundProps> = ({ theme = 'twilight' }) => {
     );
 };
 
-export default Background;
+export default memo(Background);
