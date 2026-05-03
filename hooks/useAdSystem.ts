@@ -68,8 +68,8 @@ export function useAdSystem(isUserLoggedIn: boolean) {
     
     if (!isUserLoggedIn) return;
 
-    // Set to 30 minutes for production
-    const AD_INTERVAL = 60 * 1000 * 30;
+    // Set to 5 minutes
+    const AD_INTERVAL = 60 * 1000 * 5;
     adTimerRef.current = window.setTimeout(showAd, AD_INTERVAL);
   }, [showAd, isUserLoggedIn]);
 
