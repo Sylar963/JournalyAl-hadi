@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Particle {
   x: number;
@@ -15,29 +15,27 @@ const CustomCursor: React.FC = () => {
   const cursorRef = useRef<{ x: number, y: number }>({ x: -100, y: -100 });
   const particlesRef = useRef<Particle[]>([]);
   const lastPosRef = useRef<{ x: number, y: number }>({ x: -100, y: -100 });
-  const isVisibleRef = useRef(false);
+  
+  // Custom cursor visual state
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!hasFinePointer || prefersReducedMotion) {
-      return;
-    }
-
     // Hide default cursor
     document.body.style.cursor = 'none';
 
+    // Event listeners
     const onMouseMove = (e: MouseEvent) => {
       cursorRef.current = { x: e.clientX, y: e.clientY };
-      isVisibleRef.current = true;
+      if (!isVisible) setIsVisible(true);
     };
 
-    const onMouseEnter = () => {
-      isVisibleRef.current = true;
-    };
-    const onMouseLeave = () => {
-      isVisibleRef.current = false;
-    };
+    const onMouseEnter = () => setIsVisible(true);
+    const onMouseLeave = () => setIsVisible(false);
+    
+    // Make sure links/buttons show pointer cursor logic if needed, 
+    // but we are overriding everything with none. 
+    // We can add logic here to expand cursor on hover if requested, 
+    // but for now keeping it simple as per plan.
 
     window.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseenter', onMouseEnter);
@@ -73,7 +71,7 @@ const CustomCursor: React.FC = () => {
 
     // Create new particles based on movement distance
     const dist = Math.hypot(x - lastX, y - lastY);
-    if (dist > 2 && isVisibleRef.current) {
+    if (dist > 2 && isVisible) {
       const particleCount = Math.min(Math.floor(dist), 5); // Cap particles per frame
       for (let i = 0; i < particleCount; i++) {
         // Interpolate position for smoother trail
@@ -95,25 +93,25 @@ const CustomCursor: React.FC = () => {
     lastPosRef.current = { x, y };
 
     // Update and draw particles
-    particlesRef.current = particlesRef.current.filter((p) => {
+    particlesRef.current.forEach((p, index) => {
       p.life -= 0.02;
       p.x += p.vx;
       p.y += p.vy;
       p.size *= 0.95;
 
       if (p.life <= 0) {
-        return false;
+        particlesRef.current.splice(index, 1);
+        return;
       }
 
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255, 50, 50, ${p.life})`;
       ctx.fill();
-      return true;
     });
 
     // Draw main cursor dot
-    if (isVisibleRef.current) {
+    if (isVisible) {
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fillStyle = '#ff3333';
@@ -127,17 +125,11 @@ const CustomCursor: React.FC = () => {
   };
 
   useEffect(() => {
-    const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!hasFinePointer || prefersReducedMotion) {
-      return;
-    }
-
     requestRef.current = requestAnimationFrame(animate);
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, []);
+  }, [isVisible]); // Re-bind if visibility changes, though logic handles it inside loop too
 
   return (
     <canvas

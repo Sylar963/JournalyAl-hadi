@@ -62,9 +62,6 @@ const AppContent: React.FC = () => {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTos, setShowTos] = useState(false);
   const fallbackModalDateRef = useRef(new Date());
-  const [showAmbientLayer, setShowAmbientLayer] = useState(false);
-  const [showCustomCursor, setShowCustomCursor] = useState(false);
-
   // Consent
   const { consent } = useConsent();
 
@@ -74,30 +71,6 @@ const AppContent: React.FC = () => {
     if (savedTheme) {
       setTheme(savedTheme);
     }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
-
-    const revealAmbientLayer = () => {
-      if (!prefersReducedMotion) {
-        setShowAmbientLayer(true);
-      }
-      if (!prefersReducedMotion && hasFinePointer) {
-        setShowCustomCursor(true);
-      }
-    };
-
-    if ('requestIdleCallback' in window) {
-      const idleId = window.requestIdleCallback(revealAmbientLayer, { timeout: 800 });
-      return () => window.cancelIdleCallback(idleId);
-    }
-
-    const timeoutId = window.setTimeout(revealAmbientLayer, 250);
-    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const handleThemeChange = useCallback((newTheme: Theme) => {
@@ -220,8 +193,8 @@ const AppContent: React.FC = () => {
   return (
     <>
       <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !isAppAccessible ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
-      {showCustomCursor && <CustomCursor />}
-      {showAmbientLayer && (!showLanding || isAppAccessible) && (
+      <CustomCursor />
+      {(!showLanding || isAppAccessible) && (
         <>
           <Background theme={effectiveTheme} />
           <GridOverlay />
