@@ -10,7 +10,12 @@ interface PayoffChartProps {
 
 const width = 400;
 const height = 220;
-const padding = 24;
+const chartPadding = {
+  top: 28,
+  right: 24,
+  bottom: 24,
+  left: 24,
+};
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
@@ -50,7 +55,9 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
 
     const rawMin = Math.min(...referencePrices);
     const rawMax = Math.max(...referencePrices);
-    const span = Math.max(rawMax - rawMin, entryPrice * 0.08, 1);
+    const priceMagnitude = Math.max(Math.abs(entryPrice), Math.abs(rawMin), Math.abs(rawMax));
+    const minimumPriceSpan = priceMagnitude > 0 ? priceMagnitude * 0.08 : 1;
+    const span = Math.max(rawMax - rawMin, minimumPriceSpan);
     const domainMin = Math.max(0, rawMin - span * 0.35);
     const domainMax = rawMax + span * 0.35;
 
@@ -70,12 +77,14 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
     const pnlValues = prices.map(pnlForPrice);
     const minPnl = Math.min(...pnlValues, 0);
     const maxPnl = Math.max(...pnlValues, 0);
-    const pnlSpan = Math.max(maxPnl - minPnl, Math.abs(maxPnl) * 0.25, Math.abs(minPnl) * 0.25, 1);
+    const pnlMagnitude = Math.max(Math.abs(maxPnl), Math.abs(minPnl));
+    const minimumPnlSpan = pnlMagnitude > 0 ? pnlMagnitude * 0.25 : 1;
+    const pnlSpan = Math.max(maxPnl - minPnl, minimumPnlSpan);
     const yMin = minPnl - pnlSpan * 0.08;
     const yMax = maxPnl + pnlSpan * 0.08;
 
-    const priceToX = (price: number) => padding + ((price - domainMin) / (domainMax - domainMin)) * (width - padding * 2);
-    const pnlToY = (pnl: number) => height - padding - ((pnl - yMin) / (yMax - yMin)) * (height - padding * 2);
+    const priceToX = (price: number) => chartPadding.left + ((price - domainMin) / (domainMax - domainMin)) * (width - chartPadding.left - chartPadding.right);
+    const pnlToY = (pnl: number) => height - chartPadding.bottom - ((pnl - yMin) / (yMax - yMin)) * (height - chartPadding.top - chartPadding.bottom);
     const zeroY = pnlToY(0);
 
     const points = prices.map((price) => ({
@@ -121,16 +130,16 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
     switch (chartType) {
       case 'long_future':
         return {
-          path: `M ${padding},${height - padding} L ${width - padding},${padding}`,
-          areaPath: `M ${padding},${height - padding} L ${width - padding},${padding} L ${width - padding},${zeroY} L ${padding},${zeroY} Z`,
+          path: `M ${chartPadding.left},${height - chartPadding.bottom} L ${width - chartPadding.right},${chartPadding.top}`,
+          areaPath: `M ${chartPadding.left},${height - chartPadding.bottom} L ${width - chartPadding.right},${chartPadding.top} L ${width - chartPadding.right},${zeroY} L ${chartPadding.left},${zeroY} Z`,
           zeroY,
           strokeColor,
           fill,
         };
       case 'short_future':
         return {
-          path: `M ${padding},${padding} L ${width - padding},${height - padding}`,
-          areaPath: `M ${padding},${padding} L ${width - padding},${height - padding} L ${width - padding},${zeroY} L ${padding},${zeroY} Z`,
+          path: `M ${chartPadding.left},${chartPadding.top} L ${width - chartPadding.right},${height - chartPadding.bottom}`,
+          areaPath: `M ${chartPadding.left},${chartPadding.top} L ${width - chartPadding.right},${height - chartPadding.bottom} L ${width - chartPadding.right},${zeroY} L ${chartPadding.left},${zeroY} Z`,
           zeroY,
           strokeColor,
           fill,
@@ -138,10 +147,10 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
       case 'buy_call': {
         const strikeX = centerX - 40;
         const lossY = zeroY + 40;
-        const rightY = lossY - ((width - padding) - strikeX);
+        const rightY = lossY - ((width - chartPadding.right) - strikeX);
         return {
-          path: `M ${padding},${lossY} L ${strikeX},${lossY} L ${width - padding},${rightY}`,
-          areaPath: `M ${padding},${lossY} L ${strikeX},${lossY} L ${width - padding},${rightY} L ${width - padding},${zeroY} L ${padding},${zeroY} Z`,
+          path: `M ${chartPadding.left},${lossY} L ${strikeX},${lossY} L ${width - chartPadding.right},${rightY}`,
+          areaPath: `M ${chartPadding.left},${lossY} L ${strikeX},${lossY} L ${width - chartPadding.right},${rightY} L ${width - chartPadding.right},${zeroY} L ${chartPadding.left},${zeroY} Z`,
           zeroY,
           strokeColor,
           fill,
@@ -150,10 +159,10 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
       case 'buy_put': {
         const strikeX = centerX + 40;
         const lossY = zeroY + 40;
-        const leftY = lossY - (strikeX - padding);
+        const leftY = lossY - (strikeX - chartPadding.left);
         return {
-          path: `M ${padding},${leftY} L ${strikeX},${lossY} L ${width - padding},${lossY}`,
-          areaPath: `M ${padding},${leftY} L ${strikeX},${lossY} L ${width - padding},${lossY} L ${width - padding},${zeroY} L ${padding},${zeroY} Z`,
+          path: `M ${chartPadding.left},${leftY} L ${strikeX},${lossY} L ${width - chartPadding.right},${lossY}`,
+          areaPath: `M ${chartPadding.left},${leftY} L ${strikeX},${lossY} L ${width - chartPadding.right},${lossY} L ${width - chartPadding.right},${zeroY} L ${chartPadding.left},${zeroY} Z`,
           zeroY,
           strokeColor,
           fill,
@@ -177,16 +186,18 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
-      <div className="absolute top-4 left-4 z-10 flex flex-col">
-        <h4 className="text-sm font-bold text-white tracking-wide shadow-black drop-shadow-md">{type.toUpperCase()}</h4>
-        <span className="text-[10px] font-mono" style={{ color: accentColor }}>{subtitle.toUpperCase()}</span>
-      </div>
-
-      {liveFutureView?.currentPnl !== undefined && (
-        <div className="absolute top-4 right-4 z-10 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-mono text-white backdrop-blur-sm">
-          {t('bybit.unrealized_pnl')}: {liveFutureView.currentPnl >= 0 ? '+' : ''}{liveFutureView.currentPnl.toFixed(2)}
+      <div className="relative z-10 flex items-start justify-between gap-3 px-4 pt-4">
+        <div className="flex flex-col">
+          <h4 className="text-sm font-bold text-white tracking-wide shadow-black drop-shadow-md">{type.toUpperCase()}</h4>
+          <span className="text-[10px] font-mono" style={{ color: accentColor }}>{subtitle.toUpperCase()}</span>
         </div>
-      )}
+
+        {liveFutureView?.currentPnl !== undefined && (
+          <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-mono text-white backdrop-blur-sm">
+            {t('bybit.unrealized_pnl')}: {liveFutureView.currentPnl >= 0 ? '+' : ''}{liveFutureView.currentPnl.toFixed(2)}
+          </div>
+        )}
+      </div>
 
       <svg
         viewBox={`0 0 ${width} ${height}`}
@@ -222,10 +233,18 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
           <>
             {liveFutureView.markers.map((marker) => {
               const x = liveFutureView.priceToX(marker.price);
+              const useRightAnchor = x > width - 88;
               return (
                 <g key={`${marker.label}-${marker.price}`}>
-                  <line x1={x} y1={padding} x2={x} y2={height - padding} stroke={marker.color} strokeOpacity="0.7" strokeDasharray="4 4" />
-                  <text x={x + 4} y={padding + 12} fill={marker.color} fontSize="10" fontWeight="600">
+                  <line x1={x} y1={chartPadding.top} x2={x} y2={height - chartPadding.bottom} stroke={marker.color} strokeOpacity="0.7" strokeDasharray="4 4" />
+                  <text
+                    x={useRightAnchor ? x - 6 : x + 6}
+                    y={chartPadding.top - 8}
+                    fill={marker.color}
+                    fontSize="10"
+                    fontWeight="600"
+                    textAnchor={useRightAnchor ? 'end' : 'start'}
+                  >
                     {marker.label}
                   </text>
                 </g>
