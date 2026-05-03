@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -14,24 +14,25 @@ import IconReports from './components/icons/IconReports';
 import IconHistory from './components/icons/IconHistory';
 import IconQuest from './components/icons/IconQuest';
 import IconSettings from './components/icons/IconSettings';
+import EntryModal from './components/EntryModal';
+import ProfileModal from './components/ProfileModal';
+import QuestsPopover from './components/QuestsPopover';
+import Auth from './components/Auth';
 import AdPopup from './components/AdPopup';
+import LandingPage from './components/LandingPage';
 import Background from './components/Background';
 import GridOverlay from './components/GridOverlay';
 import CustomCursor from './components/CustomCursor';
 import { ThemeWrapper } from './components/ThemeWrapper';
 import { I18nProvider } from './hooks/useI18n';
 import CookieBanner from './components/CookieBanner';
+import PrivacyPolicy from './components/Legal/PrivacyPolicy';
+import TermsOfService from './components/Legal/TermsOfService';
 import { Analytics } from '@vercel/analytics/react';
 import { useConsent } from './hooks/useConsent';
 import PreMarketRoutine from './components/Routine/PreMarketRoutine';
 import { useI18n } from './hooks/useI18n';
-import EntryModal from './components/EntryModal';
-import ProfileModal from './components/ProfileModal';
-import QuestsPopover from './components/QuestsPopover';
-import Auth from './components/Auth';
-import LandingPage from './components/LandingPage';
-import PrivacyPolicy from './components/Legal/PrivacyPolicy';
-import TermsOfService from './components/Legal/TermsOfService';
+
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
 import { useAuth } from './hooks/useAuth';
@@ -61,7 +62,6 @@ const AppContent: React.FC = () => {
   // Legal Modals
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTos, setShowTos] = useState(false);
-  const fallbackModalDateRef = useRef(new Date());
 
   // Consent
   const { consent } = useConsent();
@@ -92,28 +92,12 @@ const AppContent: React.FC = () => {
     if (emotion) setInitialEmotion(emotion);
     setIsModalOpen(true);
   }, []);
-  const handleOpenBlankEntry = useCallback(() => handleOpenNewEntry(), [handleOpenNewEntry]);
-  const handleMonthChange = useCallback((offset: number) => {
-    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
-  }, []);
-  const handleYearChange = useCallback((offset: number) => {
-    setCurrentDate((prev) => new Date(prev.getFullYear() + offset, prev.getMonth(), 1));
-  }, []);
-  const handleGoToToday = useCallback(() => setCurrentDate(new Date()), []);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedDate(null);
     setInitialEmotion(undefined);
   }, []);
-  const handleOpenProfileModal = useCallback(() => setIsProfileModalOpen(true), []);
-  const handleCloseProfileModal = useCallback(() => setIsProfileModalOpen(false), []);
-  const handleToggleQuests = useCallback(() => setIsQuestsOpen((prev) => !prev), []);
-  const handleCloseQuests = useCallback(() => setIsQuestsOpen(false), []);
-  const handleOpenPrivacy = useCallback(() => setShowPrivacy(true), []);
-  const handleClosePrivacy = useCallback(() => setShowPrivacy(false), []);
-  const handleOpenTerms = useCallback(() => setShowTos(true), []);
-  const handleCloseTerms = useCallback(() => setShowTos(false), []);
 
   const onSaveEntry = useCallback(async (entry: Omit<EmotionEntry, 'date'>) => {
     if (selectedDate) {
@@ -147,50 +131,15 @@ const AppContent: React.FC = () => {
 
   const entriesArray = Object.values(entries);
   const isAppAccessible = !!session || !isSupabaseConfigured;
-  const isBybitEnabled = !!session && isSupabaseConfigured;
   const effectiveTheme = isAppAccessible ? theme : 'twilight';
-  const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = useMemo(() => [
+  const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = [
     { view: 'journal', label: t('dashboard.sidebar.journal'), icon: <IconJournal className="w-4 h-4" /> },
     { view: 'trends', label: t('dashboard.sidebar.trends'), icon: <IconTrends className="w-4 h-4" /> },
     { view: 'reports', label: t('dashboard.sidebar.reports'), icon: <IconReports className="w-4 h-4" /> },
     { view: 'history', label: t('dashboard.sidebar.history'), icon: <IconHistory className="w-4 h-4" /> },
     { view: 'review', label: t('dashboard.sidebar.review'), icon: <IconQuest className="w-4 h-4" /> },
     { view: 'settings', label: t('dashboard.sidebar.settings'), icon: <IconSettings className="w-4 h-4" /> },
-  ], [t]);
-  const selectedEntryKey = useMemo(() => {
-    if (!selectedDate) return null;
-    return `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
-  }, [selectedDate]);
-  const selectedEntry = selectedEntryKey ? entries[selectedEntryKey] : undefined;
-  const modalSelectedDate = selectedDate ?? fallbackModalDateRef.current;
-
-  const renderActiveView = () => {
-    if (activeView === 'journal') {
-      return (
-        <>
-          <PreMarketRoutine />
-          <CalendarView
-            currentDate={currentDate}
-            onMonthChange={handleMonthChange}
-            onYearChange={handleYearChange}
-            onGoToToday={handleGoToToday}
-            onDateClick={handleDateClick}
-            entries={entries}
-          />
-        </>
-      );
-    }
-
-    return (
-      <>
-        {activeView === 'trends' && <TrendsView entries={entriesArray} />}
-        {activeView === 'reports' && <ReportsView entries={entriesArray} />}
-        {activeView === 'history' && <HistoryView entries={entriesArray} />}
-        {activeView === 'review' && <PerformanceReviewView />}
-        {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={isBybitEnabled} />}
-      </>
-    );
-  };
+  ];
 
   return (
     <>
@@ -207,9 +156,9 @@ const AppContent: React.FC = () => {
         {!isAppAccessible ? (
             showLanding ? (
                 <LandingPage 
-                    onGetStarted={() => setShowLanding(false)} 
-                    onOpenPrivacy={handleOpenPrivacy}
-                    onOpenTerms={handleOpenTerms}
+                  onGetStarted={() => setShowLanding(false)} 
+                  onOpenPrivacy={() => setShowPrivacy(true)}
+                  onOpenTerms={() => setShowTos(true)}
                 />
             ) : (
                 <Auth />
@@ -225,10 +174,10 @@ const AppContent: React.FC = () => {
                 />
                 <div className="flex-1 flex flex-col overflow-hidden">
                     <Header
-                        onNewEntryClick={handleOpenBlankEntry}
+                        onNewEntryClick={() => handleOpenNewEntry()}
                         userProfile={userProfile}
-                        onProfileClick={handleOpenProfileModal}
-                        onQuestsClick={handleToggleQuests}
+                        onProfileClick={() => setIsProfileModalOpen(true)}
+                        onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
                         onSignOut={signOut}
                     />
                     <nav className="md:hidden border-b border-[color:var(--glass-border)] bg-black/10 backdrop-blur-xl">
@@ -258,7 +207,27 @@ const AppContent: React.FC = () => {
                         ) : error ? (
                             <div className="flex items-center justify-center h-full p-4">{error}</div>
                         ) : (
-                            renderActiveView()
+                            <>
+
+                                {activeView === 'journal' && (
+                                    <>
+                                        <PreMarketRoutine />
+                                        <CalendarView
+                                            currentDate={currentDate}
+                                            onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
+                                            onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
+                                            onGoToToday={() => setCurrentDate(new Date())}
+                                            onDateClick={handleDateClick}
+                                            entries={entries}
+                                        />
+                                    </>
+                                )}
+                                {activeView === 'trends' && <TrendsView entries={entriesArray} />}
+                                {activeView === 'reports' && <ReportsView entries={entriesArray} />}
+                                {activeView === 'history' && <HistoryView entries={entriesArray} />}
+                                {activeView === 'review' && <PerformanceReviewView />}
+                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={!!session && isSupabaseConfigured} />}
+                            </>
                         )}
                     </main>
                 </div>
@@ -268,20 +237,20 @@ const AppContent: React.FC = () => {
                     onClose={handleCloseModal}
                     onSave={onSaveEntry}
                     onDelete={onDeleteEntry}
-                    selectedDate={modalSelectedDate}
-                    entry={selectedEntry}
+                    selectedDate={selectedDate || new Date()}
+                    entry={selectedDate ? entries[`${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`] : undefined}
                     initialEmotion={initialEmotion}
-                    isBybitAvailable={isBybitEnabled}
+                    isBybitAvailable={!!session && isSupabaseConfigured}
                 />
                 <ProfileModal
                     isOpen={isProfileModalOpen}
-                    onClose={handleCloseProfileModal}
+                    onClose={() => setIsProfileModalOpen(false)}
                     onSave={saveProfile}
                     profile={userProfile}
                 />
                 <QuestsPopover
                     isOpen={isQuestsOpen}
-                    onClose={handleCloseQuests}
+                    onClose={() => setIsQuestsOpen(false)}
                     quests={quests}
                     onAddQuest={addQuest}
                     onToggleQuest={toggleQuest}
@@ -304,12 +273,8 @@ const AppContent: React.FC = () => {
       </ThemeWrapper>
       <CookieBanner />
       <AnimatePresence>
-        {showPrivacy && (
-          <PrivacyPolicy onClose={handleClosePrivacy} />
-        )}
-        {showTos && (
-          <TermsOfService onClose={handleCloseTerms} />
-        )}
+        {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
+        {showTos && <TermsOfService onClose={() => setShowTos(false)} />}
       </AnimatePresence>
       {consent.analytics && <Analytics />}
     </>
