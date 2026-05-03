@@ -12,14 +12,33 @@ function toNumber(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-export function normalizeTradeTypeFromSide(side?: string): TradeDetails['type'] {
+export function resolveFutureTradeType(side?: string, isClosingPosition = false): TradeDetails['type'] {
+  if (isClosingPosition) {
+    return side === 'Sell' ? 'Long Future' : 'Short Future';
+  }
+
   return side === 'Sell' ? 'Short Future' : 'Long Future';
+}
+
+export function normalizeTradeTypeFromSide(side?: string): TradeDetails['type'] {
+  return resolveFutureTradeType(side);
+}
+
+function isClosingTrade(trade: Partial<TradeDetails>) {
+  return trade.status === 'closed' || trade.closedPnl !== undefined;
+}
+
+export function resolveBybitTradeType(trade: Pick<BybitCachedTrade, 'side' | 'closedPnl' | 'rawClosedPnl'>): TradeDetails['type'] {
+  return resolveFutureTradeType(
+    trade.side,
+    trade.closedPnl !== undefined || trade.rawClosedPnl !== undefined && trade.rawClosedPnl !== null
+  );
 }
 
 export function createTradeFingerprint(trade: Partial<TradeDetails>): string {
   const source = trade.source ?? 'manual';
   const symbol = (trade.symbol || '').toUpperCase().trim();
-  const type = trade.type || normalizeTradeTypeFromSide(trade.side);
+  const type = trade.type || resolveFutureTradeType(trade.side, isClosingTrade(trade));
   const side = trade.side || 'Unknown';
   const executedAt = trade.executedAt ? new Date(trade.executedAt).toISOString() : '';
   const quantity = toNumber(trade.quantity ?? trade.contracts ?? trade.entryPrice);
@@ -37,23 +56,57 @@ export function createTradeFingerprint(trade: Partial<TradeDetails>): string {
 }
 
 export function normalizeManualTrade(trade: TradeDetails): IndexedTrade {
-  const tradeFingerprint = trade.tradeFingerprint || createTradeFingerprint({
-    ...trade,
-    source: trade.source ?? 'manual',
+  const normalizedTrade = trade.source === 'bybit'
+    ? normalizePersistedTrade(trade)
+    : trade;
+  const tradeFingerprint = normalizedTrade.tradeFingerprint || createTradeFingerprint({
+    ...normalizedTrade,
+    source: normalizedTrade.source ?? 'manual',
   });
 
   return {
-    ...trade,
-    source: trade.source ?? 'manual',
+    ...normalizedTrade,
+    source: normalizedTrade.source ?? 'manual',
     tradeFingerprint,
-    effectivePnl: toNumber(trade.closedPnl ?? trade.pnl),
+    effectivePnl: toNumber(normalizedTrade.closedPnl ?? normalizedTrade.pnl),
+  };
+}
+
+export function normalizePersistedTrade(trade: TradeDetails): TradeDetails {
+  if (trade.source !== 'bybit') {
+    return trade;
+  }
+
+  const normalizedType = resolveFutureTradeType(trade.side, isClosingTrade(trade));
+  const normalizedTrade: TradeDetails = {
+    ...trade,
+    type: normalizedType,
+  };
+
+  return {
+    ...normalizedTrade,
+    tradeFingerprint: trade.tradeFingerprint || createTradeFingerprint({
+      ...normalizedTrade,
+      source: 'bybit',
+    }),
+  };
+}
+
+export function normalizeEntryTradingData(tradingData?: EmotionEntry['tradingData']): EmotionEntry['tradingData'] | undefined {
+  if (!tradingData) {
+    return undefined;
+  }
+
+  return {
+    ...tradingData,
+    trades: (tradingData.trades ?? []).map(normalizePersistedTrade),
   };
 }
 
 export function tradeFromCachedBybitTrade(trade: BybitCachedTrade): TradeDetails {
   return {
     id: trade.id,
-    type: trade.type,
+    type: resolveBybitTradeType(trade),
     symbol: trade.symbol,
     source: 'bybit',
     closedPnl: trade.closedPnl,

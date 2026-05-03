@@ -218,6 +218,7 @@ interface ExecutionItem {
 interface ClosedPnlItem {
   symbol: string;
   orderId: string;
+  side?: 'Buy' | 'Sell';
   closedPnl?: string;
   [key: string]: unknown;
 }
@@ -306,8 +307,11 @@ function createFingerprintForTrade(trade: {
   executedAt: string;
   quantity: number;
   price: number;
+  isClosingPosition?: boolean;
 }) {
-  const type = trade.side === 'Sell' ? 'Short Future' : 'Long Future';
+  const type = trade.isClosingPosition
+    ? trade.side === 'Sell' ? 'Long Future' : 'Short Future'
+    : trade.side === 'Sell' ? 'Short Future' : 'Long Future';
   return [
     'bybit',
     trade.symbol.toUpperCase(),
@@ -422,6 +426,7 @@ export function mapBybitConnectionRow(row: {
 }
 
 export function mapBybitTradeRow(trade: AggregatedTradeRow) {
+  const isClosingPosition = trade.raw_closed_pnl !== null;
   return {
     id: trade.external_trade_id,
     provider: 'bybit' as const,
@@ -437,7 +442,9 @@ export function mapBybitTradeRow(trade: AggregatedTradeRow) {
     fee: trade.exec_fee ?? undefined,
     feeCurrency: trade.fee_currency ?? undefined,
     closedPnl: trade.closed_pnl ?? undefined,
-    type: trade.side === 'Sell' ? 'Short Future' : 'Long Future',
+    type: isClosingPosition
+      ? trade.side === 'Sell' ? 'Long Future' : 'Short Future'
+      : trade.side === 'Sell' ? 'Short Future' : 'Long Future',
     tradeFingerprint: trade.trade_fingerprint,
     rawExecution: trade.raw_execution,
     rawClosedPnl: trade.raw_closed_pnl,
@@ -611,6 +618,7 @@ export async function fetchAggregatedTradesForDay(input: {
         executedAt,
         quantity: totalQty,
         price: avgPrice,
+        isClosingPosition: closedPnlRow !== null,
       }),
       synced_at: now,
     };

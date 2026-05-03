@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage } from '../utils/errorHelpers';
-import { createTradeFingerprint, normalizeTradeTypeFromSide } from './tradingIndexService';
+import { createTradeFingerprint, normalizeEntryTradingData, normalizeTradeTypeFromSide, resolveFutureTradeType } from './tradingIndexService';
 
 export type Database = {
   public: {
@@ -651,7 +651,7 @@ type BybitPositionCacheRow = Database['public']['Tables']['bybit_position_cache'
 const BYBIT_FUNCTION_REGIONS = ['ca-central-1', 'eu-west-1'] as const;
 
 function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
-    const type = normalizeTradeTypeFromSide(row.side);
+    const type = resolveFutureTradeType(row.side, row.raw_closed_pnl !== null || row.closed_pnl !== null);
     return {
         id: row.id,
         provider: 'bybit',
@@ -875,7 +875,7 @@ export async function getEntries(): Promise<Record<string, EmotionEntry>> {
                 notes: e.notes,
                 imageUrl: e.image_url ?? undefined,
                 pnl: e.pnl ?? undefined,
-                tradingData: e.trading_data || undefined
+                tradingData: normalizeEntryTradingData(e.trading_data || undefined),
             };
         }
     }
@@ -884,6 +884,7 @@ export async function getEntries(): Promise<Record<string, EmotionEntry>> {
 
 export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
     const userId = await getUserId();
+    const normalizedTradingData = normalizeEntryTradingData(entry.tradingData);
     
     const data = await performSupabaseOp(
         () => supabase!
@@ -896,7 +897,7 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
                 image_url: entry.imageUrl ?? null,
                 user_id: userId,
                 pnl: entry.pnl ?? null,
-                trading_data: entry.tradingData ?? null
+                trading_data: normalizedTradingData ?? null
             }, { onConflict: 'user_id,date' })
             .select()
             .single(),
@@ -911,7 +912,7 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
         notes: savedData.notes,
         imageUrl: savedData.image_url ?? undefined,
         pnl: savedData.pnl ?? undefined,
-        tradingData: savedData.trading_data || undefined
+        tradingData: normalizeEntryTradingData(savedData.trading_data || undefined),
     };
 }
 

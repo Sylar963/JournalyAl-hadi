@@ -1,4 +1,5 @@
 import { type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview } from '../types';
+import { normalizeEntryTradingData } from './tradingIndexService';
 
 const ENTRIES_KEY = 'emotion-journal-entries';
 const PROFILE_KEY = 'emotion-journal-profile';
@@ -16,14 +17,29 @@ const DEFAULT_PROFILE: UserProfile = {
 // --- Entry Functions ---
 export async function getEntries(): Promise<Record<string, EmotionEntry>> {
     const data = localStorage.getItem(ENTRIES_KEY);
-    return data ? JSON.parse(data) : {};
+    if (!data) return {};
+
+    const parsed = JSON.parse(data) as Record<string, EmotionEntry>;
+    return Object.fromEntries(
+        Object.entries(parsed).map(([date, entry]) => [
+            date,
+            {
+                ...entry,
+                tradingData: normalizeEntryTradingData(entry.tradingData),
+            },
+        ])
+    );
 }
 
 export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
     const entries = await getEntries();
-    entries[entry.date] = entry;
+    const normalizedEntry: EmotionEntry = {
+        ...entry,
+        tradingData: normalizeEntryTradingData(entry.tradingData),
+    };
+    entries[entry.date] = normalizedEntry;
     localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
-    return entry;
+    return normalizedEntry;
 }
 
 export async function deleteEntry(date: string): Promise<void> {
