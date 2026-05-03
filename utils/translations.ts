@@ -10,9 +10,9 @@ export const translations = {
     
     // Hero
     'hero.title.delta': 'DELTA',
-    'hero.title.journal': 'JOURNAL',
-    'hero.subtitle': '[ Knowledge at Scale ]',
-    'hero.cta': 'START CREATING',
+    'hero.title.journal': 'TRADING JOURNAL',
+    'hero.subtitle': 'Professional Crypto Trading Psychology',
+    'hero.cta': 'ACCESS TERMINAL',
     'hero.status': 'SYSTEM STATUS',
     'hero.operational': 'OPERATIONAL',
     'hero.version': 'VERSION',
@@ -32,11 +32,11 @@ export const translations = {
     
     // Dashboard Common
     'dashboard.nav_title': 'Main Navigation',
-    'dashboard.sidebar.journal': 'Journal',
-    'dashboard.sidebar.trends': 'Trends',
+    'dashboard.sidebar.journal': 'Dashboard',
+    'dashboard.sidebar.trends': 'Analytics',
     'dashboard.sidebar.reports': 'Reports',
     'dashboard.sidebar.history': 'History',
-    'dashboard.sidebar.review': 'Review',
+    'dashboard.sidebar.review': 'Performance Review',
     'dashboard.sidebar.settings': 'Settings',
     'dashboard.sidebar.quick_actions': 'Quick Actions',
     'dashboard.sidebar.log_happy': 'Log Happy',
@@ -184,7 +184,7 @@ export const translations = {
     'emotion.angry': 'Angry',
 
     // Trends
-    'trends.title': 'Trends Analysis',
+    'trends.title': 'Analytics Overview',
     'trends.tab_general': 'General',
     'trends.tab_pnl': 'PNL Index',
     'trends.stat_total': 'Total Entries',
@@ -347,9 +347,9 @@ export const translations = {
     
     // Hero
     'hero.title.delta': 'DELTA',
-    'hero.title.journal': 'DIARIO',
-    'hero.subtitle': '[ Conocimiento a Escala ]',
-    'hero.cta': 'EMPEZAR A CREAR',
+    'hero.title.journal': 'TRADING JOURNAL',
+    'hero.subtitle': 'Psicología Profesional de Trading Crypto',
+    'hero.cta': 'ACCEDER AL TERMINAL',
     'hero.status': 'ESTADO DEL SISTEMA',
     'hero.operational': 'OPERATIVO',
     'hero.version': 'VERSIÓN',
@@ -369,12 +369,12 @@ export const translations = {
 
     // Dashboard Common
     'dashboard.nav_title': 'Navegación Principal',
-    'dashboard.sidebar.journal': 'Diario',
-    'dashboard.sidebar.trends': 'Tendencias',
+    'dashboard.sidebar.journal': 'Panel',
+    'dashboard.sidebar.trends': 'Analítica',
     'dashboard.sidebar.reports': 'Reportes',
     'dashboard.sidebar.history': 'Historial',
-    'dashboard.sidebar.review': 'Revisión',
-    'dashboard.sidebar.settings': 'Ajustes',
+    'dashboard.sidebar.review': 'Revisión de Desempeño',
+    'dashboard.sidebar.settings': 'Configuración',
     'dashboard.sidebar.quick_actions': 'Acciones Rápidas',
     'dashboard.sidebar.log_happy': 'Log Feliz',
     'dashboard.sidebar.log_calm': 'Log Calma',
@@ -468,7 +468,7 @@ export const translations = {
     'emotion.angry': 'Enfadado',
 
     // Trends
-    'trends.title': 'Análisis de Tendencias',
+    'trends.title': 'Resumen Analítico',
     'trends.tab_general': 'General',
     'trends.tab_pnl': 'Índice PNL',
     'trends.stat_total': 'Total de Entradas',

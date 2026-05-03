@@ -139,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
             <path d="M12 4L3 20H21L12 4Z" />
           </svg>
         </div>
-        {!isCollapsed && <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 ml-3 whitespace-nowrap tracking-tight">DeltaJournal</h1>}
+        {!isCollapsed && <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 ml-3 whitespace-nowrap tracking-tight">Delta Trading Journal</h1>}
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">

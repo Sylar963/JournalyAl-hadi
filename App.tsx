@@ -39,6 +39,19 @@ import { useAuth } from './hooks/useAuth';
 import { useAdSystem } from './hooks/useAdSystem';
 import { useJournalData } from './hooks/useJournalData';
 
+const VIEW_ROUTES: Record<string, ActiveView> = {
+  '': 'journal',
+  'dashboard': 'journal',
+  'journal': 'journal',
+  'analytics': 'trends',
+  'trends': 'trends',
+  'reports': 'reports',
+  'history': 'history',
+  'review': 'review',
+  'performance-review': 'review',
+  'settings': 'settings',
+};
+
 const AppContent: React.FC = () => {
   const { session, loading: isAuthLoading, signOut, isSupabaseConfigured } = useAuth();
   const { entries, quests, userProfile, loading: isDataLoading, error, saveEntry, deleteEntry, saveProfile, addQuest, toggleQuest, deleteQuest } = useJournalData(session, isSupabaseConfigured);
@@ -49,6 +62,20 @@ const AppContent: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeView, setActiveView] = useState<ActiveView>('journal');
   const [theme, setTheme] = useState<Theme>('twilight');
+
+  // URL-based routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1) || '';
+      const view = VIEW_ROUTES[hash];
+      if (view) {
+        setActiveView(view);
+      }
+    };
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,7 +107,11 @@ const AppContent: React.FC = () => {
   }, []);
 
   // Event Handlers
-  const handleNavigate = useCallback((view: ActiveView) => setActiveView(view), []);
+  const handleNavigate = useCallback((view: ActiveView) => {
+    setActiveView(view);
+    const route = Object.entries(VIEW_ROUTES).find(([_, v]) => v === view)?.[0] || '';
+    window.location.hash = route;
+  }, []);
   
   const handleDateClick = useCallback((day: Date) => {
     setSelectedDate(day);

@@ -26,7 +26,7 @@ const PrivacyPolicy: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="p-8 space-y-8 text-gray-300">
           <section>
             <h3 className="text-xl font-semibold text-white mb-4">1. Introduction</h3>
-            <p>Welcome to Deltajournal. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+            <p>Welcome to Delta Trading Journal. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
           </section>
 
           <section>

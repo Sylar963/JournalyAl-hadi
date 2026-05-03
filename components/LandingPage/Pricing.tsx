@@ -63,10 +63,10 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
 
   const plans = [
     {
-      name: "Free Beta Access",
+      name: "Beta Access",
       price: "$0",
-      description: "Experience the full power of Delta Journal during our beta phase. Refine your emotional edge for free.",
-      subText: "LIMITED TIME BETA",
+      description: "Experience the full power of Delta Trading Journal during our beta phase. Refine your emotional edge for free.",
+      subText: "EARLY ACCESS PROGRAM",
       features: [
         "Unlimited Journal Entries",
         "Emotional Alpha Analytics",
@@ -74,15 +74,15 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
         "Daily Pre-Market Baselining",
         "Secure Data Encryption"
       ],
-      cta: "Join Beta for Free",
+      cta: "Access Terminal",
       popular: true,
       tag: "BETA"
     },
     {
-      name: "PRO Journal",
+      name: "PRO Terminal",
       price: "Coming soon",
       description: "Advanced psychological analytics for elite traders seeking mathematical precision in their discipline.",
-      subText: "Stay tuned for launch",
+      subText: "Roadmap Q2 2026",
       features: [
         "Exchange Integration (Bybit, Binance, OKX)",
         "Strategy Performance Matrices",
@@ -92,7 +92,7 @@ const Pricing: React.FC<PricingProps> = ({ onGetStarted, onNotifyMe }) => {
       ],
       cta: "Notify Me",
       popular: false,
-      tag: "FUTURE",
+      tag: "PRO",
       comingSoon: true
     }
   ];
