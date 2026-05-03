@@ -19,11 +19,20 @@ function getStoredSession(): Session | null {
   return null;
 }
 
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+  return hydrated;
+}
+
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(() => getStoredSession());
+  const hydrated = useHydrated();
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured || !hydrated) return;
 
     auth.getSession().then(({ data: { session } }) => {
       if (session) setSession(session);
@@ -34,7 +43,7 @@ export function useAuth() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [hydrated]);
 
   const signOut = async () => {
     const { error } = await auth.signOut();

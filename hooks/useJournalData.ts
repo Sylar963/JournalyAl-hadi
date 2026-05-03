@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Session } from '@supabase/supabase-js';
 import * as db from '../services/dataService';
 import { PROFILES_TABLE_SETUP_SQL, ENTRIES_TABLE_SETUP_SQL, QUESTS_TABLE_SETUP_SQL } from '../services/supabaseService';
@@ -17,6 +17,9 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<React.ReactNode | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+  const userId = useMemo(() => session?.user?.id ?? null, [session?.user?.id]);
 
   // Initial Data Load
   useEffect(() => {
@@ -31,7 +34,7 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     let isMounted = true;
 
     async function loadInitialData() {
-      setLoading(true);
+      if (!initialLoadComplete) setLoading(true);
       setError(null);
       try {
         const fetchedEntries = await db.getEntries();
@@ -42,11 +45,12 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
           setEntries(fetchedEntries);
           setUserProfile(fetchedProfile);
           setQuests(fetchedQuests);
+          setInitialLoadComplete(true);
         }
       } catch (err: unknown) {
         if (!isMounted) return;
-        const message = getErrorMessage(err); // Extract message safely used below
-        const originalMessage = message; // Keep original for checks
+        const message = getErrorMessage(err);
+        const originalMessage = message;
 
         console.error("Failed to load data:", message);
 
@@ -94,7 +98,7 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     loadInitialData();
 
     return () => { isMounted = false; };
-  }, [session, isSupabaseConfigured]);
+  }, [userId, isSupabaseConfigured]);
 
   // Actions
   const saveEntry = useCallback(async (entry: Omit<EmotionEntry, 'date'>, date: Date) => {

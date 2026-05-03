@@ -8,13 +8,17 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-navigator.storage?.persisted?.().then((isPersisted) => {
-  if (!isPersisted) {
-    navigator.storage?.persist?.();
-  }
-});
+(async () => {
+  try {
+    if (navigator.storage?.persist) {
+      const isPersisted = await navigator.storage.persisted();
+      if (!isPersisted) {
+        await navigator.storage.persist();
+      }
+    }
+  } catch (e) {}
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-    <App />
-);
+  sessionStorage.setItem('app_loaded', '1');
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(<App />);
+})();
