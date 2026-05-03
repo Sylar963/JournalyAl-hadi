@@ -7,12 +7,14 @@ import IconSparkles from '../components/icons/IconSparkles';
 import IconSettings from '../components/icons/IconSettings';
 import IconUpload from '../components/icons/IconUpload';
 import IconJournal from '../components/icons/IconJournal';
+import IconExchange from '../components/icons/IconExchange';
 
 // Define ad content interface
 export interface AdContent {
   title: string;
   message: string;
   icon: React.ReactNode;
+  url?: string;
 }
 
 const AD_ICONS: Record<string, React.ReactNode> = {
@@ -21,6 +23,7 @@ const AD_ICONS: Record<string, React.ReactNode> = {
   settings: React.createElement(IconSettings, { className: "w-6 h-6" }),
   upload: React.createElement(IconUpload, { className: "w-6 h-6" }),
   journal: React.createElement(IconJournal, { className: "w-6 h-6" }),
+  exchange: React.createElement(IconExchange, { className: "w-6 h-6" }),
 };
 
 export function useAdSystem(isUserLoggedIn: boolean) {
@@ -32,8 +35,8 @@ export function useAdSystem(isUserLoggedIn: boolean) {
   const showAd = useCallback(() => {
     if (!isUserLoggedIn) return;
 
-    // Make the wisdom quotes dynamic
-    const adPool = [
+    // Combine tip ads and referral ads, with referral ads shown more frequently
+    const tipAds = [
         { titleKey: 'ads.insights_title', messageKey: 'ads.insights_message', icon: 'reports' },
         { titleKey: 'ads.wisdom_title', messageKey: 'wisdom', icon: 'sparkles' },
         { titleKey: 'ads.personalize_title', messageKey: 'ads.personalize_message', icon: 'settings' },
@@ -41,22 +44,38 @@ export function useAdSystem(isUserLoggedIn: boolean) {
         { titleKey: 'ads.consistency_title', messageKey: 'ads.consistency_message', icon: 'journal' },
     ];
 
-    const randomAd = adPool[Math.floor(Math.random() * adPool.length)];
-    let finalMessage = '';
-    if (randomAd.messageKey === 'wisdom') {
-        const randomIndex = Math.floor(Math.random() * 10);
-        finalMessage = t(`ads.wisdom.${randomIndex}` as TranslationKey);
-    } else {
-        finalMessage = t(randomAd.messageKey as TranslationKey);
-    }
+    // Referral ads from AD_MESSAGES (indices 5-8)
+    const referralAds = AD_MESSAGES.slice(5);
 
-    setAdContent({
-      title: t(randomAd.titleKey as TranslationKey),
-      message: finalMessage,
-      icon: AD_ICONS[randomAd.icon] || React.createElement(IconSparkles, { className: "w-6 h-6" })
-    });
+    // 50% chance to show referral ad, 50% for tips
+    const showReferral = Math.random() < 0.5;
+
+    if (showReferral && referralAds.length > 0) {
+        const randomReferral = referralAds[Math.floor(Math.random() * referralAds.length)];
+        setAdContent({
+            title: randomReferral.title,
+            message: randomReferral.message,
+            icon: AD_ICONS[randomReferral.icon] || React.createElement(IconExchange, { className: "w-6 h-6" }),
+            url: randomReferral.url
+        });
+    } else {
+        const randomTip = tipAds[Math.floor(Math.random() * tipAds.length)];
+        let finalMessage = '';
+        if (randomTip.messageKey === 'wisdom') {
+            const randomIndex = Math.floor(Math.random() * 10);
+            finalMessage = t(`ads.wisdom.${randomIndex}` as TranslationKey);
+        } else {
+            finalMessage = t(randomTip.messageKey as TranslationKey);
+        }
+
+        setAdContent({
+            title: t(randomTip.titleKey as TranslationKey),
+            message: finalMessage,
+            icon: AD_ICONS[randomTip.icon] || React.createElement(IconSparkles, { className: "w-6 h-6" })
+        });
+    }
     setIsAdVisible(true);
-  }, [isUserLoggedIn]);
+  }, [isUserLoggedIn, t]);
 
   const resetAdTimer = useCallback(() => {
     // Hide any currently visible ad when activity is detected

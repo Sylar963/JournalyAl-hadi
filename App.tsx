@@ -267,6 +267,7 @@ const AppContent: React.FC = () => {
             title={adContent.title}
             message={adContent.message}
             icon={adContent.icon}
+            url={adContent.url}
           />
         )}
       </div>

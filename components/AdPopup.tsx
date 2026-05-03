@@ -7,9 +7,10 @@ interface AdPopupProps {
   title: string;
   message: string;
   icon: React.ReactNode;
+  url?: string;
 }
 
-const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon }) => {
+const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon, url }) => {
   const { t } = useI18n();
   const [isShowing, setIsShowing] = useState(false);
 
@@ -49,6 +50,21 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
         <div className="ml-4 flex-1">
           <p className="text-base font-semibold text-white">{title}</p>
           <p className="mt-1 text-sm text-gray-400">{message}</p>
+          {url && (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center text-sm font-medium text-[var(--accent-primary)] hover:text-white transition-colors"
+            >
+              {t('ads.visit_link')}
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </a>
+          )}
         </div>
         <button
           onClick={onClose}

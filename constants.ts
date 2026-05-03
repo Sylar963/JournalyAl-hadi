@@ -135,5 +135,29 @@ export const AD_MESSAGES = [
     title: "Stay Consistent",
     message: "Journaling is most effective when it's a regular habit. Keep up the great work!",
     icon: 'journal'
+  },
+  {
+    title: "Thalex Exchange",
+    message: "Trade BTC, ETH, and more with low fees. Sign up with referral code OWNBZS for exclusive benefits.",
+    url: "https://thalex.com/exchange/sign-up?referral=OWNBZS",
+    icon: 'exchange'
+  },
+  {
+    title: "Coincall Exchange",
+    message: "Options trading with deep liquidity. Use referral code 43394533 to get started.",
+    url: "https://www.coincall.com/r/43394533",
+    icon: 'exchange'
+  },
+  {
+    title: "Bybit Exchange",
+    message: "World's fastest-growing crypto exchange. Sign up via our link for exclusive bonuses.",
+    url: "https://www.bybit.com/sign-up?affiliate_id=146658&group_id=1511275&group_type=1&ref_code=146658",
+    icon: 'exchange'
+  },
+  {
+    title: "Oggregator",
+    message: "The all-in-one options aggregator. Compare spreads across exchanges and find the best prices.",
+    url: "https://www.oggregator.xyz",
+    icon: 'exchange'
   }
 ];

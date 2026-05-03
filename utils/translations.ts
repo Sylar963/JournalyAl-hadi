@@ -140,6 +140,7 @@ export const translations = {
     'ads.did_you_know_message': 'You can attach an image to any journal entry to capture the moment visually.',
     'ads.consistency_title': 'Stay Consistent',
     'ads.consistency_message': "Journaling is most effective when it's a regular habit. Keep up the great work!",
+    'ads.visit_link': 'Visit',
     
     // Calendar
     'calendar.today': 'Today',
