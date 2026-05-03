@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
-import * as THREE from 'three';
+import type { Group } from 'three';
 import { type Theme } from '../types';
 
 interface BackgroundProps {
@@ -69,16 +69,14 @@ const CandleStick: React.FC<CandleStickProps> = ({ data, index, bullColor, bearC
 
 const TradingChart: React.FC<{ theme: Theme }> = ({ theme }) => {
     const themeConfig = THEME_COLORS[theme] || THEME_COLORS.twilight;
-    const groupRef = useRef<THREE.Group>(null);
+    const groupRef = useRef<Group>(null);
     const [candles, setCandles] = useState<CandleData[]>(() => {
-        const initial: CandleData[] = [];
         let price = 100;
-        for (let i = 0; i < 30; i++) {
+        return Array.from({ length: 30 }, () => {
             const candle = generateCandle(price);
             price = candle.close;
-            initial.push(candle);
-        }
-        return initial;
+            return candle;
+        });
     });
 
     useEffect(() => {
