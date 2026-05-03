@@ -23,14 +23,37 @@ interface CandleData {
     close: number;
 }
 
-const generateCandle = (prevClose: number): CandleData => {
-    const volatility = 0.02;
-    const direction = Math.random() > 0.48 ? 1 : -1;
-    const change = prevClose * volatility * (Math.random() * 0.5 + 0.5) * direction;
+const generateCandle = (prevClose: number, prevDirection?: number): CandleData => {
+    const rand = Math.random();
+    let volatility = 0.02;
+    let direction: number;
+    let change: number;
+
+    if (rand < 0.08) {
+        volatility = 0.08;
+        direction = prevDirection && Math.random() > 0.4 ? -prevDirection : (Math.random() > 0.5 ? 1 : -1);
+        change = prevClose * volatility * (Math.random() * 0.3 + 0.7) * direction;
+    } else if (rand < 0.15) {
+        volatility = 0.05;
+        direction = Math.random() > 0.5 ? 1 : -1;
+        change = prevClose * volatility * (Math.random() * 0.8 + 0.2) * direction;
+    } else if (rand < 0.25) {
+        volatility = 0.03;
+        direction = prevDirection && Math.random() > 0.35 ? prevDirection : (Math.random() > 0.48 ? 1 : -1);
+        change = prevClose * volatility * (Math.random() * 0.5 + 0.5) * direction;
+    } else {
+        direction = Math.random() > 0.48 ? 1 : -1;
+        change = prevClose * volatility * (Math.random() * 0.5 + 0.5) * direction;
+    }
+
     const open = prevClose;
     const close = open + change;
-    const high = Math.max(open, close) + Math.abs(change) * Math.random() * 0.5;
-    const low = Math.min(open, close) - Math.abs(change) * Math.random() * 0.5;
+    const bodySize = Math.abs(change);
+    const isLiquidation = rand < 0.15;
+    const wickMultiplier = isLiquidation ? (1.5 + Math.random() * 2) : (0.3 + Math.random() * 0.7);
+    const high = Math.max(open, close) + bodySize * wickMultiplier;
+    const low = Math.min(open, close) - bodySize * wickMultiplier;
+
     return { time: Date.now(), open, high, low, close };
 };
 
@@ -72,8 +95,10 @@ const TradingChart: React.FC<{ theme: Theme }> = ({ theme }) => {
     const groupRef = useRef<Group>(null);
     const [candles, setCandles] = useState<CandleData[]>(() => {
         let price = 100;
+        let direction = 1;
         return Array.from({ length: 30 }, () => {
-            const candle = generateCandle(price);
+            const candle = generateCandle(price, direction);
+            direction = candle.close >= candle.open ? 1 : -1;
             price = candle.close;
             return candle;
         });
@@ -82,7 +107,8 @@ const TradingChart: React.FC<{ theme: Theme }> = ({ theme }) => {
     useEffect(() => {
         const interval = setInterval(() => {
             setCandles(prev => {
-                const newCandle = generateCandle(prev[prev.length - 1].close);
+                const prevDirection = prev[prev.length - 1].close >= prev[prev.length - 1].open ? 1 : -1;
+                const newCandle = generateCandle(prev[prev.length - 1].close, prevDirection);
                 return [...prev.slice(1), newCandle];
             });
         }, 800);

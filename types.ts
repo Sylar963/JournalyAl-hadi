@@ -65,6 +65,13 @@ export interface TradingProviderDefinition {
   capabilities: TradingProviderCapability[];
 }
 
+export interface TiltMetrics {
+  score: number; // 0-100
+  riskLevel: 'low' | 'moderate' | 'high' | 'critical';
+  triggers: string[];
+  predictedBehavior?: string;
+}
+
 export interface EmotionEntry {
   date: string; // YYYY-MM-DD
   emotion: EmotionType;
@@ -76,6 +83,7 @@ export interface EmotionEntry {
     trades: TradeDetails[];
     pnlSource?: TradePnlSource;
   };
+  tiltMetrics?: TiltMetrics;
 }
 
 export interface TradingConnection {

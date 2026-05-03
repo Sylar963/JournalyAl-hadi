@@ -21,6 +21,11 @@ import IconSparkles from './icons/IconSparkles';
 import PNLCorrelationView from './PNLCorrelationView';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
+import { TiltIndexGauge } from './TiltIndexGauge';
+import { BehavioralInsights } from './BehavioralInsights';
+import { calculateTiltIndex } from '../services/tiltEngineService';
+import { learnTraderSignature, predictNextSessionRisk, TraderProfile, RiskPrediction } from '../services/behaviorLearner';
+import { TiltMetrics } from '../types';
 
 ChartJS.register(
   CategoryScale,
@@ -44,6 +49,10 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     const [aiSummary, setAiSummary] = useState('');
     const [isSummaryLoading, setIsSummaryLoading] = useState(false);
     const [summaryError, setSummaryError] = useState('');
+
+    const [tiltMetrics, setTiltMetrics] = useState<TiltMetrics | undefined>();
+    const [riskPrediction, setRiskPrediction] = useState<RiskPrediction | undefined>();
+    const [isTiltLoading, setIsTiltLoading] = useState(false);
 
     const currentMonthEntries = useMemo(() => {
         const today = new Date();
@@ -275,7 +284,33 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         }
     }, [currentMonthEntries]);
 
-    const [activeTab, setActiveTab] = useState<'general' | 'pnl'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'pnl' | 'tilt'>('general');
+
+    React.useEffect(() => {
+        const loadTiltData = async () => {
+            if (activeTab === 'tilt' && entries.length > 0 && !tiltMetrics) {
+                setIsTiltLoading(true);
+                try {
+                    // Using the most recent entry as current, others as historical
+                    const sortedEntries = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    const currentEntry = sortedEntries[sortedEntries.length - 1];
+                    const historicalEntries = sortedEntries.slice(0, sortedEntries.length - 1);
+                    
+                    const metrics = calculateTiltIndex(currentEntry, historicalEntries);
+                    setTiltMetrics(metrics);
+
+                    const profile = await learnTraderSignature(historicalEntries);
+                    const prediction = await predictNextSessionRisk(profile, currentEntry);
+                    setRiskPrediction(prediction);
+                } catch (error) {
+                    console.error("Failed to load tilt data", error);
+                } finally {
+                    setIsTiltLoading(false);
+                }
+            }
+        };
+        loadTiltData();
+    }, [activeTab, entries, tiltMetrics]);
 
   return (
     <div className="space-y-6 animate-content-entry">
@@ -304,10 +339,25 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             >
                 {t('trends.tab_pnl')}
             </button>
+            <button
+                onClick={() => setActiveTab('tilt')}
+                 className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === 'tilt'
+                        ? 'bg-white/10 text-white shadow-lg'
+                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
+                }`}
+            >
+                Tilt & Behavior
+            </button>
         </div>
       </div>
       
-      {activeTab === 'pnl' ? (
+      {activeTab === 'tilt' ? (
+          <div className="space-y-6">
+              <TiltIndexGauge metrics={tiltMetrics} />
+              <BehavioralInsights prediction={riskPrediction} isLoading={isTiltLoading} />
+          </div>
+      ) : activeTab === 'pnl' ? (
           <PNLCorrelationView entries={entries} />
       ) : (
           <>
