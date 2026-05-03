@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { findDuplicateTrade, tradeFromCachedBybitPosition, tradeFromCachedBybitTrade } from '../services/tradingIndexService';
 import { getTradingProviderClient } from '../services/tradingProviderRegistry';
 import type { BybitCachedPosition, BybitCachedTrade, BybitConnection, TradeDetails } from '../types';
@@ -29,7 +29,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   onError,
 }) => {
   const { t } = useI18n();
-  const bybitClient = getTradingProviderClient('bybit');
+  const bybitClient = useMemo(() => getTradingProviderClient('bybit'), []);
   const [connection, setConnection] = useState<BybitConnection | null>(null);
   const [trades, setTrades] = useState<BybitCachedTrade[]>([]);
   const [positions, setPositions] = useState<BybitCachedPosition[]>([]);
@@ -37,6 +37,42 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshCooldownUntil, setRefreshCooldownUntil] = useState(0);
+
+  const handleRefresh = useCallback(async (isBackground = false, connectionOverride?: BybitConnection | null) => {
+    const activeConnection = connectionOverride ?? connection;
+    if (!isBybitAvailable || !isToday || !activeConnection || activeConnection.validationStatus !== 'valid') return;
+    if (!isBackground && Date.now() < refreshCooldownUntil) return;
+
+    setIsRefreshing(true);
+    if (!isBackground) {
+      setRefreshCooldownUntil(Date.now() + REFRESH_COOLDOWN_MS);
+    }
+    onError?.(null);
+
+    try {
+      const refreshed = await bybitClient.refreshTradesForDate(date, Intl.DateTimeFormat().resolvedOptions().timeZone);
+      setConnection(refreshed.connection);
+      setTrades(refreshed.trades);
+      setPositions(refreshed.positions ?? []);
+      onCacheChange?.(refreshed.trades);
+      onPositionCacheChange?.(refreshed.positions ?? []);
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : t('bybit.error.refresh'));
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [
+    bybitClient,
+    connection,
+    date,
+    isBybitAvailable,
+    isToday,
+    onCacheChange,
+    onError,
+    onPositionCacheChange,
+    refreshCooldownUntil,
+    t,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,7 +135,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [connection, isBybitAvailable, isToday]);
+  }, [connection, handleRefresh, isBybitAvailable, isToday]);
 
   const filteredTrades = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -120,32 +156,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     );
   }, [positions, search]);
 
-  async function handleRefresh(isBackground = false, connectionOverride?: BybitConnection | null) {
-    const activeConnection = connectionOverride ?? connection;
-    if (!isBybitAvailable || !isToday || !activeConnection || activeConnection.validationStatus !== 'valid') return;
-    if (!isBackground && Date.now() < refreshCooldownUntil) return;
-
-    setIsRefreshing(true);
-    if (!isBackground) {
-      setRefreshCooldownUntil(Date.now() + REFRESH_COOLDOWN_MS);
-    }
-    onError?.(null);
-
-    try {
-      const refreshed = await bybitClient.refreshTradesForDate(date, Intl.DateTimeFormat().resolvedOptions().timeZone);
-      setConnection(refreshed.connection);
-      setTrades(refreshed.trades);
-      setPositions(refreshed.positions ?? []);
-      onCacheChange?.(refreshed.trades);
-      onPositionCacheChange?.(refreshed.positions ?? []);
-    } catch (error) {
-      onError?.(error instanceof Error ? error.message : t('bybit.error.refresh'));
-    } finally {
-      setIsRefreshing(false);
-    }
-  }
-
-  function handleSelectTrade(trade: BybitCachedTrade) {
+  const handleSelectTrade = useCallback((trade: BybitCachedTrade) => {
     const normalized = tradeFromCachedBybitTrade(trade);
     const duplicate = findDuplicateTrade(normalized, selectedTrades);
     if (duplicate) {
@@ -155,9 +166,9 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
 
     onError?.(null);
     onSelectTrade(normalized);
-  }
+  }, [onError, onSelectTrade, selectedTrades, t]);
 
-  function handleSelectPosition(position: BybitCachedPosition) {
+  const handleSelectPosition = useCallback((position: BybitCachedPosition) => {
     const normalized = tradeFromCachedBybitPosition(position);
     const duplicate = findDuplicateTrade(normalized, selectedTrades);
     if (duplicate) {
@@ -167,7 +178,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
 
     onError?.(null);
     onSelectTrade(normalized);
-  }
+  }, [onError, onSelectTrade, selectedTrades, t]);
 
   if (!isBybitAvailable) {
     return (
@@ -380,4 +391,4 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   );
 };
 
-export default BybitTradePanel;
+export default memo(BybitTradePanel);

@@ -206,12 +206,10 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     setTrades(trades.filter(t => t.id !== id));
   };
 
-  const handleAddImportedTrade = (trade: TradeDetails) => {
+  const handleAddImportedTrade = useCallback((trade: TradeDetails) => {
     setTrades((currentTrades) => [...currentTrades, trade]);
-    if (pnlSource !== 'manual') {
-      setPnlSource('linked_trades');
-    }
-  };
+    setPnlSource((currentSource) => currentSource === 'manual' ? currentSource : 'linked_trades');
+  }, []);
 
   const handlePnlInputChange = (value: string) => {
     setPnl(value);
@@ -578,13 +576,10 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                       </div>
     
                       {/* Payoff Chart */}
-                      <AnimatePresence mode="wait">
-                        <PayoffChart
-                          key={payoffPreviewTrade ? `${payoffPreviewTrade.id}-${payoffPreviewTrade.markPrice ?? 'na'}-${payoffPreviewTrade.liquidationPrice ?? 'na'}` : tradeType}
-                          type={payoffChartType}
-                          trade={payoffPreviewTrade}
-                        />
-                      </AnimatePresence>
+                      <PayoffChart
+                        type={payoffChartType}
+                        trade={payoffPreviewTrade}
+                      />
     
                       {/* Add New Trade Form */}
                       <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)]">

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import type { TradeDetails } from '../types';
 import { useI18n } from '../hooks/useI18n';
@@ -329,4 +329,4 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
   );
 };
 
-export default PayoffChart;
+export default memo(PayoffChart);
