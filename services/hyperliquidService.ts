@@ -1,5 +1,71 @@
 const HYPERLIQUID_API_URL = 'https://api.hyperliquid.xyz/info';
 
+const HIP3_SYMBOLS = ['SP500', 'XYZ100'];
+
+function formatCoinSymbol(coin: string): string {
+  if (HIP3_SYMBOLS.includes(coin)) {
+    return `xyz:${coin}`;
+  }
+  return coin;
+}
+
+async function fetchCandlesWithRetry(coin: string, interval: string = '1d', days: number = 30, retries: number = 3): Promise<Candle[]> {
+  const formattedCoin = formatCoinSymbol(coin);
+  
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const endTime = Date.now();
+      const startTime = endTime - days * 24 * 60 * 60 * 1000;
+
+      const response = await fetch(HYPERLIQUID_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'candleSnapshot',
+          req: {
+            coin: formattedCoin,
+            interval,
+            startTime,
+            endTime,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.warn(`Attempt ${attempt + 1} failed for ${coin}: ${response.status} - ${errorText}`);
+        if (attempt < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          continue;
+        }
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data || !Array.isArray(data)) {
+        return [];
+      }
+
+      return data.map((c: any) => ({
+        time: c.t,
+        open: parseFloat(c.o),
+        high: parseFloat(c.h),
+        low: parseFloat(c.l),
+        close: parseFloat(c.c),
+        volume: parseFloat(c.v),
+      }));
+    } catch (error) {
+      console.warn(`Attempt ${attempt + 1} error for ${coin}:`, error);
+      if (attempt < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  
+  return [];
+}
+
 export interface Candle {
   time: number;
   open: number;
@@ -32,44 +98,6 @@ function calculatePearsonCorrelation(x: number[], y: number[]): number {
   return numerator / denominator;
 }
 
-async function fetchCandles(coin: string, interval: string = '1d', days: number = 30): Promise<Candle[]> {
-  const endTime = Date.now();
-  const startTime = endTime - days * 24 * 60 * 60 * 1000;
-
-  const response = await fetch(HYPERLIQUID_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'candleSnapshot',
-      req: {
-        coin,
-        interval,
-        startTime,
-        endTime,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch candles for ${coin}: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  
-  if (!data || !Array.isArray(data)) {
-    return [];
-  }
-
-  return data.map((c: any[]) => ({
-    time: c[0],
-    open: parseFloat(c[4]),
-    high: parseFloat(c[5]),
-    low: parseFloat(c[6]),
-    close: parseFloat(c[7]),
-    volume: parseFloat(c[8]),
-  }));
-}
-
 const SYMBOL_NAMES: Record<string, string> = {
   'BTC': 'Bitcoin',
   'ETH': 'Ethereum',
@@ -89,7 +117,7 @@ const SYMBOL_NAMES: Record<string, string> = {
 
 export async function getAssetCorrelations(baseAsset: string, targetAssets: string[]): Promise<CorrelationData[]> {
   const [baseCandles, ...targetCandlesResults] = await Promise.all(
-    [baseAsset, ...targetAssets].map(asset => fetchCandles(asset, '1d', 30))
+    [baseAsset, ...targetAssets].map(asset => fetchCandlesWithRetry(asset, '1d', 30))
   );
 
   if (baseCandles.length === 0) {
