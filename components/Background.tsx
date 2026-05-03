@@ -69,22 +69,20 @@ const CandleStick: React.FC<CandleStickProps> = ({ data, index, bullColor, bearC
     const color = isBull ? bullColor : bearColor;
     const bodyTop = Math.max(data.open, data.close);
     const bodyBottom = Math.min(data.open, data.close);
-    const bodyHeight = Math.max(bodyTop - bodyBottom, 0.01);
-    const x = (index - 15) * 0.6;
+    const bodyHeight = Math.max(bodyTop - bodyBottom, 0.02);
     const centerY = (bodyTop + bodyBottom) / 2;
-    const scale = 1.2;
+    const wickHeight = data.high - data.low;
+    const x = (index - 15) * 0.8;
 
     return (
         <group position={[x, 0, 0]}>
-            {/* Wick (high to low) */}
-            <mesh position={[0, (data.high + data.low) / 2 * scale, 0]}>
-                <boxGeometry args={[0.05 * scale, (data.high - data.low) * scale, 0.05 * scale]} />
+            <mesh position={[0, (data.high + data.low) / 2, 0]}>
+                <boxGeometry args={[0.08, wickHeight, 0.08]} />
                 <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
             </mesh>
-            {/* Body */}
-            <mesh position={[0, centerY * scale, 0]}>
-                <boxGeometry args={[0.4 * scale, bodyHeight * scale, 0.2 * scale]} />
-                <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.4} />
+            <mesh position={[0, centerY, 0]}>
+                <boxGeometry args={[0.5, bodyHeight, 0.25]} />
+                <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} />
             </mesh>
         </group>
     );
@@ -119,34 +117,34 @@ const TradingChart: React.FC<{ theme: Theme }> = ({ theme }) => {
         const allPrices = candles.flatMap(c => [c.high, c.low]);
         const min = Math.min(...allPrices);
         const max = Math.max(...allPrices);
-        const padding = (max - min) * 0.1;
-        return { min: min - padding, max: max + padding };
+        return { min, max, mid: (min + max) / 2 };
     }, [candles]);
+
+    const candleSpacing = 0.8;
+    const chartWidth = 30 * candleSpacing;
 
     useFrame((state) => {
         if (groupRef.current) {
-            groupRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1) * 0.1;
-            groupRef.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.3) * 0.2;
+            groupRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1) * 0.05;
+            groupRef.current.position.y = Math.sin(state.clock.getElapsedTime() * 0.3) * 0.3;
         }
     });
 
     return (
-        <group ref={groupRef} scale={[0.8, 0.8, 0.8]} position={[0, 0, -3]}>
+        <group ref={groupRef} scale={[0.6, 0.6, 0.6]} position={[0, 0, -4]}>
             {candles.map((candle, i) => {
-                const normalizedHigh = ((candle.high - priceRange.min) / (priceRange.max - priceRange.min)) - 0.5;
-                const normalizedLow = ((candle.low - priceRange.min) / (priceRange.max - priceRange.min)) - 0.5;
-                const normalizedOpen = ((candle.open - priceRange.min) / (priceRange.max - priceRange.min)) - 0.5;
-                const normalizedClose = ((candle.close - priceRange.min) / (priceRange.max - priceRange.min)) - 0.5;
+                const x = (i - 15) * candleSpacing;
+                const y = (candle.high + candle.low) / 2 - priceRange.mid;
                 return (
                     <CandleStick
                         key={i}
                         index={i}
                         data={{
                             time: candle.time,
-                            open: normalizedOpen,
-                            high: normalizedHigh,
-                            low: normalizedLow,
-                            close: normalizedClose
+                            open: candle.open - priceRange.mid,
+                            high: candle.high - priceRange.mid,
+                            low: candle.low - priceRange.mid,
+                            close: candle.close - priceRange.mid
                         }}
                         bullColor={themeConfig.bullColor}
                         bearColor={themeConfig.bearColor}
