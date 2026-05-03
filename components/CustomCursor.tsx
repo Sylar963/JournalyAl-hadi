@@ -32,6 +32,25 @@ const CustomCursor: React.FC = () => {
     const onMouseEnter = () => setIsVisible(true);
     const onMouseLeave = () => setIsVisible(false);
     
+    // Touch event handlers for mobile
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) {
+        cursorRef.current = { x: touch.clientX, y: touch.clientY };
+        if (!isVisible) setIsVisible(true);
+      }
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (touch) {
+        cursorRef.current = { x: touch.clientX, y: touch.clientY };
+        setIsVisible(true);
+      }
+    };
+
+    const onTouchEnd = () => setIsVisible(false);
+    
     // Make sure links/buttons show pointer cursor logic if needed, 
     // but we are overriding everything with none. 
     // We can add logic here to expand cursor on hover if requested, 
@@ -40,12 +59,18 @@ const CustomCursor: React.FC = () => {
     window.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseenter', onMouseEnter);
     document.addEventListener('mouseleave', onMouseLeave);
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
 
     return () => {
       document.body.style.cursor = 'auto'; // Restore cursor
       window.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseenter', onMouseEnter);
       document.removeEventListener('mouseleave', onMouseLeave);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, []);
