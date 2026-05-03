@@ -222,6 +222,35 @@ interface ClosedPnlItem {
   [key: string]: unknown;
 }
 
+interface AccountInfoResult {
+  marginMode: string;
+  unifiedMarginStatus: number;
+  [key: string]: unknown;
+}
+
+async function fetchAccountMarginMode(
+  environment: BybitEnvironment,
+  apiKey: string,
+  apiSecret: string
+): Promise<'cross' | 'isolated' | 'unknown'> {
+  const response = await bybitSignedGet<{ retCode: number; retMsg: string; result: AccountInfoResult }>(
+    environment,
+    apiKey,
+    apiSecret,
+    '/v5/account/info',
+    {}
+  );
+
+  if (response.retCode !== 0) {
+    return 'unknown';
+  }
+
+  const marginMode = response.result?.marginMode;
+  if (marginMode === 'ISOLATED_MARGIN') return 'isolated';
+  if (marginMode === 'REGULAR_MARGIN') return 'cross';
+  return 'unknown';
+}
+
 interface PositionItem {
   symbol: string;
   side?: 'Buy' | 'Sell' | 'None' | '';
@@ -445,18 +474,21 @@ export async function fetchActivePositions(input: {
   apiSecret: string;
   symbol?: string;
 }): Promise<AggregatedPositionRow[]> {
-  const positions = await fetchPaged<{ nextPageCursor?: string; list: PositionItem[] }>(
-    input.environment,
-    input.apiKey,
-    input.apiSecret,
-    '/v5/position/list',
-    {
-      category: 'linear',
-      settleCoin: input.symbol ? undefined : 'USDT',
-      symbol: input.symbol,
-      limit: 200,
-    }
-  ) as PositionItem[];
+  const [positions, marginMode] = await Promise.all([
+    fetchPaged<{ nextPageCursor?: string; list: PositionItem[] }>(
+      input.environment,
+      input.apiKey,
+      input.apiSecret,
+      '/v5/position/list',
+      {
+        category: 'linear',
+        settleCoin: input.symbol ? undefined : 'USDT',
+        symbol: input.symbol,
+        limit: 200,
+      }
+    ) as Promise<PositionItem[]>,
+    fetchAccountMarginMode(input.environment, input.apiKey, input.apiSecret),
+  ]);
 
   const now = new Date().toISOString();
   return positions
@@ -483,7 +515,7 @@ export async function fetchActivePositions(input: {
         liquidation_price: toOptionalNumber(position.liqPrice),
         leverage: toOptionalNumber(position.leverage),
         position_value: toOptionalNumber(position.positionValue),
-        margin_mode: resolveMarginMode(position.tradeMode),
+        margin_mode: marginMode,
         external_position_id: `position:${position.symbol}:${side}`,
         updated_at: updatedAt,
         raw_position: position as Record<string, unknown>,
