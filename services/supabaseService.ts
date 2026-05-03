@@ -1196,6 +1196,80 @@ export async function bulkRefreshBybitTrades(
     return results;
 }
 
+export async function bulkCreateEntriesWithTrades(
+    startDate: string,
+    endDate: string,
+    timezone: string
+): Promise<{ date: string; tradesCount: number; pnl: number; created: boolean }[]> {
+    const results: { date: string; tradesCount: number; pnl: number; created: boolean }[] = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        try {
+            const cacheResult = await refreshBybitTradesForDate(dateStr, timezone);
+            const trades = cacheResult.trades;
+            const positions = cacheResult.positions || [];
+            const allTrades = [...trades, ...positions.map(p => ({
+                ...p,
+                id: p.id,
+                type: p.type,
+                symbol: p.symbol,
+                source: 'bybit' as const,
+                closedPnl: p.unrealizedPnl,
+                quantity: p.quantity,
+                side: p.side,
+                status: p.status as 'open' | 'closed',
+                entryPrice: p.entryPrice,
+                tradeFingerprint: `${p.provider}|${p.symbol}|${p.type}|${p.side}|${p.id}`
+            }))];
+            
+            if (allTrades.length === 0) {
+                results.push({ date: dateStr, tradesCount: 0, pnl: 0, created: false });
+                continue;
+            }
+            
+            const totalPnl = allTrades.reduce((sum, t) => sum + ((t as any).closedPnl ?? (t as any).pnl ?? 0), 0);
+            const tradeDetails = allTrades.map(t => ({
+                id: t.id,
+                type: t.type,
+                symbol: t.symbol,
+                source: t.source as 'bybit',
+                closedPnl: (t as any).closedPnl ?? (t as any).pnl,
+                pnl: (t as any).closedPnl ?? (t as any).pnl,
+                quantity: (t as any).quantity ?? (t as any).contracts,
+                contracts: (t as any).quantity ?? (t as any).contracts,
+                price: (t as any).price ?? (t as any).entryPrice,
+                side: t.side,
+                tradeFingerprint: t.tradeFingerprint,
+                externalTradeId: (t as any).externalTradeId ?? t.id,
+                orderId: (t as any).orderId,
+                executedAt: (t as any).executedAt ?? (t as any).updatedAt,
+                status: (t as any).closedPnl !== undefined ? 'closed' : 'open'
+            }));
+            
+            await saveEntry({
+                date: dateStr,
+                emotion: 'neutral',
+                intensity: 5,
+                notes: `Auto-imported from Bybit: ${allTrades.length} trades`,
+                pnl: totalPnl,
+                tradingData: {
+                    trades: tradeDetails as any,
+                    pnlSource: 'linked_trades'
+                }
+            });
+            
+            results.push({ date: dateStr, tradesCount: allTrades.length, pnl: totalPnl, created: true });
+        } catch (error) {
+            results.push({ date: dateStr, tradesCount: 0, pnl: 0, created: false });
+        }
+    }
+    
+    return results;
+}
+
 // ====================================================================================
 // REVIEWS TABLE SETUP
 // ====================================================================================

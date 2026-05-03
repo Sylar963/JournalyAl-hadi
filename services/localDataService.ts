@@ -184,3 +184,11 @@ export async function bulkRefreshBybitTrades(
 ): Promise<{ date: string; result: BybitTradeCacheResult }[]> {
     throw new Error('Bybit integration requires Supabase-backed mode.');
 }
+
+export async function bulkCreateEntriesWithTrades(
+    _startDate: string,
+    _endDate: string,
+    _timezone: string
+): Promise<{ date: string; tradesCount: number; pnl: number; created: boolean }[]> {
+    throw new Error('Bybit integration requires Supabase-backed mode.');
+}

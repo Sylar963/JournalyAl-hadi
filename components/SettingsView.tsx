@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { type BybitEnvironment, type BybitValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
 import { getTradingProviderClient } from '../services/tradingProviderRegistry';
-import { bulkRefreshBybitTrades } from '../services/dataService';
+import { bulkRefreshBybitTrades, bulkCreateEntriesWithTrades } from '../services/dataService';
 import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage } from '../services/supabaseService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
@@ -39,7 +39,7 @@ const [maskedKey, setMaskedKey] = useState<string | null>(null);
   const [bulkImportProgress, setBulkImportProgress] = useState<string>('');
   const [bulkImportStart, setBulkImportStart] = useState('');
   const [bulkImportEnd, setBulkImportEnd] = useState('');
-  const [bulkImportResults, setBulkImportResults] = useState<{ date: string; trades: number; pnl: number }[]>([]);
+  const [bulkImportResults, setBulkImportResults] = useState<{ date: string; trades: number; pnl: number; created: boolean }[]>([]);
   const [copiedSetupSql, setCopiedSetupSql] = useState(false);
 
   const shouldShowSetupSql = feedback === getBybitSchemaErrorMessage();
@@ -146,20 +146,16 @@ const [maskedKey, setMaskedKey] = useState<string | null>(null);
       return;
     }
     setIsBulkImporting(true);
-    setBulkImportProgress('Starting...');
+    setBulkImportProgress('Importing trades and creating entries...');
     setBulkImportResults([]);
     setFeedback(null);
     try {
-      const results = await bulkRefreshBybitTrades(bulkImportStart, bulkImportEnd, Intl.DateTimeFormat().resolvedOptions().timeZone);
-      const summary = results.map(r => ({
-        date: r.date,
-        trades: r.result.trades.length,
-        pnl: r.result.trades.reduce((sum, t) => sum + (t.closedPnl ?? 0), 0)
-      }));
-      setBulkImportResults(summary);
-      const totalTrades = summary.reduce((s, r) => s + r.trades, 0);
-      const totalPnl = summary.reduce((s, r) => s + r.pnl, 0);
-      setBulkImportProgress(`Done! ${results.length} days, ${totalTrades} trades, PnL: $${totalPnl.toFixed(2)}`);
+      const results = await bulkCreateEntriesWithTrades(bulkImportStart, bulkImportEnd, Intl.DateTimeFormat().resolvedOptions().timeZone);
+      setBulkImportResults(results);
+      const totalTrades = results.reduce((s, r) => s + r.tradesCount, 0);
+      const totalPnl = results.reduce((s, r) => s + r.pnl, 0);
+      const createdCount = results.filter(r => r.created).length;
+      setBulkImportProgress(`Done! ${createdCount} entries created, ${totalTrades} trades, PnL: $${totalPnl.toFixed(2)}`);
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Bulk import failed');
     } finally {
@@ -339,6 +335,7 @@ const [maskedKey, setMaskedKey] = useState<string | null>(null);
                         <th className="p-2 text-left">Date</th>
                         <th className="p-2 text-right">Trades</th>
                         <th className="p-2 text-right">PnL</th>
+                        <th className="p-2 text-center">Done</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -347,6 +344,7 @@ const [maskedKey, setMaskedKey] = useState<string | null>(null);
                           <td className="p-2 text-gray-300">{r.date}</td>
                           <td className="p-2 text-right text-gray-300">{r.trades}</td>
                           <td className={`p-2 text-right ${r.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>{r.pnl >= 0 ? '+' : ''}{r.pnl.toFixed(2)}</td>
+                          <td className={`p-2 text-center ${r.created ? 'text-green-400' : 'text-gray-500'}`}>{r.created ? '✓' : '-'}</td>
                         </tr>
                       ))}
                     </tbody>
