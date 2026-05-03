@@ -42,7 +42,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
     let cancelled = false;
 
     async function load() {
-      if (!isBybitAvailable || !isToday) {
+      if (!isBybitAvailable) {
         setConnection(null);
         setTrades([]);
         setPositions([]);
@@ -122,7 +122,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
 
   async function handleRefresh(isBackground = false, connectionOverride?: BybitConnection | null) {
     const activeConnection = connectionOverride ?? connection;
-    if (!isBybitAvailable || !isToday || !activeConnection || activeConnection.validationStatus !== 'valid') return;
+    if (!isBybitAvailable || !activeConnection || activeConnection.validationStatus !== 'valid') return;
     if (!isBackground && Date.now() < refreshCooldownUntil) return;
 
     setIsRefreshing(true);

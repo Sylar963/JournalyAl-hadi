@@ -325,7 +325,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     }, 0);
 
     const hasLinkedPnl = linkedTrades.some((trade) => typeof (trade.closedPnl ?? trade.pnl) === 'number');
-    setPnl(hasLinkedPnl ? totalLinkedPnl.toFixed(2) : '');
+    setPnl(hasLinkedPnl ? totalLinkedPnl.toFixed(2) : '0');
   }, [pnlSource, trades]);
 
   const payoffPreviewTrade = useMemo(() => {
