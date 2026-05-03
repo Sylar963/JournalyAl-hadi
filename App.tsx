@@ -1,8 +1,13 @@
-import React, { Suspense, lazy, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import CalendarView from './components/CalendarView';
+import TrendsView from './components/TrendsView';
+import ReportsView from './components/ReportsView';
+import HistoryView from './components/HistoryView';
+import SettingsView from './components/SettingsView';
+import PerformanceReviewView from './components/PerformanceReviewView';
 import IconJournal from './components/icons/IconJournal';
 import IconTrends from './components/icons/IconTrends';
 import IconReports from './components/icons/IconReports';
@@ -20,31 +25,18 @@ import { Analytics } from '@vercel/analytics/react';
 import { useConsent } from './hooks/useConsent';
 import PreMarketRoutine from './components/Routine/PreMarketRoutine';
 import { useI18n } from './hooks/useI18n';
-
+import EntryModal from './components/EntryModal';
+import ProfileModal from './components/ProfileModal';
+import QuestsPopover from './components/QuestsPopover';
+import Auth from './components/Auth';
+import LandingPage from './components/LandingPage';
+import PrivacyPolicy from './components/Legal/PrivacyPolicy';
+import TermsOfService from './components/Legal/TermsOfService';
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useAdSystem } from './hooks/useAdSystem';
 import { useJournalData } from './hooks/useJournalData';
-
-const TrendsView = lazy(() => import('./components/TrendsView'));
-const ReportsView = lazy(() => import('./components/ReportsView'));
-const HistoryView = lazy(() => import('./components/HistoryView'));
-const SettingsView = lazy(() => import('./components/SettingsView'));
-const PerformanceReviewView = lazy(() => import('./components/PerformanceReviewView'));
-const EntryModal = lazy(() => import('./components/EntryModal'));
-const ProfileModal = lazy(() => import('./components/ProfileModal'));
-const QuestsPopover = lazy(() => import('./components/QuestsPopover'));
-const Auth = lazy(() => import('./components/Auth'));
-const LandingPage = lazy(() => import('./components/LandingPage'));
-const PrivacyPolicy = lazy(() => import('./components/Legal/PrivacyPolicy'));
-const TermsOfService = lazy(() => import('./components/Legal/TermsOfService'));
-
-const SectionLoader: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={`flex items-center justify-center ${className ?? 'h-full min-h-[240px]'}`}>
-    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--accent-primary)]" />
-  </div>
-);
 
 const AppContent: React.FC = () => {
   const { session, loading: isAuthLoading, signOut, isSupabaseConfigured } = useAuth();
@@ -190,13 +182,13 @@ const AppContent: React.FC = () => {
     }
 
     return (
-      <Suspense fallback={<SectionLoader />}>
+      <>
         {activeView === 'trends' && <TrendsView entries={entriesArray} />}
         {activeView === 'reports' && <ReportsView entries={entriesArray} />}
         {activeView === 'history' && <HistoryView entries={entriesArray} />}
         {activeView === 'review' && <PerformanceReviewView />}
         {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={isBybitEnabled} />}
-      </Suspense>
+      </>
     );
   };
 
@@ -214,17 +206,13 @@ const AppContent: React.FC = () => {
       <div className="flex h-full w-full z-10 relative">
         {!isAppAccessible ? (
             showLanding ? (
-                <Suspense fallback={<SectionLoader className="min-h-screen w-full" />}>
-                  <LandingPage 
+                <LandingPage 
                     onGetStarted={() => setShowLanding(false)} 
                     onOpenPrivacy={handleOpenPrivacy}
                     onOpenTerms={handleOpenTerms}
-                  />
-                </Suspense>
+                />
             ) : (
-                <Suspense fallback={<SectionLoader className="min-h-screen w-full" />}>
-                  <Auth />
-                </Suspense>
+                <Auth />
             )
         ) : (
             <>
@@ -275,33 +263,31 @@ const AppContent: React.FC = () => {
                     </main>
                 </div>
 
-                <Suspense fallback={null}>
-                  <EntryModal
-                      isOpen={isModalOpen}
-                      onClose={handleCloseModal}
-                      onSave={onSaveEntry}
-                      onDelete={onDeleteEntry}
-                      selectedDate={modalSelectedDate}
-                      entry={selectedEntry}
-                      initialEmotion={initialEmotion}
-                      isBybitAvailable={isBybitEnabled}
-                  />
-                  <ProfileModal
-                      isOpen={isProfileModalOpen}
-                      onClose={handleCloseProfileModal}
-                      onSave={saveProfile}
-                      profile={userProfile}
-                  />
-                  <QuestsPopover
-                      isOpen={isQuestsOpen}
-                      onClose={handleCloseQuests}
-                      quests={quests}
-                      onAddQuest={addQuest}
-                      onToggleQuest={toggleQuest}
-                      onDeleteQuest={deleteQuest}
-                      anchorRef={questsPopoverRef}
-                  />
-                </Suspense>
+                <EntryModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseModal}
+                    onSave={onSaveEntry}
+                    onDelete={onDeleteEntry}
+                    selectedDate={modalSelectedDate}
+                    entry={selectedEntry}
+                    initialEmotion={initialEmotion}
+                    isBybitAvailable={isBybitEnabled}
+                />
+                <ProfileModal
+                    isOpen={isProfileModalOpen}
+                    onClose={handleCloseProfileModal}
+                    onSave={saveProfile}
+                    profile={userProfile}
+                />
+                <QuestsPopover
+                    isOpen={isQuestsOpen}
+                    onClose={handleCloseQuests}
+                    quests={quests}
+                    onAddQuest={addQuest}
+                    onToggleQuest={toggleQuest}
+                    onDeleteQuest={deleteQuest}
+                    anchorRef={questsPopoverRef}
+                />
             </>
         )}
         
@@ -319,14 +305,10 @@ const AppContent: React.FC = () => {
       <CookieBanner />
       <AnimatePresence>
         {showPrivacy && (
-          <Suspense fallback={null}>
-            <PrivacyPolicy onClose={handleClosePrivacy} />
-          </Suspense>
+          <PrivacyPolicy onClose={handleClosePrivacy} />
         )}
         {showTos && (
-          <Suspense fallback={null}>
-            <TermsOfService onClose={handleCloseTerms} />
-          </Suspense>
+          <TermsOfService onClose={handleCloseTerms} />
         )}
       </AnimatePresence>
       {consent.analytics && <Analytics />}
