@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Journaly
 
-# Run and deploy your AI Studio app
+A personal AI-powered journaling application that helps you reflect, plan, and grow through daily writing enhanced with Gemini AI.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1ZT8vl7M0pPGLNhJJcZTUl6RN_uwnv449
+- **Emotion-Based Journaling** - Track daily journal entries linked to emotions (joy, calm, frustration, etc.)
+- **Bybit Trading Integration** - Connect your Bybit account to import and link trades to your journal entries
+- **AI-Powered Insights** - Gemini AI analyzes your entries for patterns, wins, and areas to improve
+- **Performance Review** - Yearly and quarterly reviews to identify recurring problems and successes
+- **Trends & Analytics** - Visualize emotional patterns and P&L correlations over time
+- **Daily Routines** - Pre-market routine checklists and bias-setting plugins
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+   ```
+   npm install
+   ```
+
+2. Create a `.env.local` file with your API keys:
+   ```
+   GEMINI_API_KEY=your_gemini_api_key
+   ```
+
+   Optional: For Bybit trading features, add Supabase credentials:
+   ```
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
 3. Run the app:
-   `npm run dev`
+   ```
+   npm run dev
+   ```
+
+4. Open http://localhost:5173 in your browser
