@@ -8,6 +8,12 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+navigator.storage?.persisted?.().then((isPersisted) => {
+  if (!isPersisted) {
+    navigator.storage?.persist?.();
+  }
+});
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
     <App />

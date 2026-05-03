@@ -1,23 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import * as auth from '../services/auth';
 import { isUsingSupabase as isSupabaseConfigured } from '../services/dataService';
 
+const SESSION_KEY = 'dj-supabase-session';
+
+function getStoredSession(): Session | null {
+  try {
+    const stored = localStorage.getItem(SESSION_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed?.expires_at && Date.now() > parsed.expires_at * 1000) {
+        return null;
+      }
+      return parsed as Session;
+    }
+  } catch {}
+  return null;
+}
+
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const initialLoadDone = useRef(false);
+  const [session, setSession] = useState<Session | null>(() => getStoredSession());
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
+    if (!isSupabaseConfigured) return;
 
     auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-      initialLoadDone.current = true;
+      if (session) setSession(session);
     });
 
     const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
@@ -34,5 +43,5 @@ export function useAuth() {
     }
   };
 
-  return { session, loading, signOut, isSupabaseConfigured };
+  return { session, loading: false, signOut, isSupabaseConfigured };
 }
