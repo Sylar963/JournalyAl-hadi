@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -149,17 +149,18 @@ const AppContent: React.FC = () => {
   const isAppAccessible = !!session || !isSupabaseConfigured;
   const isBybitEnabled = !!session && isSupabaseConfigured;
   const effectiveTheme = isAppAccessible ? theme : 'twilight';
-  const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = [
+  const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = useMemo(() => [
     { view: 'journal', label: t('dashboard.sidebar.journal'), icon: <IconJournal className="w-4 h-4" /> },
     { view: 'trends', label: t('dashboard.sidebar.trends'), icon: <IconTrends className="w-4 h-4" /> },
     { view: 'reports', label: t('dashboard.sidebar.reports'), icon: <IconReports className="w-4 h-4" /> },
     { view: 'history', label: t('dashboard.sidebar.history'), icon: <IconHistory className="w-4 h-4" /> },
     { view: 'review', label: t('dashboard.sidebar.review'), icon: <IconQuest className="w-4 h-4" /> },
     { view: 'settings', label: t('dashboard.sidebar.settings'), icon: <IconSettings className="w-4 h-4" /> },
-  ];
-  const selectedEntryKey = selectedDate
-    ? `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`
-    : null;
+  ], [t]);
+  const selectedEntryKey = useMemo(() => {
+    if (!selectedDate) return null;
+    return `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
+  }, [selectedDate]);
   const selectedEntry = selectedEntryKey ? entries[selectedEntryKey] : undefined;
   const modalSelectedDate = selectedDate ?? fallbackModalDateRef.current;
 
