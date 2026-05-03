@@ -63,18 +63,21 @@ const AppContent: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>('journal');
   const [theme, setTheme] = useState<Theme>('twilight');
 
-  // URL-based routing
+  // URL-based routing using history API for reliable SPA navigation
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1) || '';
-      const view = VIEW_ROUTES[hash];
-      if (view) {
-        setActiveView(view);
-      }
+    const getViewFromPath = () => {
+      const path = window.location.pathname.replace(/^\//, '') || '';
+      return VIEW_ROUTES[path] || 'journal';
     };
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    setActiveView(getViewFromPath());
+
+    const handlePopState = () => {
+      setActiveView(getViewFromPath());
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
   
   // Modal states
@@ -110,7 +113,7 @@ const AppContent: React.FC = () => {
   const handleNavigate = useCallback((view: ActiveView) => {
     setActiveView(view);
     const route = Object.entries(VIEW_ROUTES).find(([_, v]) => v === view)?.[0] || '';
-    window.location.hash = route;
+    window.history.pushState(null, '', route ? `/${route}` : '/');
   }, []);
   
   const handleDateClick = useCallback((day: Date) => {
