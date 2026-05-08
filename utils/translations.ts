@@ -422,6 +422,28 @@ export const translations = {
     'modal.entry.pnl_source_manual': 'Manual',
     'modal.entry.pnl_source_linked': 'Operaciones vinculadas',
 
+    // Ads and Wisdom
+    'ads.wisdom_title': 'Un Momento de Sabiduria',
+    'ads.wisdom.0': 'El secreto del cambio es enfocar toda tu energia no en luchar contra lo viejo, sino en construir lo nuevo.',
+    'ads.wisdom.1': 'No pierdas mas tiempo discutiendo como debe ser un buen hombre. Se uno.',
+    'ads.wisdom.2': 'La mente lo es todo. En lo que piensas te conviertes.',
+    'ads.wisdom.3': 'Tienes poder sobre tu mente, no sobre los eventos externos. Comprendelo y encontraras fuerza.',
+    'ads.wisdom.4': 'La paz viene de dentro. No la busques fuera.',
+    'ads.wisdom.5': 'La mejor venganza es no parecerte a tu enemigo.',
+    'ads.wisdom.6': 'No vivas en el pasado, no suenes con el futuro, concentra la mente en el momento presente.',
+    'ads.wisdom.7': 'Quien vive en armonia consigo mismo vive en armonia con el universo.',
+    'ads.wisdom.8': 'Hay tres cosas que no pueden permanecer ocultas mucho tiempo: el sol, la luna y la verdad.',
+    'ads.wisdom.9': 'La felicidad de tu vida depende de la calidad de tus pensamientos.',
+    'ads.insights_title': 'Desbloquea Mas Insights',
+    'ads.insights_message': 'Genera un reporte completo en la pagina de Reportes para entender tus patrones emocionales.',
+    'ads.personalize_title': 'Personaliza Tu Espacio',
+    'ads.personalize_message': 'Sabias que puedes cambiar tu tema en la vista de Configuracion? Encuentra un estilo que te calme.',
+    'ads.did_you_know_title': 'Sabias Que?',
+    'ads.did_you_know_message': 'Puedes adjuntar una imagen a cualquier entrada del diario para capturar el momento visualmente.',
+    'ads.consistency_title': 'Manten la Constancia',
+    'ads.consistency_message': 'Llevar un diario es mas efectivo cuando se convierte en un habito regular. Sigue asi.',
+    'ads.visit_link': 'Visitar',
+
     // Calendar
     'calendar.today': 'Hoy',
     'calendar.unfold': 'Desplegar',

@@ -25,7 +25,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const t = useCallback((key: TranslationKey): string => {
-    const translation = translations[language][key];
+    const translation = translations[language][key] ?? translations.en[key];
     if (!translation) {
       return key;
     }
