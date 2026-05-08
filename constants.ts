@@ -130,7 +130,9 @@ export const AD_MESSAGES = [
     title: "Thalex Exchange",
     message: "Trade BTC, ETH, and more with low fees. Sign up with referral code OWNBZS for exclusive benefits.",
     url: "https://thalex.com/exchange/sign-up?referral=OWNBZS",
-    icon: 'exchange'
+    icon: 'exchange',
+    bannerImageUrl: '/Thalex%20Logo.svg',
+    creativeType: 'logo'
   },
   {
     title: "Coincall Exchange",

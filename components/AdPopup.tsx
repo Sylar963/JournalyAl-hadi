@@ -9,9 +9,10 @@ interface AdPopupProps {
   icon: React.ReactNode;
   url?: string;
   bannerImageUrl?: string;
+  creativeType?: 'banner' | 'logo';
 }
 
-const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon, url, bannerImageUrl }) => {
+const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon, url, bannerImageUrl, creativeType = 'banner' }) => {
   const { t } = useI18n();
   const [isShowing, setIsShowing] = useState(false);
 
@@ -45,13 +46,28 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
       }`}
     >
       {bannerImageUrl && (
-        <div className="mb-4 overflow-hidden rounded-lg border border-[color:var(--glass-border)]/60 bg-black/20">
-          <img
-            src={bannerImageUrl}
-            alt={`${title} banner`}
-            className="block h-auto w-full"
-          />
-        </div>
+        creativeType === 'logo' ? (
+          <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(6,10,20,0.96),rgba(18,28,45,0.92))] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+              Partner Exchange
+            </div>
+            <div className="flex items-center justify-center rounded-lg bg-white px-4 py-4 shadow-[0_14px_40px_rgba(0,0,0,0.28)]">
+              <img
+                src={bannerImageUrl}
+                alt={`${title} logo`}
+                className="block h-16 w-auto max-w-full object-contain"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4 overflow-hidden rounded-lg border border-[color:var(--glass-border)]/60 bg-black/20">
+            <img
+              src={bannerImageUrl}
+              alt={`${title} banner`}
+              className="block h-auto w-full"
+            />
+          </div>
+        )
       )}
       <div className="flex items-start">
         <div className="flex-shrink-0 w-10 h-10 bg-[var(--accent-primary)]/10 rounded-lg flex items-center justify-center text-[var(--accent-primary)] shadow-[0_0_10px_var(--chart-glow-color-1)]">

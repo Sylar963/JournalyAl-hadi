@@ -16,6 +16,7 @@ export interface AdContent {
   icon: React.ReactNode;
   url?: string;
   bannerImageUrl?: string;
+  creativeType?: 'banner' | 'logo';
 }
 
 const AD_ICONS: Record<string, React.ReactNode> = {
@@ -58,7 +59,8 @@ export function useAdSystem(isUserLoggedIn: boolean) {
             message: randomReferral.message,
             icon: AD_ICONS[randomReferral.icon] || React.createElement(IconExchange, { className: "w-6 h-6" }),
             url: randomReferral.url,
-            bannerImageUrl: randomReferral.bannerImageUrl
+            bannerImageUrl: randomReferral.bannerImageUrl,
+            creativeType: randomReferral.creativeType
         });
     } else {
         const randomTip = tipAds[Math.floor(Math.random() * tipAds.length)];

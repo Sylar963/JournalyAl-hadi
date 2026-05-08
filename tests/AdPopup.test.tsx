@@ -23,6 +23,7 @@ function AdSystemHarness() {
           icon={adContent.icon}
           url={adContent.url}
           bannerImageUrl={adContent.bannerImageUrl}
+          creativeType={adContent.creativeType}
         />
       )}
     </>
@@ -99,5 +100,25 @@ describe('AdPopup', () => {
     );
 
     expect(screen.getByRole('img', { name: /coincall exchange banner/i })).toHaveAttribute('src', '/bannercoincall.png');
+  });
+
+  it('renders the logo treatment when the ad uses logo creative', () => {
+    render(
+      <I18nProvider>
+        <AdPopup
+          isOpen={true}
+          onClose={() => {}}
+          title="Thalex Exchange"
+          message="Trade BTC, ETH, and more with low fees."
+          icon={<span>icon</span>}
+          url="https://thalex.com/exchange/sign-up?referral=OWNBZS"
+          bannerImageUrl="/Thalex%20Logo.svg"
+          creativeType="logo"
+        />
+      </I18nProvider>
+    );
+
+    expect(screen.getByText('Partner Exchange')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /thalex exchange logo/i })).toHaveAttribute('src', '/Thalex%20Logo.svg');
   });
 });
