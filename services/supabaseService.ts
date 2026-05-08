@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview } from '../types';
+import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexCachedTrade, type ThalexCachedPosition, type ThalexTradeCacheResult, type ThalexEnvironment, type ThalexInstrumentType } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage } from '../utils/errorHelpers';
 import { createTradeFingerprint, normalizeEntryTradingData, normalizeTradeTypeFromSide, resolveFutureTradeType } from './tradingIndexService';
@@ -322,6 +322,195 @@ export type Database = {
         };
         Relationships: [];
       };
+      thalex_connections: {
+        Row: {
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          key_name: string;
+          key_name_masked: string;
+          key_name_last4: string;
+          private_key_ciphertext: string;
+          private_key_iv: string;
+          private_key_version: string;
+          validation_status: 'not_connected' | 'pending' | 'valid' | 'invalid';
+          permission_snapshot: Record<string, unknown> | null;
+          last_validated_at: string | null;
+          last_sync_at: string | null;
+          sync_status: 'idle' | 'syncing' | 'ready' | 'error' | null;
+          sync_error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          key_name: string;
+          key_name_masked: string;
+          key_name_last4: string;
+          private_key_ciphertext: string;
+          private_key_iv: string;
+          private_key_version?: string;
+          validation_status?: 'not_connected' | 'pending' | 'valid' | 'invalid';
+          permission_snapshot?: Record<string, unknown> | null;
+          last_validated_at?: string | null;
+          last_sync_at?: string | null;
+          sync_status?: 'idle' | 'syncing' | 'ready' | 'error' | null;
+          sync_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          environment?: 'mainnet' | 'testnet';
+          key_name?: string;
+          key_name_masked?: string;
+          key_name_last4?: string;
+          private_key_ciphertext?: string;
+          private_key_iv?: string;
+          private_key_version?: string;
+          validation_status?: 'not_connected' | 'pending' | 'valid' | 'invalid';
+          permission_snapshot?: Record<string, unknown> | null;
+          last_validated_at?: string | null;
+          last_sync_at?: string | null;
+          sync_status?: 'idle' | 'syncing' | 'ready' | 'error' | null;
+          sync_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      thalex_trade_cache: {
+        Row: {
+          id: string;
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          trade_day: string;
+          external_trade_id: string;
+          order_id: string;
+          instrument_name: string;
+          instrument_type: ThalexInstrumentType;
+          side: 'Buy' | 'Sell' | 'Unknown';
+          executed_at: string;
+          quantity: number;
+          price: number;
+          fee: number | null;
+          fee_currency: string | null;
+          closed_pnl: number | null;
+          trade_fingerprint: string;
+          raw_trade: Record<string, unknown> | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          trade_day: string;
+          external_trade_id: string;
+          order_id: string;
+          instrument_name: string;
+          instrument_type?: ThalexInstrumentType;
+          side: 'Buy' | 'Sell' | 'Unknown';
+          executed_at: string;
+          quantity: number;
+          price: number;
+          fee?: number | null;
+          fee_currency?: string | null;
+          closed_pnl?: number | null;
+          trade_fingerprint: string;
+          raw_trade?: Record<string, unknown> | null;
+          synced_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          environment?: 'mainnet' | 'testnet';
+          trade_day?: string;
+          external_trade_id?: string;
+          order_id?: string;
+          instrument_name?: string;
+          instrument_type?: ThalexInstrumentType;
+          side?: 'Buy' | 'Sell' | 'Unknown';
+          executed_at?: string;
+          quantity?: number;
+          price?: number;
+          fee?: number | null;
+          fee_currency?: string | null;
+          closed_pnl?: number | null;
+          trade_fingerprint?: string;
+          raw_trade?: Record<string, unknown> | null;
+          synced_at?: string;
+        };
+        Relationships: [];
+      };
+      thalex_position_cache: {
+        Row: {
+          id: string;
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          instrument_name: string;
+          instrument_type: ThalexInstrumentType;
+          position: number;
+          side: 'Buy' | 'Sell' | 'Unknown';
+          position_status: 'open' | 'closed';
+          mark_price: number | null;
+          start_price: number | null;
+          average_price: number | null;
+          unrealised_pnl: number | null;
+          realised_pnl: number | null;
+          entry_value: number | null;
+          iv: number | null;
+          index_price: number | null;
+          external_position_id: string;
+          updated_at: string | null;
+          raw_position: Record<string, unknown> | null;
+          synced_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          environment: 'mainnet' | 'testnet';
+          instrument_name: string;
+          instrument_type?: ThalexInstrumentType;
+          position: number;
+          side: 'Buy' | 'Sell' | 'Unknown';
+          position_status?: 'open' | 'closed';
+          mark_price?: number | null;
+          start_price?: number | null;
+          average_price?: number | null;
+          unrealised_pnl?: number | null;
+          realised_pnl?: number | null;
+          entry_value?: number | null;
+          iv?: number | null;
+          index_price?: number | null;
+          external_position_id: string;
+          updated_at?: string | null;
+          raw_position?: Record<string, unknown> | null;
+          synced_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          environment?: 'mainnet' | 'testnet';
+          instrument_name?: string;
+          instrument_type?: ThalexInstrumentType;
+          position?: number;
+          side?: 'Buy' | 'Sell' | 'Unknown';
+          position_status?: 'open' | 'closed';
+          mark_price?: number | null;
+          start_price?: number | null;
+          average_price?: number | null;
+          unrealised_pnl?: number | null;
+          realised_pnl?: number | null;
+          entry_value?: number | null;
+          iv?: number | null;
+          index_price?: number | null;
+          external_position_id?: string;
+          updated_at?: string | null;
+          raw_position?: Record<string, unknown> | null;
+          synced_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: { [key: string]: never };
     Functions: { [key: string]: never };
@@ -571,6 +760,20 @@ export function isMissingBybitSchemaError(message: string): boolean {
 
 export function getBybitSchemaErrorMessage(): string {
     return 'Bybit tables are missing in Supabase. Run the SQL from supabase/sql/bybit_setup.sql, then refresh the app.';
+}
+
+// Thalex setup SQL is read from the static file embedded as a template string.
+// In production, the UI copies this and asks the user to run it in Supabase SQL Editor.
+export const THALEX_SETUP_SQL = `-- Run this in Supabase SQL Editor to enable Thalex integration.
+-- Full SQL is in supabase/sql/thalex_setup.sql
+-- See docs/THALEX_INTEGRATION.md for instructions.
+
+-- Quick check:
+SELECT table_name FROM information_schema.tables
+WHERE table_schema='public' AND table_name IN ('thalex_connections','thalex_trade_cache','thalex_position_cache');`;
+
+export function getThalexSchemaErrorMessage(): string {
+    return 'Thalex tables are missing in Supabase. Run the SQL from supabase/sql/thalex_setup.sql, then refresh the app.';
 }
 
 function isResponseLike(value: unknown): value is Response {
@@ -1438,4 +1641,216 @@ export async function addLead(email: string): Promise<void> {
         () => supabase!.from('leads').insert({ email }).select(), // Select to ensure it really happened if we care, or just to satisfy typings if reusing op
         'Error adding lead'
     );
+}
+
+// ====================================================================================
+// THALEX SERVICE METHODS
+// ====================================================================================
+
+type ThalexConnectionRow = Database['public']['Tables']['thalex_connections']['Row'];
+type ThalexTradeCacheRow = Database['public']['Tables']['thalex_trade_cache']['Row'];
+type ThalexPositionCacheRow = Database['public']['Tables']['thalex_position_cache']['Row'];
+
+const THALEX_FUNCTION_REGIONS = ['ca-central-1', 'eu-west-1'] as const;
+
+export function isMissingThalexSchemaError(message: string): boolean {
+    const n = message.toLowerCase();
+    return n.includes('relation "public.thalex_connections" does not exist')
+        || n.includes('relation "public.thalex_trade_cache" does not exist')
+        || n.includes('relation "public.thalex_position_cache" does not exist')
+        || (n.includes('thalex_connections') && n.includes('does not exist'))
+        || (n.includes('thalex_trade_cache') && n.includes('does not exist'))
+        || (n.includes('thalex_position_cache') && n.includes('does not exist'));
+}
+
+function mapThalexConnection(row: ThalexConnectionRow): ThalexConnection {
+    return {
+        provider: 'thalex',
+        environment: row.environment,
+        keyNameMasked: row.key_name_masked,
+        keyNameLast4: row.key_name_last4,
+        // Satisfy TradingConnection base interface
+        apiKeyMasked: row.key_name_masked,
+        apiKeyLast4: row.key_name_last4,
+        validationStatus: row.validation_status,
+        permissionSnapshot: row.permission_snapshot,
+        lastValidatedAt: row.last_validated_at ?? undefined,
+        lastSyncAt: row.last_sync_at ?? undefined,
+        syncStatus: (row.sync_status as ThalexConnection['syncStatus']) ?? 'idle',
+        syncError: row.sync_error ?? null,
+    };
+}
+
+function mapThalexTrade(row: ThalexTradeCacheRow): ThalexCachedTrade {
+    // Derive trade type from instrument name + side
+    // (a simplified version — the full logic runs in the Edge Function)
+    const type = (() => {
+        const name = row.instrument_name.toUpperCase();
+        if (row.instrument_type === 'option') {
+            const isCall = name.endsWith('-C');
+            const letter = isCall ? 'Call' : 'Put';
+            return (row.side === 'Buy' ? `BTO ${letter}` : `STO ${letter}`) as TradeDetails['type'];
+        }
+        return (row.side === 'Buy' ? 'Long Future' : 'Short Future') as TradeDetails['type'];
+    })();
+
+    return {
+        id: row.id,
+        provider: 'thalex',
+        environment: row.environment,
+        tradeDay: row.trade_day,
+        instrumentType: row.instrument_type,
+        externalTradeId: row.external_trade_id,
+        orderId: row.order_id,
+        symbol: row.instrument_name,
+        side: row.side,
+        executedAt: row.executed_at,
+        quantity: Number(row.quantity),
+        price: Number(row.price),
+        fee: row.fee ?? undefined,
+        feeCurrency: row.fee_currency ?? undefined,
+        closedPnl: row.closed_pnl ?? undefined,
+        type,
+        tradeFingerprint: row.trade_fingerprint,
+        rawTrade: row.raw_trade ?? undefined,
+    };
+}
+
+function mapThalexPosition(row: ThalexPositionCacheRow): ThalexCachedPosition {
+    const type = (() => {
+        if (row.instrument_type === 'option') {
+            const isCall = row.instrument_name.toUpperCase().endsWith('-C');
+            return (row.side === 'Buy'
+                ? isCall ? 'BTO Call' : 'BTO Put'
+                : isCall ? 'STO Call' : 'STO Put') as TradeDetails['type'];
+        }
+        return (row.side === 'Buy' ? 'Long Future' : 'Short Future') as TradeDetails['type'];
+    })();
+
+    return {
+        id: row.id,
+        provider: 'thalex',
+        environment: row.environment,
+        instrumentType: row.instrument_type,
+        symbol: row.instrument_name,
+        side: row.side,
+        status: row.position_status,
+        quantity: Math.abs(Number(row.position)),
+        entryPrice: row.start_price ?? undefined,
+        markPrice: row.mark_price ?? undefined,
+        unrealizedPnl: row.unrealised_pnl ?? undefined,
+        liquidationPrice: undefined,
+        leverage: undefined,
+        positionValue: row.entry_value ?? undefined,
+        marginMode: 'unknown',
+        updatedAt: row.updated_at ?? undefined,
+        externalPositionId: row.external_position_id,
+        type,
+        rawPosition: row.raw_position ?? undefined,
+    };
+}
+
+export async function getThalexConnection(): Promise<ThalexConnection | null> {
+    const result = await invokeBrowserSafeRegionalFunction<{ connection: ThalexConnectionRow | null }>(
+        'thalex-get-connection',
+        {},
+        THALEX_FUNCTION_REGIONS,
+    );
+    return result.connection ? mapThalexConnection(result.connection) : null;
+}
+
+export async function saveThalexConnection(input: ThalexCredentialInput): Promise<ThalexConnection> {
+    const result = await invokeBrowserSafeRegionalFunction<ThalexConnectionRow>(
+        'thalex-upsert-credentials',
+        {
+            keyName: input.keyName,
+            privateKeyPem: input.privateKeyPem,
+            environment: input.environment,
+        },
+        THALEX_FUNCTION_REGIONS,
+    );
+    return mapThalexConnection(result);
+}
+
+export async function validateThalexConnection(input: ThalexCredentialInput): Promise<ThalexConnection> {
+    await invokeBrowserSafeRegionalFunction<{ valid: boolean }>(
+        'thalex-validate-credentials',
+        {
+            keyName: input.keyName,
+            privateKeyPem: input.privateKeyPem,
+            environment: input.environment,
+        },
+        THALEX_FUNCTION_REGIONS,
+    );
+
+    // Return a transient ThalexConnection (not yet persisted)
+    return {
+        provider: 'thalex',
+        environment: input.environment,
+        keyNameMasked: input.keyName.length > 4 ? `${input.keyName.slice(0, 4)}***` : input.keyName,
+        keyNameLast4: input.keyName.slice(-4),
+        apiKeyMasked: input.keyName.length > 4 ? `${input.keyName.slice(0, 4)}***` : input.keyName,
+        apiKeyLast4: input.keyName.slice(-4),
+        validationStatus: 'valid',
+        permissionSnapshot: null,
+    };
+}
+
+export async function deleteThalexConnection(): Promise<void> {
+    await invokeBrowserSafeRegionalFunction<{ deleted: boolean }>(
+        'thalex-delete-connection',
+        {},
+        THALEX_FUNCTION_REGIONS,
+    );
+}
+
+export async function getCachedThalexTradesForDate(date: string): Promise<ThalexTradeCacheResult> {
+    if (!supabase) throw new Error(clientNotConfiguredError);
+
+    const connection = await getThalexConnection();
+    if (!connection) {
+        return { trades: [], positions: [], connection: null };
+    }
+
+    const { data: trades, error: tradesErr } = await supabase
+        .from('thalex_trade_cache')
+        .select('*')
+        .eq('trade_day', date)
+        .order('executed_at', { ascending: true });
+
+    if (tradesErr) throw new Error(tradesErr.message);
+
+    const { data: positions, error: posErr } = await supabase
+        .from('thalex_position_cache')
+        .select('*');
+
+    if (posErr) throw new Error(posErr.message);
+
+    return {
+        trades: (trades ?? []).map(mapThalexTrade),
+        positions: (positions ?? []).map(mapThalexPosition),
+        connection,
+        refreshedAt: connection.lastSyncAt,
+    };
+}
+
+export async function refreshThalexTradesForDate(date: string, timezone: string): Promise<ThalexTradeCacheResult> {
+    const result = await invokeBrowserSafeRegionalFunction<{
+        trades: ThalexTradeCacheRow[];
+        positions: ThalexPositionCacheRow[];
+        refreshedAt: string;
+    }>(
+        'thalex-sync-trades',
+        { date, timezone },
+        THALEX_FUNCTION_REGIONS,
+    );
+
+    const connection = await getThalexConnection();
+
+    return {
+        trades: result.trades.map(mapThalexTrade),
+        positions: result.positions.map(mapThalexPosition),
+        connection,
+        refreshedAt: result.refreshedAt,
+    };
 }

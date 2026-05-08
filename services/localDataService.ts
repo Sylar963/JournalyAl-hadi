@@ -1,4 +1,4 @@
-import { type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview } from '../types';
+import { type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexTradeCacheResult } from '../types';
 import { normalizeEntryTradingData } from './tradingIndexService';
 
 const ENTRIES_KEY = 'emotion-journal-entries';
@@ -191,4 +191,30 @@ export async function bulkCreateEntriesWithTrades(
     _timezone: string
 ): Promise<{ date: string; tradesCount: number; pnl: number; created: boolean }[]> {
     throw new Error('Bybit integration requires Supabase-backed mode.');
+}
+
+// --- Thalex Stubs (local mode does not support Thalex) ---
+
+export async function getThalexConnection(): Promise<ThalexConnection | null> {
+    return null;
+}
+
+export async function saveThalexConnection(_input: ThalexCredentialInput): Promise<ThalexConnection> {
+    throw new Error('Thalex integration requires Supabase-backed mode.');
+}
+
+export async function validateThalexConnection(_input: ThalexCredentialInput): Promise<ThalexConnection> {
+    throw new Error('Thalex integration requires Supabase-backed mode.');
+}
+
+export async function deleteThalexConnection(): Promise<void> {
+    // No-op in local mode.
+}
+
+export async function getCachedThalexTradesForDate(_date: string): Promise<ThalexTradeCacheResult> {
+    return { trades: [], positions: [], connection: null };
+}
+
+export async function refreshThalexTradesForDate(_date: string, _timezone: string): Promise<ThalexTradeCacheResult> {
+    throw new Error('Thalex integration requires Supabase-backed mode.');
 }

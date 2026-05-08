@@ -2,7 +2,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
 import * as supabaseService from './supabaseService';
 import * as localDataService from './localDataService';
-import { BybitConnection, BybitCredentialInput, BybitTradeCacheResult, EmotionEntry, UserProfile, Quest, PerformanceReview } from '../types';
+import { BybitConnection, BybitCredentialInput, BybitTradeCacheResult, EmotionEntry, UserProfile, Quest, PerformanceReview, ThalexConnection, ThalexCredentialInput, ThalexTradeCacheResult } from '../types';
 
 // Check if the environment variables for Supabase are provided.
 const isSupabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
@@ -38,6 +38,13 @@ interface DataService {
     refreshBybitTradesForDate(date: string, timezone: string): Promise<BybitTradeCacheResult>;
     bulkRefreshBybitTrades(startDate: string, endDate: string, timezone: string): Promise<{ date: string; result: BybitTradeCacheResult }[]>;
     bulkCreateEntriesWithTrades(startDate: string, endDate: string, timezone: string): Promise<{ date: string; tradesCount: number; pnl: number; created: boolean }[]>;
+    // Thalex
+    getThalexConnection(): Promise<ThalexConnection | null>;
+    saveThalexConnection(input: ThalexCredentialInput): Promise<ThalexConnection>;
+    validateThalexConnection(input: ThalexCredentialInput): Promise<ThalexConnection>;
+    deleteThalexConnection(): Promise<void>;
+    getCachedThalexTradesForDate(date: string): Promise<ThalexTradeCacheResult>;
+    refreshThalexTradesForDate(date: string, timezone: string): Promise<ThalexTradeCacheResult>;
 }
 
 // Conditionally select the service to use
@@ -66,6 +73,12 @@ export const getCachedBybitTradesForDate = service.getCachedBybitTradesForDate;
 export const refreshBybitTradesForDate = service.refreshBybitTradesForDate;
 export const bulkRefreshBybitTrades = service.bulkRefreshBybitTrades;
 export const bulkCreateEntriesWithTrades = service.bulkCreateEntriesWithTrades;
+export const getThalexConnection = service.getThalexConnection;
+export const saveThalexConnection = service.saveThalexConnection;
+export const validateThalexConnection = service.validateThalexConnection;
+export const deleteThalexConnection = service.deleteThalexConnection;
+export const getCachedThalexTradesForDate = service.getCachedThalexTradesForDate;
+export const refreshThalexTradesForDate = service.refreshThalexTradesForDate;
 
 
 // Also export a flag that the UI can use to understand the current persistence mode.

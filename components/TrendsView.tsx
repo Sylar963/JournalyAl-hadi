@@ -317,37 +317,30 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
   return (
     <div className="space-y-6 animate-content-entry">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-white">{t('trends.title')}</h1>
+        <div>
+          <p className="journal-kicker">Performance Analytics</p>
+          <h1 className="text-2xl font-semibold text-[var(--text-main)] mt-1">{t('trends.title')}</h1>
+        </div>
         
-        {/* Tab Navigation */}
-        <div className="flex p-1 bg-black/40 rounded-xl border border-[color:var(--glass-border)] w-full md:w-auto">
+        <div className="journal-tabbar flex p-1 rounded-xl w-full md:w-auto">
             <button
                 onClick={() => setActiveTab('general')}
-                className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'general'
-                        ? 'bg-white/10 text-white shadow-lg'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                }`}
+                data-active={activeTab === 'general'}
+                className="journal-tab flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all"
             >
                 {t('trends.tab_general')}
             </button>
             <button
                 onClick={() => setActiveTab('pnl')}
-                 className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'pnl'
-                        ? 'bg-white/10 text-white shadow-lg'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                }`}
+                data-active={activeTab === 'pnl'}
+                className="journal-tab flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all"
             >
                 {t('trends.tab_pnl')}
             </button>
             <button
                 onClick={() => setActiveTab('tilt')}
-                 className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'tilt'
-                        ? 'bg-white/10 text-white shadow-lg'
-                        : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                }`}
+                data-active={activeTab === 'tilt'}
+                className="journal-tab flex-1 md:flex-none px-6 py-2 rounded-lg text-sm font-medium transition-all"
             >
                 Tilt & Behavior
             </button>
@@ -364,52 +357,55 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
       ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_total')}</h3>
-                <p className="text-3xl font-bold text-white mt-1">{stats.total}</p>
+                <div className="journal-panel p-6 rounded-2xl">
+                <h3 className="journal-kicker">{t('trends.stat_total')}</h3>
+                <p className="journal-metric text-3xl font-semibold text-[var(--text-main)] mt-3">{stats.total}</p>
                 </div>
-                <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_frequent')}</h3>
-                <p className="text-3xl font-bold text-white mt-1">{stats.mostFrequent}</p>
+                <div className="journal-panel p-6 rounded-2xl">
+                <h3 className="journal-kicker">{t('trends.stat_frequent')}</h3>
+                <p className="text-2xl font-semibold text-[var(--text-main)] mt-3">{stats.mostFrequent}</p>
                 </div>
-                <div className="glass-panel p-6 rounded-2xl">
-                <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_intensity')}</h3>
-                <p className="text-3xl font-bold text-white mt-1">{stats.avgIntensity}</p>
+                <div className="journal-panel p-6 rounded-2xl">
+                <h3 className="journal-kicker">{t('trends.stat_intensity')}</h3>
+                <p className="journal-metric text-3xl font-semibold text-[var(--text-main)] mt-3">{stats.avgIntensity}</p>
                 </div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-panel p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_distribution')}</h3>
+                <div className="journal-panel p-6 rounded-2xl">
+                    <p className="journal-kicker mb-2">Monthly Distribution</p>
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_distribution')}</h3>
                     <div className="h-80">
                     {currentMonthEntries.length > 0 ? (
                         <Bar options={barChartOptions as any} data={distributionChartData} />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500">
+                        <div className="flex items-center justify-center h-full text-[var(--text-subtle)]">
                             {t('trends.no_data')}
                         </div>
                     )}
                     </div>
                 </div>
-                <div className="glass-panel p-6 rounded-2xl">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_intensity')}</h3>
+                <div className="journal-panel p-6 rounded-2xl">
+                    <p className="journal-kicker mb-2">Session Intensity</p>
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_intensity')}</h3>
                     <div className="h-80">
                     {currentMonthEntries.length > 0 ? (
                         <Line options={intensityChartOptions as any} data={intensityChartData} />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500">
+                        <div className="flex items-center justify-center h-full text-[var(--text-subtle)]">
                             {t('trends.no_intensity')}
                         </div>
                     )}
                     </div>
                 </div>
-                <div className="glass-panel p-6 rounded-2xl lg:col-span-2">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_weekly')}</h3>
+                <div className="journal-panel p-6 rounded-2xl lg:col-span-2">
+                    <p className="journal-kicker mb-2">Weekly Profile</p>
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_weekly')}</h3>
                     <div className="h-96">
                     {currentMonthEntries.length > 0 ? (
                         <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
                     ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500">
+                        <div className="flex items-center justify-center h-full text-[var(--text-subtle)]">
                             {t('trends.no_weekly')}
                         </div>
                     )}
@@ -417,31 +413,32 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                 </div>
             </div>
 
-            <div className="glass-panel p-6 rounded-2xl">
+            <div className="journal-panel p-6 rounded-2xl">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div>
-                    <h3 className="text-lg font-semibold text-white">{t('trends.ai_title')}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{t('trends.ai_subtitle')}</p>
+                    <p className="journal-kicker">AI Review</p>
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mt-1">{t('trends.ai_title')}</h3>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">{t('trends.ai_subtitle')}</p>
                     </div>
-                    <button onClick={handleGenerateSummary} disabled={isSummaryLoading || currentMonthEntries.length === 0} className="flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                    <button onClick={handleGenerateSummary} disabled={isSummaryLoading || currentMonthEntries.length === 0} className="journal-button-primary flex-shrink-0 flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <IconSparkles className="w-5 h-5 mr-2" />
                         {isSummaryLoading ? t('trends.ai_analyzing') : t('trends.ai_button')}
                     </button>
                 </div>
-                {isSummaryLoading && <p className="text-center text-sm text-gray-400 mt-4">{t('trends.ai_thinking')}</p>}
+                {isSummaryLoading && <p className="text-center text-sm text-[var(--text-muted)] mt-4">{t('trends.ai_thinking')}</p>}
                 {summaryError && <p className="text-center text-sm text-red-400 mt-4">{summaryError}</p>}
                 {aiSummary && (
-                    <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                        <p className="text-sm text-gray-300 whitespace-pre-wrap font-light leading-relaxed">{aiSummary}</p>
+                    <div className="mt-4 p-4 journal-panel-muted rounded-xl">
+                        <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap font-light leading-relaxed">{aiSummary}</p>
                     </div>
                 )}
                 {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length > 0 && (
-                    <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
+                    <p className="text-sm text-[var(--text-subtle)] mt-4 text-center sm:text-left">
                         {t('trends.ai_get_started')}
                     </p>
                 )}
                 {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length === 0 && (
-                    <p className="text-sm text-gray-500 mt-4 text-center sm:text-left">
+                    <p className="text-sm text-[var(--text-subtle)] mt-4 text-center sm:text-left">
                         {t('trends.ai_log_entries')}
                     </p>
                 )}

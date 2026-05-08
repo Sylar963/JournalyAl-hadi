@@ -15,36 +15,141 @@
       body {
         font-family: "Inter", sans-serif;
 
-        /* --- Glassmorphic Gradient Theme Variables (2025 Trend) --- */
-        --bg-color: #050505; /* Pure dark background */
-
-        /* Glass Effect Variables */
-        --glass-bg: rgba(255, 255, 255, 0.03);
-        --glass-border: rgba(255, 255, 255, 0.08);
-        --glass-blur: 20px;
-
-        /* Accent Colors */
-        --accent-primary: #e4e4e7; /* Zinc-200 */
-        --accent-secondary: #71717a; /* Zinc-500 */
+        --bg-color: #07111a;
+        --app-bg: #07111a;
+        --surface-1: rgba(10, 19, 31, 0.92);
+        --surface-2: rgba(14, 26, 40, 0.92);
+        --surface-3: rgba(20, 36, 55, 0.96);
+        --glass-bg: rgba(10, 19, 31, 0.76);
+        --glass-border: rgba(148, 163, 184, 0.18);
+        --glass-blur: 12px;
+        --panel-border: rgba(148, 163, 184, 0.16);
+        --panel-border-strong: rgba(148, 163, 184, 0.28);
+        --accent-primary: #d8e0e8;
+        --accent-secondary: #8a9aab;
         --accent-gradient: linear-gradient(
           135deg,
           var(--accent-primary),
           var(--accent-secondary)
         );
-
-        /* Text Colors */
-        --text-main: #f3f4f6;
-        --text-muted: #9ca3af;
-
-        /* Grid & Glow */
-        --grid-line-color: rgba(255, 255, 255, 0.08);
-        --chart-glow-color-1: rgba(255, 255, 255, 0.1); /* White glow */
-        --chart-glow-color-2: rgba(113, 113, 122, 0.15); /* Zinc glow */
-        --calendar-border: var(--glass-border);
+        --accent-soft: rgba(216, 224, 232, 0.12);
+        --text-main: #e7edf4;
+        --text-muted: #93a4b8;
+        --text-subtle: #64748b;
+        --positive-color: #4ade80;
+        --negative-color: #f87171;
+        --warning-color: #fbbf24;
+        --info-color: #38bdf8;
+        --grid-line-color: rgba(148, 163, 184, 0.08);
+        --chart-glow-color-1: rgba(129, 140, 248, 0.06);
+        --chart-glow-color-2: rgba(56, 189, 248, 0.05);
+        --calendar-border: var(--panel-border);
 
         color: var(--text-main);
-        background-color: #050505; /* Solid dark background */
+        background-color: var(--app-bg);
         transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+      }
+
+      .dashboard-app {
+        color: var(--text-main);
+        background:
+          radial-gradient(circle at top right, rgba(56, 189, 248, 0.04), transparent 24%),
+          radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.03), transparent 28%),
+          var(--app-bg);
+      }
+
+      .journal-panel {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 22%),
+          var(--surface-1);
+        border: 1px solid var(--panel-border);
+        box-shadow: 0 16px 40px rgba(2, 6, 23, 0.22);
+      }
+
+      .journal-panel-muted {
+        background: var(--surface-2);
+        border: 1px solid var(--panel-border);
+      }
+
+      .journal-panel-strong {
+        background: var(--surface-3);
+        border: 1px solid var(--panel-border-strong);
+      }
+
+      .journal-sidebar {
+        background: rgba(7, 17, 26, 0.94);
+        border-right: 1px solid var(--panel-border);
+      }
+
+      .journal-topbar {
+        background: rgba(7, 17, 26, 0.9);
+        border-bottom: 1px solid var(--panel-border);
+      }
+
+      .journal-kicker {
+        color: var(--text-subtle);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .journal-input {
+        background: var(--surface-2);
+        border: 1px solid var(--panel-border);
+        color: var(--text-main);
+      }
+
+      .journal-input::placeholder {
+        color: var(--text-subtle);
+      }
+
+      .journal-input:focus {
+        outline: none;
+        border-color: var(--panel-border-strong);
+        box-shadow: 0 0 0 1px rgba(216, 224, 232, 0.14);
+      }
+
+      .journal-tabbar {
+        background: rgba(7, 17, 26, 0.76);
+        border: 1px solid var(--panel-border);
+      }
+
+      .journal-tab {
+        border: 1px solid transparent;
+        color: var(--text-muted);
+      }
+
+      .journal-tab[data-active="true"] {
+        background: var(--surface-3);
+        border-color: var(--panel-border-strong);
+        color: var(--text-main);
+      }
+
+      .journal-button-primary {
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        color: #07111a;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .journal-button-secondary {
+        background: var(--surface-2);
+        color: var(--text-main);
+        border: 1px solid var(--panel-border);
+      }
+
+      .journal-button-danger {
+        background: rgba(127, 29, 29, 0.18);
+        color: #fca5a5;
+        border: 1px solid rgba(248, 113, 113, 0.24);
+      }
+
+      .journal-metric {
+        font-family: "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .journal-divider {
+        border-color: var(--panel-border);
       }
 
       /* Glass Panel Utility Class */
@@ -53,7 +158,7 @@
         backdrop-filter: blur(var(--glass-blur));
         -webkit-backdrop-filter: blur(var(--glass-blur));
         border: 1px solid var(--glass-border);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 12px 32px rgba(2, 6, 23, 0.18);
       }
 
       /* Gradient Text Utility */
@@ -176,12 +281,10 @@
       /* Energy Line Effect - Enterprise Grade */
       .energy-border {
         position: relative;
-        /* Subtle, refined border */
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        /* Sophisticated, deep glow */
+        border: 1px solid rgba(148, 163, 184, 0.16);
         box-shadow:
-          0 0 20px rgba(0, 0, 0, 0.5),
-          inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+          0 16px 32px rgba(2, 6, 23, 0.22),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden;
       }
@@ -205,9 +308,9 @@
       }
 
       .energy-border:hover {
-        border-color: rgba(255, 255, 255, 0.3);
-        box-shadow: 0 10px 40px -10px rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
+        border-color: rgba(148, 163, 184, 0.28);
+        box-shadow: 0 18px 36px rgba(2, 6, 23, 0.26);
+        transform: translateY(-1px);
       }
 
       .energy-border:hover::before {

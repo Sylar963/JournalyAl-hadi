@@ -71,21 +71,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       const hasTrades = entry?.tradingData?.trades && entry.tradingData.trades.length > 0;
       const hasValidEmotion = entry && entry.emotion && EMOTIONS_CONFIG[entry.emotion];
 
-      let cellClasses = 'relative border-r border-b border-[color:var(--glass-border)] p-2 text-left cursor-pointer transition-all duration-300 min-h-[120px] flex flex-col group hover:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)]';
+      let cellClasses = 'relative border-r border-b border-[color:var(--calendar-border)] p-3 text-left cursor-pointer transition-all duration-200 min-h-[126px] flex flex-col group';
       let dayNumberClasses = 'font-semibold transition-colors duration-300';
 
       if (hasValidEmotion) {
-        cellClasses += ` ${EMOTIONS_CONFIG[entry.emotion].hoverColor} bg-white/5 hover:bg-white/10 backdrop-blur-sm`;
+        cellClasses += ` ${EMOTIONS_CONFIG[entry.emotion].hoverColor} bg-[var(--surface-2)] hover:bg-[var(--surface-3)]`;
       } else if (hasTrades) {
         cellClasses += ' bg-emerald-500/10 hover:bg-emerald-500/20 border-l-2 border-l-emerald-400/50';
       } else {
-        cellClasses += ' bg-transparent hover:bg-white/5';
+        cellClasses += ' bg-transparent hover:bg-[var(--surface-2)]';
       }
 
       if (isToday) {
-        dayNumberClasses += ' bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-[0_0_15px_var(--accent-primary)]';
+        dayNumberClasses += ' journal-button-primary rounded-full w-8 h-8 flex items-center justify-center journal-metric';
       } else {
-        dayNumberClasses += ' text-gray-400 group-hover:text-white';
+        dayNumberClasses += ' text-[var(--text-muted)] group-hover:text-[var(--text-main)] journal-metric';
       }
 
       if (animatingDateKey === dateKey) {
@@ -138,25 +138,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
   const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
   return (
-    <div className={`rounded-2xl glass-panel p-4 md:p-6 animate-content-entry transition-all duration-500 ease-in-out ${isFolded ? 'h-auto' : ''}`}>
+    <div className={`rounded-2xl journal-panel p-4 md:p-6 animate-content-entry transition-all duration-500 ease-in-out ${isFolded ? 'h-auto' : ''}`}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mr-6 tracking-tight">
-            {capitalizedMonth} {year}
-          </h2>
+          <div className="mr-6">
+            <p className="journal-kicker">Session Calendar</p>
+            <h2 className="text-2xl font-semibold text-[var(--text-main)] tracking-tight mt-1">
+              {capitalizedMonth} <span className="journal-metric">{year}</span>
+            </h2>
+          </div>
           <div className="flex items-center space-x-2">
-            <button onClick={() => onYearChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.prev_year')}><IconChevronsLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(-1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.prev_month')}><IconChevronLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.next_month')}><IconChevronRight className="w-5 h-5" /></button>
-            <button onClick={() => onYearChange(1)} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white" title={t('calendar.next_year')}><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
+            <button onClick={() => onYearChange(-1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.prev_year')}><IconChevronsLeft className="w-5 h-5" /></button>
+            <button onClick={() => onMonthChange(-1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.prev_month')}><IconChevronLeft className="w-5 h-5" /></button>
+            <button onClick={() => onMonthChange(1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.next_month')}><IconChevronRight className="w-5 h-5" /></button>
+            <button onClick={() => onYearChange(1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.next_year')}><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-400 hidden md:inline font-medium tracking-wide">{`${totalEntries} ${t('calendar.entries_count')}`}</span>
-          <button onClick={onGoToToday} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-white hover:shadow-[0_0_10px_rgba(255,255,255,0.1)]">{t('calendar.today')}</button>
+          <span className="text-sm text-[var(--text-muted)] hidden md:inline font-medium tracking-wide journal-metric">{`${totalEntries} ${t('calendar.entries_count')}`}</span>
+          <button onClick={onGoToToday} className="journal-button-secondary px-4 py-2 text-sm font-medium rounded-lg transition-all">{t('calendar.today')}</button>
           <button
             onClick={() => setIsFolded(!isFolded)}
-            className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] hover:opacity-90 text-white rounded-lg transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] flex items-center"
+            className="journal-button-primary px-4 py-2 text-sm font-medium hover:opacity-95 rounded-lg transition-all flex items-center"
           >
             {isFolded ? t('calendar.unfold') : t('calendar.fold')}
           </button>
@@ -164,11 +167,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
       </div>
 
       {!isFolded && (
-        <div className="grid grid-cols-7 border-t border-l border-[color:var(--glass-border)] animate-in fade-in slide-in-from-top-4 duration-500 rounded-tl-lg rounded-tr-lg overflow-hidden">
+        <div className="grid grid-cols-7 border-t border-l border-[color:var(--calendar-border)] animate-in fade-in slide-in-from-top-4 duration-500 rounded-tl-lg rounded-tr-lg overflow-hidden bg-[var(--surface-1)]">
           {WEEK_DAYS.map((day, index) => (
             <div
               key={day}
-              className={`py-3 text-center text-xs font-bold uppercase bg-white/5 border-r border-b border-[color:var(--glass-border)] text-gray-400 tracking-wider ${DAY_TEXT_CLASSES[index]}`}
+              className={`py-3 text-center text-xs font-bold uppercase bg-[var(--surface-2)] border-r border-b border-[color:var(--calendar-border)] text-[var(--text-muted)] tracking-wider ${DAY_TEXT_CLASSES[index]}`}
             >
               {t(`weekday.${day.toLowerCase()}` as TranslationKey)}
             </div>

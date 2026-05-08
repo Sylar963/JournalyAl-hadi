@@ -10,6 +10,12 @@ vi.mock('../services/dataService', () => ({
   deleteBybitConnection: vi.fn(),
   getCachedBybitTradesForDate: vi.fn(),
   refreshBybitTradesForDate: vi.fn(),
+  getThalexConnection: vi.fn(),
+  saveThalexConnection: vi.fn(),
+  validateThalexConnection: vi.fn(),
+  deleteThalexConnection: vi.fn(),
+  getCachedThalexTradesForDate: vi.fn(),
+  refreshThalexTradesForDate: vi.fn(),
 }));
 
 import { getBybitConnection, getCachedBybitTradesForDate, refreshBybitTradesForDate } from '../services/dataService';

@@ -22,7 +22,6 @@ import AdPopup from './components/AdPopup';
 import LandingPage from './components/LandingPage';
 import Background from './components/Background';
 import GridOverlay from './components/GridOverlay';
-import CustomCursor from './components/CustomCursor';
 import { ThemeWrapper } from './components/ThemeWrapper';
 import { I18nProvider } from './hooks/useI18n';
 import CookieBanner from './components/CookieBanner';
@@ -178,7 +177,6 @@ const AppContent: React.FC = () => {
   return (
     <>
       <ThemeWrapper theme={effectiveTheme} className={`flex flex-col relative ${showLanding && !isAppAccessible ? 'min-h-screen w-full' : 'h-screen w-screen overflow-hidden'}`}>
-      <CustomCursor />
       {(!showLanding || isAppAccessible) && (
         <>
           <Background theme={effectiveTheme} />
@@ -186,7 +184,7 @@ const AppContent: React.FC = () => {
         </>
       )}
       
-      <div className="flex h-full w-full z-10 relative">
+      <div className="flex h-full w-full z-10 relative dashboard-app">
         {!isAppAccessible ? (
             showLanding ? (
                 <LandingPage 
@@ -214,16 +212,16 @@ const AppContent: React.FC = () => {
                         onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
                         onSignOut={signOut}
                     />
-                    <nav className="md:hidden border-b border-[color:var(--glass-border)] bg-black/10 backdrop-blur-xl">
+                    <nav className="md:hidden border-b journal-divider bg-[var(--surface-1)]/90 backdrop-blur-xl">
                         <div className="flex gap-2 overflow-x-auto px-4 py-3 custom-scrollbar">
                             {mobileNavItems.map((item) => (
                                 <button
                                     key={item.view}
                                     onClick={() => handleNavigate(item.view)}
-                                    className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-all ${
+                                    className={`flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
                                         activeView === item.view
-                                            ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/15 text-[var(--accent-primary)]'
-                                            : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                                            ? 'border-[var(--panel-border-strong)] bg-[var(--surface-3)] text-[var(--text-main)]'
+                                            : 'border-[var(--panel-border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
                                     }`}
                                     aria-current={activeView === item.view ? 'page' : undefined}
                                 >
@@ -260,7 +258,7 @@ const AppContent: React.FC = () => {
                                 {activeView === 'reports' && <ReportsView entries={entriesArray} />}
                                 {activeView === 'history' && <HistoryView entries={entriesArray} />}
                                 {activeView === 'review' && <PerformanceReviewView />}
-                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={!!session && isSupabaseConfigured} />}
+                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={!!session && isSupabaseConfigured} isThalexAvailable={!!session && isSupabaseConfigured} />}
                             </>
                         )}
                     </main>

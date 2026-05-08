@@ -7,12 +7,15 @@ export type EmotionType = 'happy' | 'calm' | 'anxious' | 'sad' | 'angry';
 export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'settings' | 'review';
 
 export type Theme = 'twilight' | 'sunrise' | 'cyberpunk' | 'forest';
-export type TradeSource = 'manual' | 'bybit';
-export type TradingProvider = 'bybit' | 'hyperliquid';
+export type TradeSource = 'manual' | 'bybit' | 'thalex';
+export type TradingProvider = 'bybit' | 'hyperliquid' | 'thalex';
 export type TradingProviderCapability = 'trade_history' | 'market_data';
 export type TradingProviderAvailability = 'active' | 'planned';
 export type BybitEnvironment = 'mainnet' | 'testnet';
 export type BybitValidationStatus = 'not_connected' | 'pending' | 'valid' | 'invalid' | 'permission_denied';
+export type ThalexEnvironment = 'mainnet' | 'testnet';
+export type ThalexValidationStatus = 'not_connected' | 'pending' | 'valid' | 'invalid';
+export type ThalexInstrumentType = 'option' | 'future' | 'perpetual' | 'combination' | 'unknown';
 export type TradePnlSource = 'manual' | 'linked_trades';
 export type TradeSide = 'Buy' | 'Sell' | 'Unknown';
 export type TradeStatus = 'open' | 'closed' | 'unknown';
@@ -99,9 +102,9 @@ export interface TradingConnection {
 }
 
 export interface TradingCredentialInput {
-  provider: TradingProvider;
-  apiKey: string;
-  apiSecret: string;
+  provider?: TradingProvider;
+  apiKey?: string;
+  apiSecret?: string;
 }
 
 export interface BybitConnection extends TradingConnection {
@@ -109,9 +112,11 @@ export interface BybitConnection extends TradingConnection {
   environment: BybitEnvironment;
 }
 
-export interface BybitCredentialInput extends Omit<TradingCredentialInput, 'provider'> {
+export interface BybitCredentialInput extends TradingCredentialInput {
   provider?: 'bybit';
   environment: BybitEnvironment;
+  apiKey: string;     // required for Bybit
+  apiSecret: string;  // required for Bybit
 }
 
 export interface TradingCachedTrade {
@@ -177,6 +182,50 @@ export interface BybitTradeCacheResult extends TradingTradeCacheResult {
   positions: BybitCachedPosition[];
   connection: BybitConnection | null;
 }
+
+// ---- Thalex Types ----
+
+export interface ThalexConnection extends TradingConnection {
+  provider: 'thalex';
+  environment: ThalexEnvironment;
+  keyNameMasked: string;
+  keyNameLast4: string;
+  validationStatus: ThalexValidationStatus;
+}
+
+export interface ThalexCredentialInput extends TradingCredentialInput {
+  provider?: 'thalex';
+  environment: ThalexEnvironment;
+  keyName: string;       // The key name from Thalex (e.g. K123456789)
+  privateKeyPem: string; // RSA private key in PEM format
+}
+
+export interface ThalexCachedTrade extends TradingCachedTrade {
+  provider: 'thalex';
+  id: string;
+  environment: ThalexEnvironment;
+  tradeDay: string;
+  instrumentType: ThalexInstrumentType;
+  /** Raw object returned by Thalex /private/trade_history */
+  rawTrade?: Record<string, unknown>;
+}
+
+export interface ThalexCachedPosition extends TradingCachedPosition {
+  provider: 'thalex';
+  id: string;
+  environment: ThalexEnvironment;
+  instrumentType: ThalexInstrumentType;
+  /** Raw object returned by Thalex /private/portfolio */
+  rawPosition?: Record<string, unknown>;
+}
+
+export interface ThalexTradeCacheResult extends TradingTradeCacheResult {
+  trades: ThalexCachedTrade[];
+  positions: ThalexCachedPosition[];
+  connection: ThalexConnection | null;
+}
+
+// ---- End Thalex Types ----
 
 export interface ReportAnalysis {
     summary: string;

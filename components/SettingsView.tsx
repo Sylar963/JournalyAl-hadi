@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { type BybitEnvironment, type BybitValidationStatus, type Theme } from '../types';
+import { type BybitEnvironment, type BybitValidationStatus, type ThalexEnvironment, type ThalexValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
 import { getTradingProviderClient } from '../services/tradingProviderRegistry';
 import { bulkRefreshBybitTrades, bulkCreateEntriesWithTrades } from '../services/dataService';
-import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage } from '../services/supabaseService';
+import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage, THALEX_SETUP_SQL, getThalexSchemaErrorMessage } from '../services/supabaseService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
 
@@ -11,6 +11,7 @@ interface SettingsViewProps {
   currentTheme: Theme;
   onThemeChange: (theme: Theme) => void;
   isBybitAvailable: boolean;
+  isThalexAvailable: boolean;
 }
 
 const validationClasses: Record<BybitValidationStatus, string> = {
@@ -21,9 +22,10 @@ const validationClasses: Record<BybitValidationStatus, string> = {
   permission_denied: 'bg-red-500/10 text-red-300',
 };
 
-const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange, isBybitAvailable }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange, isBybitAvailable, isThalexAvailable }) => {
   const { t } = useI18n();
   const bybitClient = getTradingProviderClient('bybit');
+  const thalexClient = getTradingProviderClient('thalex');
   const [environment, setEnvironment] = useState<BybitEnvironment>('mainnet');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
@@ -43,12 +45,34 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
   const [bulkImportResults, setBulkImportResults] = useState<{ date: string; trades: number; pnl: number; created: boolean }[]>([]);
   const [copiedSetupSql, setCopiedSetupSql] = useState(false);
 
+  // --- Thalex state ---
+  const [thalexEnvironment, setThalexEnvironment] = useState<ThalexEnvironment>('mainnet');
+  const [thalexKeyName, setThalexKeyName] = useState('');
+  const [thalexPrivateKey, setThalexPrivateKey] = useState('');
+  const [thalexStatus, setThalexStatus] = useState<ThalexValidationStatus>('not_connected');
+  const [thalexFeedback, setThalexFeedback] = useState<string | null>(null);
+  const [thalexMaskedKey, setThalexMaskedKey] = useState<string | null>(null);
+  const [thalexLastValidated, setThalexLastValidated] = useState<string | null>(null);
+  const [thalexLastSync, setThalexLastSync] = useState<string | null>(null);
+  const [isThalexLoading, setIsThalexLoading] = useState(false);
+  const [isThalexSaving, setIsThalexSaving] = useState(false);
+  const [isThalexTesting, setIsThalexTesting] = useState(false);
+  const [isThalexDeleting, setIsThalexDeleting] = useState(false);
+  const [copiedThalexSetupSql, setCopiedThalexSetupSql] = useState(false);
+
   const shouldShowSetupSql = feedback === getBybitSchemaErrorMessage();
+  const shouldShowThalexSetupSql = thalexFeedback === getThalexSchemaErrorMessage();
 
   const handleCopySetupSql = async () => {
     await navigator.clipboard.writeText(BYBIT_SETUP_SQL.trim());
     setCopiedSetupSql(true);
     setTimeout(() => setCopiedSetupSql(false), 2000);
+  };
+
+  const handleCopyThalexSetupSql = async () => {
+    await navigator.clipboard.writeText(THALEX_SETUP_SQL.trim());
+    setCopiedThalexSetupSql(true);
+    setTimeout(() => setCopiedThalexSetupSql(false), 2000);
   };
 
   useEffect(() => {
@@ -161,6 +185,79 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
       setFeedback(error instanceof Error ? error.message : 'Bulk import failed');
     } finally {
       setIsBulkImporting(false);
+    }
+  }
+
+  // --- Thalex handlers ---
+  useEffect(() => {
+    let cancelled = false;
+    async function loadThalexConnection() {
+      if (!isThalexAvailable) return;
+      setIsThalexLoading(true);
+      try {
+        const connection = await thalexClient.getConnection();
+        if (!connection || cancelled) return;
+        setThalexEnvironment(connection.environment);
+        setThalexStatus(connection.validationStatus);
+        setThalexMaskedKey(connection.keyNameMasked);
+        setThalexLastValidated(connection.lastValidatedAt ?? null);
+        setThalexLastSync(connection.lastSyncAt ?? null);
+      } catch (error) {
+        if (!cancelled) setThalexFeedback(error instanceof Error ? error.message : 'Failed to load Thalex connection.');
+      } finally {
+        if (!cancelled) setIsThalexLoading(false);
+      }
+    }
+    void loadThalexConnection();
+    return () => { cancelled = true; };
+  }, [thalexClient, isThalexAvailable]);
+
+  async function handleThalexSaveConnection() {
+    setIsThalexSaving(true);
+    setThalexFeedback(null);
+    try {
+      const connection = await thalexClient.saveConnection({ environment: thalexEnvironment, keyName: thalexKeyName, privateKeyPem: thalexPrivateKey });
+      setThalexStatus(connection.validationStatus);
+      setThalexMaskedKey(connection.keyNameMasked);
+      setThalexLastValidated(connection.lastValidatedAt ?? null);
+      setThalexKeyName('');
+      setThalexPrivateKey('');
+      setThalexFeedback('Thalex connected successfully.');
+    } catch (error) {
+      setThalexFeedback(error instanceof Error ? error.message : 'Failed to save Thalex credentials.');
+    } finally {
+      setIsThalexSaving(false);
+    }
+  }
+
+  async function handleThalexTestConnection() {
+    setIsThalexTesting(true);
+    setThalexFeedback(null);
+    try {
+      const connection = await thalexClient.validateConnection({ environment: thalexEnvironment, keyName: thalexKeyName, privateKeyPem: thalexPrivateKey });
+      setThalexStatus(connection.validationStatus);
+      setThalexFeedback('Thalex credentials are valid! ✓');
+    } catch (error) {
+      setThalexFeedback(error instanceof Error ? error.message : 'Thalex validation failed.');
+    } finally {
+      setIsThalexTesting(false);
+    }
+  }
+
+  async function handleThalexDeleteConnection() {
+    setIsThalexDeleting(true);
+    setThalexFeedback(null);
+    try {
+      await thalexClient.deleteConnection();
+      setThalexStatus('not_connected');
+      setThalexMaskedKey(null);
+      setThalexLastValidated(null);
+      setThalexLastSync(null);
+      setThalexFeedback('Thalex disconnected.');
+    } catch (error) {
+      setThalexFeedback(error instanceof Error ? error.message : 'Failed to disconnect Thalex.');
+    } finally {
+      setIsThalexDeleting(false);
     }
   }
 
@@ -377,6 +474,134 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 </div>
                 <pre className="max-h-72 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-gray-200">
                   <code>{BYBIT_SETUP_SQL.trim()}</code>
+                </pre>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Thalex Section */}
+      <div className="glass-panel p-6 rounded-2xl space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              Thalex Options
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">Options &amp; Futures</span>
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">Connect via RSA key pair to pull your options &amp; futures history.</p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            thalexStatus === 'valid' ? 'bg-green-500/10 text-green-300' :
+            thalexStatus === 'pending' ? 'bg-amber-500/10 text-amber-300' :
+            thalexStatus === 'invalid' ? 'bg-red-500/10 text-red-300' :
+            'bg-white/10 text-gray-300'
+          }`}>
+            {thalexStatus === 'valid' ? 'Connected' : thalexStatus === 'pending' ? 'Pending' : thalexStatus === 'invalid' ? 'Invalid' : 'Not Connected'}
+          </span>
+        </div>
+
+        {!isThalexAvailable ? (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Thalex integration requires Supabase. Configure your Supabase environment variables to enable this feature.
+          </div>
+        ) : (
+          <>
+            {thalexMaskedKey && (
+              <div className="rounded-xl border border-[color:var(--glass-border)] bg-white/5 p-4 text-sm text-gray-300">
+                <p>Key: <span className="font-mono text-white">{thalexMaskedKey}</span></p>
+                {thalexLastValidated && <p className="mt-1 text-gray-400">Last validated: {new Date(thalexLastValidated).toLocaleString()}</p>}
+                {thalexLastSync && <p className="mt-1 text-gray-400">Last sync: {new Date(thalexLastSync).toLocaleString()}</p>}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="text-sm text-gray-300">
+                <span className="block mb-2">Environment</span>
+                <select
+                  value={thalexEnvironment}
+                  onChange={(e) => setThalexEnvironment(e.target.value as ThalexEnvironment)}
+                  className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+                >
+                  <option value="mainnet">Mainnet</option>
+                  <option value="testnet">Testnet</option>
+                </select>
+              </label>
+
+              <label className="text-sm text-gray-300">
+                <span className="block mb-2">Key Name <span className="text-gray-500 text-xs">(e.g. K123456789)</span></span>
+                <input
+                  type="text"
+                  value={thalexKeyName}
+                  onChange={(e) => setThalexKeyName(e.target.value)}
+                  placeholder="K123456789"
+                  className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white font-mono"
+                />
+              </label>
+            </div>
+
+            <label className="text-sm text-gray-300 block">
+              <span className="block mb-2">RSA Private Key <span className="text-gray-500 text-xs">(PEM format — -----BEGIN PRIVATE KEY-----)</span></span>
+              <textarea
+                value={thalexPrivateKey}
+                onChange={(e) => setThalexPrivateKey(e.target.value)}
+                placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
+                rows={5}
+                className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white font-mono text-xs resize-none"
+              />
+            </label>
+
+            <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3 text-xs text-purple-200">
+              <strong>How to get credentials:</strong> Log into Thalex → Account Settings → API Keys → Create key pair. Copy the key name and private key (shown only once). Use RS256 algorithm when generating the key.
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => void handleThalexTestConnection()}
+                disabled={!thalexKeyName || !thalexPrivateKey || isThalexTesting || isThalexSaving}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isThalexTesting ? 'Testing...' : 'Test'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleThalexSaveConnection()}
+                disabled={!thalexKeyName || !thalexPrivateKey || isThalexSaving || isThalexTesting}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-purple-600 to-violet-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isThalexSaving ? 'Connecting...' : 'Connect'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleThalexDeleteConnection()}
+                disabled={!thalexMaskedKey || isThalexDeleting || isThalexSaving}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/15 text-red-300 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isThalexDeleting ? 'Disconnecting...' : 'Disconnect'}
+              </button>
+            </div>
+
+            {thalexFeedback && (
+              <div className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-4 text-sm text-gray-200">
+                {thalexFeedback}
+              </div>
+            )}
+
+            {shouldShowThalexSetupSql && (
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-amber-200">Run this SQL in Supabase SQL Editor, then refresh the app.</p>
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyThalexSetupSql()}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/30 text-white border border-white/10"
+                  >
+                    {copiedThalexSetupSql ? 'Copied!' : 'Copy SQL'}
+                  </button>
+                </div>
+                <pre className="max-h-48 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-gray-200">
+                  <code>{THALEX_SETUP_SQL.trim()}</code>
                 </pre>
               </div>
             )}

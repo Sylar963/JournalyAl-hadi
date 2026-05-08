@@ -26,12 +26,12 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick, disable
     disabled={disabled}
     title={isCollapsed ? label : undefined}
     aria-label={label}
-    className={`flex items-center w-full py-2 text-sm font-medium rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center px-2' : 'px-4'} ${
+    className={`flex items-center w-full py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${isCollapsed ? 'justify-center px-2' : 'px-4'} ${
       active
-        ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+        ? 'bg-[var(--surface-3)] text-[var(--text-main)] border border-[var(--panel-border-strong)]'
         : disabled 
         ? 'text-gray-600 cursor-not-allowed'
-        : 'text-gray-400 hover:bg-white/5 hover:text-white hover:shadow-[0_0_10px_rgba(255,255,255,0.05)]'
+        : 'text-[var(--text-muted)] border border-transparent hover:bg-[var(--surface-2)] hover:text-[var(--text-main)] hover:border-[var(--panel-border)]'
     }`}
     aria-current={active ? 'page' : undefined}
   >
@@ -41,7 +41,7 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick, disable
 );
 
 const QuickActionItem: React.FC<{ icon: React.ReactNode; label: string, onClick: () => void; }> = ({ icon, label, onClick }) => (
-    <button onClick={onClick} className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-gray-200 rounded-lg transition-colors duration-200">
+    <button onClick={onClick} className="flex items-center w-full px-4 py-2.5 text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-main)] rounded-lg border border-transparent hover:border-[var(--panel-border)] transition-colors duration-200">
         {icon}
         <span className="ml-3">{label}</span>
     </button>
@@ -132,18 +132,23 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
   };
 
   return (
-    <div className={`hidden md:flex flex-col ${isCollapsed ? 'w-20' : 'w-64'} glass-panel border-r-0 border-t-0 border-b-0 border-l-0 border-r border-[color:var(--glass-border)] p-4 transition-all duration-300 ease-in-out z-20`}>
-      <div className="flex items-center mb-8">
-        <div className="w-8 h-8 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] rounded-lg flex-shrink-0 shadow-[0_0_15px_var(--accent-primary)] flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white">
+    <div className={`hidden md:flex flex-col ${isCollapsed ? 'w-20' : 'w-72'} journal-sidebar p-4 transition-all duration-300 ease-in-out z-20`}>
+      <div className="flex items-center mb-8 rounded-xl journal-panel-muted px-3 py-3">
+        <div className="w-9 h-9 bg-[var(--surface-3)] rounded-lg flex-shrink-0 border border-[var(--panel-border-strong)] flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-[var(--accent-primary)]">
             <path d="M12 4L3 20H21L12 4Z" />
           </svg>
         </div>
-        {!isCollapsed && <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 ml-3 whitespace-nowrap tracking-tight">Delta Trading Journal</h1>}
+        {!isCollapsed && (
+          <div className="ml-3 min-w-0">
+            <p className="journal-kicker">Automated Review</p>
+            <h1 className="text-base font-semibold text-[var(--text-main)] whitespace-nowrap tracking-[0.01em]">Delta Journal</h1>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-        {!isCollapsed && <h2 className="px-4 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">{t('dashboard.nav_title')}</h2>}
+        {!isCollapsed && <h2 className="px-4 mb-3 journal-kicker">{t('dashboard.nav_title')}</h2>}
         <nav className="space-y-1">
           <NavItem 
             icon={<IconJournal className="w-5 h-5" />} 
@@ -191,7 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
         
         {!isCollapsed && (
           <>
-            <h2 className="px-4 mt-8 mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">{t('dashboard.sidebar.quick_actions')}</h2>
+            <h2 className="px-4 mt-8 mb-3 journal-kicker">{t('dashboard.sidebar.quick_actions')}</h2>
             <nav className="space-y-1">
                 <QuickActionItem icon={<IconPlus className="w-5 h-5 text-[var(--accent-primary)]"/>} label={t('dashboard.sidebar.log_happy')} onClick={() => onNewEntryClick('happy')} />
                 <QuickActionItem icon={<IconPlus className="w-5 h-5 text-blue-300"/>} label={t('dashboard.sidebar.log_calm')} onClick={() => onNewEntryClick('calm')} />
@@ -201,30 +206,35 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
         )}
       </div>
 
-      <div className="mt-auto pt-4 border-t border-[color:var(--glass-border)] space-y-4">
+      <div className="mt-auto pt-4 border-t journal-divider space-y-4">
         {!isCollapsed && (
           <div 
-            className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm"
+            className="journal-panel p-4 rounded-xl"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <h3 className="font-semibold text-white text-sm">{t('dashboard.sidebar.purpose_title')}</h3>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="journal-kicker">Journal Focus</p>
+                <h3 className="font-semibold text-[var(--text-main)] text-sm mt-1">{t('dashboard.sidebar.purpose_title')}</h3>
+              </div>
+            </div>
             <div className="h-24 flex items-center justify-center">
               {isEditingPurpose ? (
                 <textarea
                   value={purposeText}
                   onChange={(e) => setPurposeText(e.target.value)}
-                  className="mt-2 w-full bg-black/40 border border-[color:var(--glass-border)] text-sm text-gray-300 p-2 rounded-md focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none"
+                  className="journal-input mt-2 w-full text-sm p-2 rounded-md transition resize-none"
                   rows={4}
                   aria-label="Edit journal purpose"
                   autoFocus
                 />
               ) : showQuotes ? (
-                <p key={currentQuoteIndex} className="text-sm text-gray-400 italic text-center animate-fade-in">
+                <p key={currentQuoteIndex} className="text-sm text-[var(--text-muted)] italic text-center animate-fade-in">
                   "{WISDOM_QUOTES[currentQuoteIndex]}"
                 </p>
               ) : (
-                <p className="text-sm text-gray-400 mt-1 italic text-center">
+                <p className="text-sm text-[var(--text-muted)] mt-1 italic text-center">
                   {purposeText || t('dashboard.sidebar.purpose_placeholder')}
                 </p>
               )}
@@ -234,13 +244,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
                 <div className="flex items-center space-x-2">
                   <button 
                     onClick={handleSaveClick}
-                    className="flex-1 bg-[var(--accent-primary)] text-white py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all shadow-lg shadow-[var(--chart-glow-color-1)]"
+                    className="flex-1 journal-button-primary py-2 rounded-lg text-sm font-medium hover:opacity-95 transition-all"
                   >
                     {t('common.save')}
                   </button>
                   <button 
                     onClick={handleCancelClick}
-                    className="flex-1 bg-white/10 text-white py-2 rounded-lg text-sm font-medium hover:bg-white/20 transition-colors"
+                    className="flex-1 journal-button-secondary py-2 rounded-lg text-sm font-medium transition-colors"
                   >
                     {t('common.cancel')}
                   </button>
@@ -248,7 +258,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
               ) : (
                 <button 
                   onClick={handleEditClick}
-                  className="w-full bg-white/10 text-white py-2 rounded-lg text-sm font-medium hover:bg-white/20 transition-colors border border-white/5"
+                  className="w-full journal-button-secondary py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   {t('dashboard.sidebar.edit')}
                 </button>
@@ -260,22 +270,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
            {!isCollapsed && (
               <button 
                 onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-                className="flex items-center w-full p-2 text-xs font-mono text-gray-500 hover:bg-white/5 hover:text-white rounded-lg transition-all border border-white/5 group"
+                className="flex items-center w-full p-2.5 text-xs font-mono text-[var(--text-subtle)] hover:bg-[var(--surface-2)] hover:text-[var(--text-main)] rounded-lg transition-all border border-[var(--panel-border)] group journal-metric"
               >
                 <span className="mr-auto">LANGUAGE</span>
                 <div className="flex items-center gap-2">
-                  <span className={language === 'en' ? 'text-white font-bold' : 'text-gray-600'}>EN</span>
-                  <span className="text-gray-800">/</span>
-                  <span className={language === 'es' ? 'text-white font-bold' : 'text-gray-600'}>ES</span>
+                  <span className={language === 'en' ? 'text-[var(--text-main)] font-bold' : 'text-[var(--text-subtle)]'}>EN</span>
+                  <span className="text-[var(--text-subtle)]">/</span>
+                  <span className={language === 'es' ? 'text-[var(--text-main)] font-bold' : 'text-[var(--text-subtle)]'}>ES</span>
                 </div>
               </button>
            )}
            <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`flex items-center w-full p-2 text-gray-400 hover:bg-white/10 hover:text-white rounded-lg transition-colors ${isCollapsed ? 'justify-center' : ''}`}
-            title={isCollapsed ? t('dashboard.sidebar.expand') : t('dashboard.sidebar.collapse')}
-          >
-            <IconChevronsLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed && 'rotate-180'}`} />
+             onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`flex items-center w-full p-2.5 text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-main)] rounded-lg transition-colors border border-transparent hover:border-[var(--panel-border)] ${isCollapsed ? 'justify-center' : ''}`}
+             title={isCollapsed ? t('dashboard.sidebar.expand') : t('dashboard.sidebar.collapse')}
+           >
+             <IconChevronsLeft className={`w-5 h-5 transition-transform duration-300 ${isCollapsed && 'rotate-180'}`} />
             {!isCollapsed && <span className="ml-2 text-sm font-medium">{t('dashboard.sidebar.collapse')}</span>}
           </button>
          </div>

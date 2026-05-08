@@ -13,11 +13,10 @@ const GridOverlay: React.FC = () => {
                 pointerEvents: 'none',
                 backgroundImage: `
           linear-gradient(var(--grid-line-color) 1px, transparent 1px),
-          linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px),
-          radial-gradient(ellipse at 70% 80%, var(--chart-glow-color-1) 0%, transparent 50%),
-          radial-gradient(ellipse at 30% 20%, var(--chart-glow-color-2) 0%, transparent 40%)
+          linear-gradient(to right, var(--grid-line-color) 1px, transparent 1px)
         `,
-                backgroundSize: '50px 50px, 50px 50px, 100% 100%, 100% 100%',
+                backgroundSize: '64px 64px, 64px 64px',
+                opacity: 0.5,
                 backgroundAttachment: 'fixed',
                 transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
             }}
