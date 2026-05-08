@@ -385,13 +385,13 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const tradeTypes = ['Long Future', 'Short Future', 'BTO Call', 'BTO Put', 'STC Call', 'STC Put', 'STO Call', 'STO Put', 'BTC Call', 'BTC Put'];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
       <div 
         ref={modalRef} 
         role="dialog"
         aria-modal="true"
         aria-labelledby="entry-modal-title"
-        className="glass-panel rounded-2xl shadow-2xl w-full max-w-lg border border-[color:var(--glass-border)] animate-scale-in flex flex-col max-h-[90vh] overflow-hidden">
+        className="journal-panel rounded-2xl shadow-2xl w-full max-w-4xl animate-scale-in flex flex-col max-h-[92vh] overflow-hidden">
         
         <AnimatePresence mode="wait">
         {!isSuccess ? (
@@ -402,43 +402,37 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
             exit={{ opacity: 0, scale: 0.95 }}
             className="flex flex-col h-full overflow-hidden"
           >
-            {/* Browser-like Tab Bar */}
-            <div className="flex items-center px-4 pt-4 border-b border-[color:var(--glass-border)] bg-black/20 rounded-t-2xl space-x-2">
+            <div className="flex items-center px-4 pt-4 border-b journal-divider bg-[var(--surface-1)] rounded-t-2xl space-x-2">
                 <button
                     onClick={() => setActiveTab('journal')}
-                    className={`px-6 py-2 rounded-t-lg text-sm font-medium transition-all relative ${
-                        activeTab === 'journal'
-                            ? 'text-white bg-white/5 border-t border-l border-r border-[color:var(--glass-border)]'
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    }`}
+                    data-active={activeTab === 'journal'}
+                    className="journal-tab px-6 py-2 rounded-t-lg text-sm font-medium transition-all relative"
                 >
                     {t('modal.entry.tab_journal')}
-                    {activeTab === 'journal' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050507] z-10"></div>}
+                    {activeTab === 'journal' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[var(--surface-3)] z-10"></div>}
                 </button>
                 <button
                     onClick={() => setActiveTab('trading')}
-                    className={`px-6 py-2 rounded-t-lg text-sm font-medium transition-all relative ${
-                        activeTab === 'trading'
-                            ? 'text-white bg-white/5 border-t border-l border-r border-[color:var(--glass-border)]'
-                            : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
-                    }`}
+                    data-active={activeTab === 'trading'}
+                    className="journal-tab px-6 py-2 rounded-t-lg text-sm font-medium transition-all relative"
                 >
                     {t('modal.entry.tab_trading')}
-                    {activeTab === 'trading' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050507] z-10"></div>}
+                    {activeTab === 'trading' && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[var(--surface-3)] z-10"></div>}
                 </button>
                 
                 <div className="ml-auto">
-                    <button onClick={onClose} disabled={isSaving || isDeleting} className="text-gray-400 hover:text-white transition-colors text-xl leading-none disabled:opacity-50 p-1">&times;</button>
+                    <button onClick={onClose} disabled={isSaving || isDeleting} className="text-[var(--text-muted)] hover:text-[var(--text-main)] transition-colors text-xl leading-none disabled:opacity-50 p-1">&times;</button>
                 </div>
             </div>
     
-            <div className="p-6 border-b border-[color:var(--glass-border)]">
+            <div className="p-6 border-b journal-divider bg-[var(--surface-1)]">
               <div className="flex justify-between items-start">
                 <div>
-                    <h2 id="entry-modal-title" className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+                    <p className="journal-kicker">Daily Review</p>
+                    <h2 id="entry-modal-title" className="text-xl font-semibold text-[var(--text-main)] mt-1">
                         {activeTab === 'journal' ? t('modal.entry.title_journal') : t('modal.entry.title_trading')}
                     </h2>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-[var(--text-muted)] text-sm journal-metric">
                       {selectedDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                 </div>
@@ -449,7 +443,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
               {activeTab === 'journal' ? (
                   <>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.emotion_label')}</label>
+                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">{t('modal.entry.emotion_label')}</label>
                         <div className="grid grid-cols-5 gap-3">
                         {emotionKeys.map(key => {
                             const config = EMOTIONS_CONFIG[key];
@@ -458,14 +452,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 <button
                                 key={key}
                                 onClick={() => setSelectedEmotion(key)}
-                                className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-300 ${
+                                className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-200 ${
                                     isSelected 
-                                        ? `border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 scale-105 shadow-[0_0_15px_rgba(6,182,212,0.2)]` 
-                                        : 'border-[color:var(--glass-border)] bg-white/5 hover:bg-white/10 hover:border-white/20'
+                                        ? 'border-[var(--panel-border-strong)] bg-[var(--surface-3)] scale-[1.02]'
+                                        : 'border-[var(--panel-border)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)]'
                                 }`}
                                 >
-                                <span className="text-3xl filter drop-shadow-md">{config.emoji}</span>
-                                <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--accent-primary)]' : 'text-gray-400'}`}>
+                                <span className="text-3xl">{config.emoji}</span>
+                                <span className={`mt-1 text-xs font-medium ${isSelected ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>
                                   {t(`emotion.${key}` as TranslationKey)}
                                 </span>
                                 </button>
@@ -475,13 +469,13 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     </div>
                     
                     {!selectedEmotion && (
-                        <div className="text-center text-sm text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 p-2 rounded-lg border border-[var(--accent-primary)]/20">
+                        <div className="text-center text-sm text-[var(--text-main)] bg-[var(--surface-3)] p-2 rounded-lg border border-[var(--panel-border-strong)]">
                            {language === 'es' ? 'Por favor selecciona un sentimiento arriba para guardar tu entrada.' : 'Please select an emotion above to save your entry.'}
                         </div>
                     )}
     
                     <div>
-                        <label htmlFor="intensity" className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.intensity_label')}: <span className="font-bold text-[var(--accent-primary)]">{intensity}</span></label>
+                        <label htmlFor="intensity" className="block text-sm font-medium text-[var(--text-muted)] mb-2">{t('modal.entry.intensity_label')}: <span className="font-bold text-[var(--text-main)] journal-metric">{intensity}</span></label>
                         <input
                         type="range"
                         id="intensity"
@@ -494,26 +488,26 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                     </div>
     
                     <div>
-                        <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">{t('modal.entry.notes_label')}</label>
+                        <label htmlFor="notes" className="block text-sm font-medium text-[var(--text-muted)] mb-2">{t('modal.entry.notes_label')}</label>
                         <textarea
                         id="notes"
                         rows={4}
                         value={notes}
                         onChange={e => setNotes(e.target.value)}
                         placeholder={t('modal.entry.notes_placeholder')}
-                        className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none placeholder-gray-500"
+                        className="journal-input w-full rounded-xl p-3 transition resize-none"
                         ></textarea>
                     </div>
                     
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Attached Image</label>
+                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Attached Image</label>
                         {image ? (
                             <div className="relative group">
-                            <img src={image} alt="Entry attachment" className="w-full h-auto max-h-48 object-cover rounded-xl border border-[color:var(--glass-border)]" />
+                            <img src={image} alt="Entry attachment" className="w-full h-auto max-h-48 object-cover rounded-xl border border-[var(--panel-border)]" />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-xl backdrop-blur-sm">
                                 <button 
                                 onClick={handleRemoveImage}
-                                className="flex items-center bg-red-500/80 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors backdrop-blur-md"
+                                className="journal-button-danger flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                                 >
                                 <IconTrash className="w-4 h-4 mr-2" />
                                 {t('modal.entry.remove_image')}
@@ -521,10 +515,10 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             </div>
                             </div>
                         ) : (
-                            <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[color:var(--glass-border)] rounded-xl hover:bg-white/5 hover:border-[var(--accent-primary)]/50 transition-all group">
-                            <IconUpload className="w-8 h-8 text-gray-500 mb-2 group-hover:text-[var(--accent-primary)] transition-colors" />
-                            <span className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">{t('modal.entry.upload_image')}</span>
-                            <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 2MB</p>
+                            <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[var(--panel-border)] rounded-xl hover:bg-[var(--surface-2)] hover:border-[var(--panel-border-strong)] transition-all group">
+                            <IconUpload className="w-8 h-8 text-[var(--text-subtle)] mb-2 group-hover:text-[var(--text-main)] transition-colors" />
+                            <span className="text-sm font-semibold text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">{t('modal.entry.upload_image')}</span>
+                            <p className="text-xs text-[var(--text-subtle)] mt-1">PNG, JPG up to 2MB</p>
                             <input id="image-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
                             </label>
                         )}
@@ -532,23 +526,24 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     
                     {entry && (
                         <div>
-                            <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="w-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                            <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="journal-button-primary w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                                 <IconSparkles className="w-5 h-5 mr-2" />
                                 {isInsightLoading ? t('modal.entry.generating') : t('modal.entry.get_insight')}
                             </button>
-                            {isInsightLoading && <p className="text-center text-sm text-gray-400 mt-2 animate-pulse">{t('modal.entry.ai_thinking')}</p>}
+                            {isInsightLoading && <p className="text-center text-sm text-[var(--text-muted)] mt-2 animate-pulse">{t('modal.entry.ai_thinking')}</p>}
                             {aiError && <p className="text-center text-sm text-red-400 mt-2">{aiError}</p>}
                             {aiInsight && (
-                                <div className="mt-4 p-4 bg-white/5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                                    <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{aiInsight}</p>
+                                <div className="mt-4 p-4 journal-panel-muted rounded-xl">
+                                    <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap leading-relaxed">{aiInsight}</p>
                                 </div>
                             )}
                         </div>
                     )}
                   </>
               ) : (
-                  <div className="space-y-6">
-                     <BybitTradePanel
+                  <div className="space-y-6 xl:grid xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.9fr)] xl:items-start xl:gap-6 xl:space-y-0">
+                     <div className="space-y-6">
+                      <BybitTradePanel
                         date={selectedDateKey}
                         isToday={isTodayEntry}
                         isBybitAvailable={isBybitAvailable}
@@ -559,12 +554,11 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                         onError={setOperationError}
                      />
 
-                     {/* Daily PNL Input */}
-                      <div>
-                        <div className="flex items-center justify-between gap-3 mb-2">
-                          <label htmlFor="daily-pnl" className="block text-sm font-medium text-gray-300">{t('modal.entry.daily_pnl')}</label>
-                          <span className={`text-[11px] uppercase tracking-wide px-2 py-1 rounded-full ${pnlSource === 'manual' ? 'bg-white/10 text-gray-300' : 'bg-green-500/10 text-green-300'}`}>
-                            {pnlSource === 'manual' ? t('modal.entry.pnl_source_manual') : t('modal.entry.pnl_source_linked')}
+                       <div>
+                         <div className="flex items-center justify-between gap-3 mb-2">
+                          <label htmlFor="daily-pnl" className="block text-sm font-medium text-[var(--text-muted)]">{t('modal.entry.daily_pnl')}</label>
+                          <span className={`text-[11px] uppercase tracking-wide px-2 py-1 rounded-full journal-metric ${pnlSource === 'manual' ? 'bg-[var(--surface-3)] text-[var(--text-muted)]' : 'bg-green-500/10 text-green-300'}`}>
+                             {pnlSource === 'manual' ? t('modal.entry.pnl_source_manual') : t('modal.entry.pnl_source_linked')}
                           </span>
                         </div>
                         <input
@@ -573,27 +567,28 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                           placeholder="e.g. 150.50 or -50.00"
                           value={pnl}
                           onChange={e => handlePnlInputChange(e.target.value)}
-                          className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
+                          className="journal-input w-full rounded-xl p-3 transition journal-metric"
                         />
-                      </div>
-    
-                      {/* Payoff Chart */}
-                      <AnimatePresence mode="wait">
-                        <PayoffChart
+                       </div>
+
+                       <AnimatePresence mode="wait">
+                         <PayoffChart
                           key={payoffPreviewTrade ? `${payoffPreviewTrade.id}-${payoffPreviewTrade.markPrice ?? 'na'}-${payoffPreviewTrade.liquidationPrice ?? 'na'}` : tradeType}
                           type={payoffChartType}
                           trade={payoffPreviewTrade}
                         />
                       </AnimatePresence>
-    
-                      {/* Add New Trade Form */}
-                      <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)]">
-                         <h3 className="text-white font-medium mb-3 text-sm">{t('modal.entry.log_new_trade')}</h3>
+                     </div>
+
+                     <div className="space-y-6">
+                      <div className="journal-panel-muted p-4 rounded-xl">
+                         <p className="journal-kicker mb-2">Manual Capture</p>
+                         <h3 className="text-[var(--text-main)] font-medium mb-3 text-sm">{t('modal.entry.log_new_trade')}</h3>
                          <div className="grid grid-cols-2 gap-3 mb-3">
                             <select 
                                 value={tradeType}
                                 onChange={(e) => setTradeType(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                                className="journal-input rounded-lg p-2 text-sm"
                             >
                                 {tradeTypes.map(t => <option key={t} value={t}>{t}</option>)}
                             </select>
@@ -602,7 +597,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 placeholder={t('modal.entry.symbol_placeholder')}
                                 value={tradeSymbol}
                                 onChange={e => setTradeSymbol(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white uppercase"
+                                className="journal-input rounded-lg p-2 text-sm uppercase"
                             />
                          </div>
                          <div className="grid grid-cols-2 gap-3 mb-3">
@@ -611,13 +606,13 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 placeholder={t('modal.entry.pnl_placeholder')}
                                 value={tradePnl}
                                 onChange={e => setTradePnl(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                                className="journal-input rounded-lg p-2 text-sm journal-metric"
                             />
                             <input
                                 type="datetime-local"
                                 value={tradeExecutedAt}
                                 onChange={e => setTradeExecutedAt(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                                className="journal-input rounded-lg p-2 text-sm journal-metric"
                             />
                          </div>
                          <div className="grid grid-cols-2 gap-3 mb-3">
@@ -626,14 +621,14 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 placeholder={t('modal.entry.quantity_placeholder')}
                                 value={tradeQuantity}
                                 onChange={e => setTradeQuantity(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                                className="journal-input rounded-lg p-2 text-sm journal-metric"
                             />
                             <input
                                 type="number"
                                 placeholder={t('modal.entry.price_placeholder')}
                                 value={tradePrice}
                                 onChange={e => setTradePrice(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                                className="journal-input rounded-lg p-2 text-sm journal-metric"
                             />
                          </div>
                          <div className="grid grid-cols-1 gap-3 mb-3">
@@ -642,78 +637,79 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 placeholder={t('modal.entry.notes_trade_placeholder')}
                                 value={tradeNotes}
                                 onChange={e => setTradeNotes(e.target.value)}
-                                className="bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2 text-sm text-white"
+                                className="journal-input rounded-lg p-2 text-sm"
                             />
                          </div>
                          <button 
-                            onClick={handleAddTrade}
-                            disabled={!tradeSymbol}
-                            className="w-full bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/50 py-2 rounded-lg text-sm font-medium hover:bg-[var(--accent-primary)]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                         >
-                            {t('modal.entry.add_trade')}
-                         </button>
-                      </div>
-    
-                      {/* Trades List */}
-                      {trades.length > 0 && (
-                          <div className="space-y-2">
-                              <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">{t('modal.entry.todays_trades')}</h3>
-                              {trades.map((t) => (
-                                  <div key={t.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-[color:var(--glass-border)]">
-                                       <div>
-                                           <div className="flex items-center space-x-2">
-                                             <span className={`text-xs px-2 py-0.5 rounded ${
-                                                 t.type.includes('Long') || t.type.includes('Call') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-                                             }`}>{t.type}</span>
-                                             <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.source === 'bybit' ? 'bg-blue-500/20 text-blue-300' : 'bg-white/10 text-gray-300'}`}>
-                                                 {t.source === 'bybit' ? 'Bybit' : 'Manual'}
-                                             </span>
-                                             {t.status && (
-                                               <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.status === 'open' ? 'bg-cyan-500/20 text-cyan-200' : t.status === 'closed' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-gray-300'}`}>
-                                                 {t.status}
-                                               </span>
-                                             )}
-                                             <span className="font-bold text-white text-sm">{t.symbol}</span>
-                                           </div>
-                                           {t.executedAt && <p className="text-gray-500 text-[11px] mt-1">{new Date(t.executedAt).toLocaleString()}</p>}
-                                           {(t.markPrice !== undefined || t.liquidationPrice !== undefined || t.unrealizedPnl !== undefined) && (
-                                             <div className="flex flex-wrap gap-2 mt-2 text-[11px] text-gray-300">
-                                               {t.markPrice !== undefined && (
-                                                 <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-cyan-100">Mark {t.markPrice.toFixed(4)}</span>
-                                               )}
-                                               {t.liquidationPrice !== undefined && (
-                                                 <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-200">Liq {t.liquidationPrice.toFixed(4)}</span>
-                                               )}
-                                               {t.unrealizedPnl !== undefined && (
-                                                 <span className={`rounded-full px-2 py-0.5 ${t.unrealizedPnl >= 0 ? 'bg-emerald-500/10 text-emerald-200' : 'bg-red-500/10 text-red-200'}`}>
-                                                   UPNL {t.unrealizedPnl >= 0 ? '+' : ''}{t.unrealizedPnl.toFixed(2)}
-                                                 </span>
-                                               )}
-                                             </div>
-                                           )}
-                                           {t.notes && <p className="text-gray-400 text-xs mt-1">{t.notes}</p>}
-                                       </div>
-                                      <div className="flex items-center space-x-3">
-                                          {(t.closedPnl !== undefined || t.pnl !== undefined) && (
-                                              <span className={`font-mono text-sm ${(t.closedPnl ?? t.pnl ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                  {(t.closedPnl ?? t.pnl ?? 0) >= 0 ? '+' : ''}{(t.closedPnl ?? t.pnl)?.toFixed?.(2) ?? (t.closedPnl ?? t.pnl)}
+                             onClick={handleAddTrade}
+                             disabled={!tradeSymbol}
+                             className="journal-button-secondary w-full py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                             {t('modal.entry.add_trade')}
+                          </button>
+                       </div>
+
+                       {trades.length > 0 && (
+                           <div className="space-y-2">
+                               <p className="journal-kicker">Linked Trade Ledger</p>
+                               <h3 className="text-[var(--text-main)] text-sm font-semibold">{t('modal.entry.todays_trades')}</h3>
+                               {trades.map((t) => (
+                                   <div key={t.id} className="flex items-center justify-between journal-panel-muted p-3 rounded-xl gap-4">
+                                        <div>
+                                            <div className="flex items-center space-x-2">
+                                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                                  t.type.includes('Long') || t.type.includes('Call') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+                                              }`}>{t.type}</span>
+                                              <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.source === 'bybit' ? 'bg-blue-500/20 text-blue-300' : 'bg-[var(--surface-3)] text-[var(--text-muted)]'}`}>
+                                                  {t.source === 'bybit' ? 'Bybit' : 'Manual'}
                                               </span>
-                                          )}
-                                          <button onClick={() => handleRemoveTrade(t.id)} className="text-gray-500 hover:text-red-400 transition-colors">
-                                              <IconTrash className="w-4 h-4" />
-                                          </button>
-                                      </div>
-                                  </div>
-                              ))}
-                          </div>
-                      )}
+                                              {t.status && (
+                                                <span className={`text-[10px] px-2 py-0.5 rounded uppercase tracking-wide ${t.status === 'open' ? 'bg-cyan-500/20 text-cyan-200' : t.status === 'closed' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-[var(--surface-3)] text-[var(--text-muted)]'}`}>
+                                                  {t.status}
+                                                </span>
+                                              )}
+                                              <span className="font-semibold text-[var(--text-main)] text-sm journal-metric">{t.symbol}</span>
+                                            </div>
+                                            {t.executedAt && <p className="text-[var(--text-subtle)] text-[11px] mt-1 journal-metric">{new Date(t.executedAt).toLocaleString()}</p>}
+                                            {(t.markPrice !== undefined || t.liquidationPrice !== undefined || t.unrealizedPnl !== undefined) && (
+                                              <div className="flex flex-wrap gap-2 mt-2 text-[11px] text-[var(--text-muted)]">
+                                                {t.markPrice !== undefined && (
+                                                  <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-cyan-100 journal-metric">Mark {t.markPrice.toFixed(4)}</span>
+                                                )}
+                                                {t.liquidationPrice !== undefined && (
+                                                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-200 journal-metric">Liq {t.liquidationPrice.toFixed(4)}</span>
+                                                )}
+                                                {t.unrealizedPnl !== undefined && (
+                                                  <span className={`rounded-full px-2 py-0.5 journal-metric ${t.unrealizedPnl >= 0 ? 'bg-emerald-500/10 text-emerald-200' : 'bg-red-500/10 text-red-200'}`}>
+                                                    UPNL {t.unrealizedPnl >= 0 ? '+' : ''}{t.unrealizedPnl.toFixed(2)}
+                                                  </span>
+                                                )}
+                                              </div>
+                                            )}
+                                            {t.notes && <p className="text-[var(--text-muted)] text-xs mt-1">{t.notes}</p>}
+                                        </div>
+                                       <div className="flex items-center space-x-3">
+                                           {(t.closedPnl !== undefined || t.pnl !== undefined) && (
+                                               <span className={`font-mono text-sm ${(t.closedPnl ?? t.pnl ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                   {(t.closedPnl ?? t.pnl ?? 0) >= 0 ? '+' : ''}{(t.closedPnl ?? t.pnl)?.toFixed?.(2) ?? (t.closedPnl ?? t.pnl)}
+                                               </span>
+                                           )}
+                                           <button onClick={() => handleRemoveTrade(t.id)} className="text-[var(--text-subtle)] hover:text-red-400 transition-colors">
+                                               <IconTrash className="w-4 h-4" />
+                                           </button>
+                                       </div>
+                                   </div>
+                               ))}
+                           </div>
+                       )}
+                      </div>
                   </div>
               )}
             </div>
     
-            <div className="p-6 bg-white/5 border-t border-[color:var(--glass-border)] flex flex-col gap-4 rounded-b-2xl min-h-[88px] backdrop-blur-md">
+            <div className="p-6 bg-[var(--surface-1)] border-t journal-divider flex flex-col gap-4 rounded-b-2xl min-h-[88px] backdrop-blur-md">
                 {confirmation ? (
-                    <div className={`flex items-center justify-center text-[var(--accent-primary)] p-3 transition-all duration-300 ease-out ${confirmation.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className={`flex items-center justify-center text-[var(--text-main)] p-3 transition-all duration-300 ease-out ${confirmation.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -736,15 +732,15 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                                 )}
                             </div>
                             <div className="flex space-x-3">
-                                <button onClick={onClose} disabled={isSaving || isDeleting} className="px-4 py-2 text-sm font-medium bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-white/10">{t('common.cancel')}</button>
+                                <button onClick={onClose} disabled={isSaving || isDeleting} className="journal-button-secondary px-4 py-2 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">{t('common.cancel')}</button>
                                 <button 
                                     onClick={handleSave} 
                                     disabled={!selectedEmotion || isSaving || isDeleting}
                                     title={!selectedEmotion ? 'Please select an emotion first' : 'Save your journal entry'}
-                                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white hover:opacity-90 rounded-xl transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
+                                    className="journal-button-primary px-4 py-2 text-sm font-medium hover:opacity-95 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none w-28 text-center"
                                 >
                                     {isSaving ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mx-auto"></div>
                                     ) : t('modal.entry.save')}
                                 </button>
                             </div>
@@ -763,7 +759,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
             className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-8"
           >
              <div className="mb-6 relative">
-                 <div className="absolute inset-0 bg-[var(--accent-primary)]/20 blur-xl rounded-full animate-pulse"></div>
+                 <div className="absolute inset-0 bg-[var(--accent-soft)] blur-xl rounded-full animate-pulse"></div>
                  <motion.div
                     initial={{ scale: 0, rotate: -45 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -788,7 +784,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-2xl font-bold text-white mb-2"
+                className="text-2xl font-semibold text-[var(--text-main)] mb-2"
              >
                  {t('modal.entry.success_title')}
              </motion.h3>
@@ -797,8 +793,8 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-gray-400 text-sm"
-             >
+                className="text-[var(--text-muted)] text-sm"
+              >
                  {t('modal.entry.success_subtitle')}
              </motion.p>
           </motion.div>

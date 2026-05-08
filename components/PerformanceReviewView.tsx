@@ -382,31 +382,32 @@ const ReviewCard: React.FC<{
   const answeredCount = countAnsweredQuestions(answers);
 
   return (
-    <div className="glass-panel rounded-2xl mb-6 overflow-hidden">
+    <div className="journal-panel rounded-2xl mb-6 overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-start justify-between gap-4 p-6 text-left transition hover:bg-white/[0.03]"
+        className="flex w-full items-start justify-between gap-4 p-6 text-left transition hover:bg-[var(--surface-2)]"
         aria-expanded={isExpanded}
       >
         <div>
-          <h3 className="text-xl font-bold text-white">{section.title}</h3>
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="journal-kicker">Review Section</p>
+          <h3 className="mt-1 text-xl font-semibold text-[var(--text-main)]">{section.title}</h3>
+          <p className="mt-2 text-sm text-[var(--text-muted)] journal-metric">
             {answeredCount}/{section.questions.length} {labels.answered}
           </p>
           {section.description && (
-            <p className="mt-2 text-sm text-gray-300">{section.description}</p>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">{section.description}</p>
           )}
         </div>
         <div className="flex items-center gap-3 pt-1">
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-gray-300">
+          <span className="rounded-full border border-[var(--panel-border)] bg-[var(--surface-2)] px-3 py-1 text-xs font-medium text-[var(--text-muted)]">
             {isExpanded ? labels.collapse : labels.expand}
           </span>
           <svg
             viewBox="0 0 20 20"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className={`h-5 w-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            className={`h-5 w-5 text-[var(--text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
             aria-hidden="true"
           >
             <path d="M5 8L10 13L15 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
@@ -415,12 +416,12 @@ const ReviewCard: React.FC<{
       </button>
 
       {isExpanded && (
-        <div className="space-y-4 border-t border-white/10 px-6 pb-6 pt-5">
+        <div className="space-y-4 border-t journal-divider px-6 pb-6 pt-5">
           {section.questions.map((question) => {
             const answer = answers.find(a => a.questionId === question.id)?.answer || '';
             return (
               <div key={question.id}>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
                   {question.text}
                 </label>
                 {question.type === 'textarea' ? (
@@ -428,7 +429,7 @@ const ReviewCard: React.FC<{
                     value={answer}
                     onChange={(e) => onAnswerChange(question.id, e.target.value)}
                     placeholder={question.placeholder || labels.answerPlaceholder}
-                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition resize-none"
+                    className="journal-input w-full rounded-lg p-3 transition resize-none"
                     rows={3}
                   />
                 ) : (
@@ -437,7 +438,7 @@ const ReviewCard: React.FC<{
                     value={answer}
                     onChange={(e) => onAnswerChange(question.id, e.target.value)}
                     placeholder={question.placeholder || labels.answerPlaceholder}
-                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
+                    className="journal-input w-full rounded-lg p-3 transition"
                   />
                 )}
               </div>
@@ -615,27 +616,30 @@ const PerformanceReviewView: React.FC = () => {
       <div className="flex items-center justify-center h-full p-4">
         <div className="text-center">
           <IconCalendar className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-          <h3 className="text-lg font-medium text-gray-400">{t('review.unable_load')}</h3>
-          <p className="text-sm text-gray-500 mt-2">{error}</p>
+          <h3 className="text-lg font-medium text-[var(--text-muted)]">{t('review.unable_load')}</h3>
+          <p className="text-sm text-[var(--text-subtle)] mt-2">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-content-entry">
+      <div className="space-y-6 animate-content-entry">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold text-white">{selectedYear} {localizedSections.find(section => section.id === 'performance-review')?.title || t('dashboard.sidebar.review')}</h1>
+          <div>
+            <p className="journal-kicker">Year-End Review</p>
+            <h1 className="text-2xl font-semibold text-[var(--text-main)] mt-1"><span className="journal-metric">{selectedYear}</span> {localizedSections.find(section => section.id === 'performance-review')?.title || t('dashboard.sidebar.review')}</h1>
+          </div>
           <div className="flex items-center gap-3">
-            <label htmlFor="review-year" className="text-sm font-medium text-gray-300">
+            <label htmlFor="review-year" className="text-sm font-medium text-[var(--text-muted)]">
               {t('review.year_label')}
             </label>
             <select
               id="review-year"
               value={selectedYear}
               onChange={(event) => setSelectedYear(Number(event.target.value))}
-              className="bg-white/5 border border-[color:var(--glass-border)] rounded-lg px-3 py-2 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition"
+              className="journal-input rounded-lg px-3 py-2 transition journal-metric"
             >
               {availableYears.map((year) => (
                 <option key={year} value={year} className="bg-slate-900 text-white">
@@ -650,14 +654,14 @@ const PerformanceReviewView: React.FC = () => {
           <button
             type="button"
             onClick={toggleAllSections}
-            className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/10"
+            className="journal-button-secondary rounded-lg px-4 py-2 text-sm font-medium transition"
           >
             {allSectionsExpanded ? t('review.collapse_all') : t('review.expand_all')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center justify-center bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-all shadow-[0_0_15px_var(--chart-glow-color-1)] disabled:opacity-50 disabled:shadow-none"
+            className="journal-button-primary flex items-center justify-center px-4 py-2 rounded-lg font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:shadow-none"
           >
             <IconSparkles className="w-5 h-5 mr-2" />
             {saving ? t('review.saving') : t('review.save')}
@@ -678,7 +682,8 @@ const PerformanceReviewView: React.FC = () => {
         </div>
       )}
 
-      <div className="text-gray-300 mb-6">
+      <div className="journal-panel-muted rounded-2xl p-5 mb-6">
+        <p className="journal-kicker mb-2">Review Prompt</p>
         <p className="text-sm leading-relaxed">
           {t('review.intro')}
         </p>

@@ -6,7 +6,7 @@ export type EmotionType = 'happy' | 'calm' | 'anxious' | 'sad' | 'angry';
 
 export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'settings' | 'review';
 
-export type Theme = 'twilight' | 'sunrise' | 'cyberpunk' | 'forest';
+export type Theme = 'insilico' | 'cscalp' | 'bloomberg';
 export type TradeSource = 'manual' | 'bybit' | 'thalex';
 export type TradingProvider = 'bybit' | 'hyperliquid' | 'thalex';
 export type TradingProviderCapability = 'trade_history' | 'market_data';

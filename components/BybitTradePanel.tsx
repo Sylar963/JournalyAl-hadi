@@ -171,7 +171,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
 
   if (!isBybitAvailable) {
     return (
-      <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] text-sm text-gray-400">
+      <div className="journal-panel-muted p-4 rounded-xl text-sm text-[var(--text-muted)]">
         {t('bybit.unavailable')}
       </div>
     );
@@ -180,17 +180,18 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
   const secondsRemaining = Math.max(0, Math.ceil((refreshCooldownUntil - Date.now()) / 1000));
 
   return (
-    <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] space-y-4">
+    <div className="journal-panel-muted p-4 rounded-xl space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-white font-medium text-sm">{t('bybit.panel_title')}</h3>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="journal-kicker">Imported Broker Data</p>
+          <h3 className="text-[var(--text-main)] font-medium text-sm mt-1">{t('bybit.panel_title')}</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-1 journal-metric">
             {connection
               ? `${t('bybit.connection')}: ${connection.apiKeyMasked} • ${connection.environment}`
               : t('bybit.not_connected')}
           </p>
           {connection?.lastSyncAt && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-[var(--text-subtle)] mt-1 journal-metric">
               {t('bybit.last_sync')}: {new Date(connection.lastSyncAt).toLocaleString()}
             </p>
           )}
@@ -199,7 +200,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
           type="button"
           onClick={() => void handleRefresh()}
           disabled={!connection || connection.validationStatus !== 'valid' || isRefreshing || secondsRemaining > 0}
-          className="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--accent-primary)]/40 text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="journal-button-secondary px-3 py-2 rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isRefreshing ? t('bybit.refreshing') : secondsRemaining > 0 ? `${t('bybit.refresh')} (${secondsRemaining}s)` : t('bybit.refresh')}
         </button>
@@ -223,39 +224,39 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={t('bybit.search_placeholder')}
-          className="w-full bg-black/40 border border-[color:var(--glass-border)] rounded-lg p-2.5 text-sm text-white"
+          className="journal-input w-full rounded-lg p-2.5 text-sm"
         />
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">{t('bybit.executions_title')}</h4>
-          <span className="text-[11px] text-gray-500">{filteredTrades.length}</span>
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">{t('bybit.executions_title')}</h4>
+          <span className="text-[11px] text-[var(--text-subtle)] journal-metric">{filteredTrades.length}</span>
         </div>
         <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
           {isLoading ? (
-            <div className="text-sm text-gray-400">{t('bybit.loading')}</div>
+            <div className="text-sm text-[var(--text-muted)]">{t('bybit.loading')}</div>
           ) : filteredTrades.length === 0 ? (
-            <div className="text-sm text-gray-400">{t('bybit.empty')}</div>
+            <div className="text-sm text-[var(--text-muted)]">{t('bybit.empty')}</div>
           ) : (
             filteredTrades.map((trade) => {
               const duplicate = !!findDuplicateTrade(tradeFromCachedBybitTrade(trade), selectedTrades);
               const pnlValue = trade.closedPnl;
 
               return (
-                <div key={trade.externalTradeId} className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-3">
+                <div key={trade.externalTradeId} className="rounded-xl border border-[var(--panel-border)] bg-[var(--surface-1)] p-3">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded ${trade.side === 'Sell' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
                           {trade.side}
                         </span>
-                        <span className="font-semibold text-white text-sm">{trade.symbol}</span>
+                        <span className="font-semibold text-[var(--text-main)] text-sm journal-metric">{trade.symbol}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-[var(--text-muted)] mt-1 journal-metric">
                         {new Date(trade.executedAt).toLocaleTimeString()} • {trade.quantity} @ {trade.price}
                       </p>
-                      <p className="text-[11px] text-gray-500 mt-1">{trade.orderId}</p>
+                      <p className="text-[11px] text-[var(--text-subtle)] mt-1 journal-metric">{trade.orderId}</p>
                     </div>
                     <div className="text-right space-y-2">
                       {typeof pnlValue === 'number' && (
@@ -267,7 +268,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
                         type="button"
                         onClick={() => handleSelectTrade(trade)}
                         disabled={duplicate}
-                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="journal-button-secondary px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {duplicate ? t('bybit.linked') : t('bybit.link_trade')}
                       </button>
@@ -282,12 +283,12 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/80">{t('bybit.positions_title')}</h4>
-          <span className="text-[11px] text-gray-500">{filteredPositions.length}</span>
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">{t('bybit.positions_title')}</h4>
+          <span className="text-[11px] text-[var(--text-subtle)] journal-metric">{filteredPositions.length}</span>
         </div>
 
         {filteredPositions.length === 0 ? (
-          <div className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-3 text-sm text-gray-400">
+          <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--surface-1)] p-3 text-sm text-[var(--text-muted)]">
             {t('bybit.positions_empty')}
           </div>
         ) : (
@@ -299,7 +300,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
               return (
                 <div
                   key={position.externalPositionId}
-                  className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.18),transparent_45%),rgba(255,255,255,0.03)] p-4"
+                  className="relative overflow-hidden rounded-2xl border border-[var(--panel-border)] bg-[var(--surface-1)] p-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-2">
@@ -310,37 +311,37 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
                         <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-200">
                           {t('bybit.status_open')}
                         </span>
-                        <span className="font-semibold text-white text-sm">{position.symbol}</span>
+                        <span className="font-semibold text-[var(--text-main)] text-sm journal-metric">{position.symbol}</span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-300 sm:grid-cols-3">
-                        <div className="rounded-lg bg-black/20 px-3 py-2">
-                          <div className="text-gray-500">{t('bybit.entry_price')}</div>
-                          <div className="font-mono text-white">{position.entryPrice?.toFixed(4) ?? '--'}</div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-muted)] sm:grid-cols-3">
+                        <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+                          <div className="text-[var(--text-subtle)]">{t('bybit.entry_price')}</div>
+                          <div className="font-mono text-[var(--text-main)]">{position.entryPrice?.toFixed(4) ?? '--'}</div>
                         </div>
-                        <div className="rounded-lg bg-black/20 px-3 py-2">
-                          <div className="text-gray-500">{t('bybit.mark_price')}</div>
-                          <div className="font-mono text-white">{position.markPrice?.toFixed(4) ?? '--'}</div>
+                        <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+                          <div className="text-[var(--text-subtle)]">{t('bybit.mark_price')}</div>
+                          <div className="font-mono text-[var(--text-main)]">{position.markPrice?.toFixed(4) ?? '--'}</div>
                         </div>
-                        <div className="rounded-lg bg-black/20 px-3 py-2">
-                          <div className="text-gray-500">{t('bybit.liquidation_price')}</div>
+                        <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+                          <div className="text-[var(--text-subtle)]">{t('bybit.liquidation_price')}</div>
                           <div className="font-mono text-amber-200">{position.liquidationPrice?.toFixed(4) ?? '--'}</div>
                         </div>
-                        <div className="rounded-lg bg-black/20 px-3 py-2">
-                          <div className="text-gray-500">{t('bybit.position_size')}</div>
-                          <div className="font-mono text-white">{position.quantity}</div>
+                        <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+                          <div className="text-[var(--text-subtle)]">{t('bybit.position_size')}</div>
+                          <div className="font-mono text-[var(--text-main)]">{position.quantity}</div>
                         </div>
-                        <div className="rounded-lg bg-black/20 px-3 py-2">
-                          <div className="text-gray-500">{t('bybit.leverage_short')}</div>
-                          <div className="font-mono text-white">{position.leverage ? `${position.leverage}x` : '--'}</div>
+                        <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+                          <div className="text-[var(--text-subtle)]">{t('bybit.leverage_short')}</div>
+                          <div className="font-mono text-[var(--text-main)]">{position.leverage ? `${position.leverage}x` : '--'}</div>
                         </div>
-                        <div className="rounded-lg bg-black/20 px-3 py-2">
-                          <div className="text-gray-500">{t('bybit.margin_mode')}</div>
-                          <div className="font-medium text-white capitalize">{position.marginMode ?? 'unknown'}</div>
+                        <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+                          <div className="text-[var(--text-subtle)]">{t('bybit.margin_mode')}</div>
+                          <div className="font-medium text-[var(--text-main)] capitalize">{position.marginMode ?? 'unknown'}</div>
                         </div>
                       </div>
 
-                      <div className="text-[11px] text-gray-500">
+                      <div className="text-[11px] text-[var(--text-subtle)] journal-metric">
                         {position.updatedAt ? `${t('bybit.updated')}: ${new Date(position.updatedAt).toLocaleString()}` : position.externalPositionId}
                       </div>
                     </div>
@@ -356,7 +357,7 @@ const BybitTradePanel: React.FC<BybitTradePanelProps> = ({
                         type="button"
                         onClick={() => handleSelectPosition(position)}
                         disabled={duplicate}
-                        className="w-full px-3 py-2 rounded-lg text-xs font-medium bg-cyan-500/10 text-cyan-100 border border-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="journal-button-secondary w-full px-3 py-2 rounded-lg text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {duplicate ? t('bybit.linked') : t('bybit.register_snapshot')}
                       </button>

@@ -34,6 +34,7 @@ import { useI18n } from './hooks/useI18n';
 
 
 import { ActiveView, EmotionEntry, EmotionType, Theme } from './types';
+import { THEMES_CONFIG } from './constants';
 import { useAuth } from './hooks/useAuth';
 import { useAdSystem } from './hooks/useAdSystem';
 import { useJournalData } from './hooks/useJournalData';
@@ -60,7 +61,7 @@ const AppContent: React.FC = () => {
   const [showLanding, setShowLanding] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeView, setActiveView] = useState<ActiveView>('journal');
-  const [theme, setTheme] = useState<Theme>('twilight');
+  const [theme, setTheme] = useState<Theme>('insilico');
 
   // URL-based routing using history API for reliable SPA navigation
   useEffect(() => {
@@ -98,7 +99,7 @@ const AppContent: React.FC = () => {
   // Theme Logic
   useEffect(() => {
     const savedTheme = localStorage.getItem('emotion-journal-theme') as Theme | null;
-    if (savedTheme) {
+    if (savedTheme && THEMES_CONFIG.some(({ id }) => id === savedTheme)) {
       setTheme(savedTheme);
     }
   }, []);
@@ -164,7 +165,7 @@ const AppContent: React.FC = () => {
 
   const entriesArray = Object.values(entries);
   const isAppAccessible = !!session || !isSupabaseConfigured;
-  const effectiveTheme = isAppAccessible ? theme : 'twilight';
+  const effectiveTheme = isAppAccessible ? theme : 'insilico';
   const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = [
     { view: 'journal', label: t('dashboard.sidebar.journal'), icon: <IconJournal className="w-4 h-4" /> },
     { view: 'trends', label: t('dashboard.sidebar.trends'), icon: <IconTrends className="w-4 h-4" /> },

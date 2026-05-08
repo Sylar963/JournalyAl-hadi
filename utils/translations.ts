@@ -319,14 +319,9 @@ export const translations = {
     'bybit.error.manual_duplicate': 'This manual trade matches a fetched Bybit trade. Link the imported trade instead.',
 
     // Themes
-    'theme.classic': 'Classic',
-    'theme.midnight': 'Midnight',
-    'theme.emerald': 'Emerald',
-    'theme.sunset': 'Sunset',
-    'theme.twilight': 'Twilight',
-    'theme.lavender': 'Lavender',
-    'theme.nord': 'Nord',
-    'theme.monochrome': 'Monochrome',
+    'theme.insilico': 'Insilico',
+    'theme.cscalp': 'CScalp',
+    'theme.bloomberg': 'Bloomberg',
     // Routine
     'routine.title': 'Pre-Market Routine',
     'routine.status': 'Status',
@@ -603,14 +598,9 @@ export const translations = {
     'bybit.error.manual_duplicate': 'Esta operación manual coincide con una operación importada de Bybit. Vincula la importada en su lugar.',
 
     // Themes
-    'theme.classic': 'Clásico',
-    'theme.midnight': 'Medianoche',
-    'theme.emerald': 'Esmeralda',
-    'theme.sunset': 'Atardecer',
-    'theme.twilight': 'Crepúsculo',
-    'theme.lavender': 'Lavanda',
-    'theme.nord': 'Nord',
-    'theme.monochrome': 'Monocromo',
+    'theme.insilico': 'Insilico',
+    'theme.cscalp': 'CScalp',
+    'theme.bloomberg': 'Bloomberg',
     // Routine
     'routine.title': 'Rutina Pre-Mercado',
     'routine.status': 'Estado',

@@ -56,43 +56,33 @@ export const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 export const THEMES_CONFIG: ThemeConfig[] = [
   {
-    id: 'twilight',
-    label: 'Twilight',
+    id: 'insilico',
+    label: 'Insilico',
     colors: {
-      background: 'bg-[#07111a]',
-      primary: 'bg-[#0a131f]',
-      secondary: 'bg-[#142437]',
-      accent: 'bg-[#d8e0e8]',
+      background: 'bg-[#09121f]',
+      primary: 'bg-[#111c2d]',
+      secondary: 'bg-[#1a2940]',
+      accent: 'bg-[#8eb8ff]',
     },
   },
   {
-    id: 'sunrise',
-    label: 'Sunrise',
+    id: 'cscalp',
+    label: 'CScalp',
     colors: {
-      background: 'bg-[#f3f0eb]',
-      primary: 'bg-[#fffdf9]',
-      secondary: 'bg-[#ece6de]',
-      accent: 'bg-[#b35c2e]',
+      background: 'bg-[#0a0d12]',
+      primary: 'bg-[#141a22]',
+      secondary: 'bg-[#1d2632]',
+      accent: 'bg-[#d7dde5]',
     },
   },
   {
-    id: 'cyberpunk',
-    label: 'Cyberpunk',
+    id: 'bloomberg',
+    label: 'Bloomberg',
     colors: {
-      background: 'bg-[#0d1320]',
-      primary: 'bg-[#131d30]',
-      secondary: 'bg-[#1b273d]',
-      accent: 'bg-[#c4b5fd]',
-    },
-  },
-  {
-    id: 'forest',
-    label: 'Forest',
-    colors: {
-      background: 'bg-[#0d1510]',
-      primary: 'bg-[#131f18]',
-      secondary: 'bg-[#1e2c22]',
-      accent: 'bg-[#d2c59a]',
+      background: 'bg-[#0d0d0f]',
+      primary: 'bg-[#17181d]',
+      secondary: 'bg-[#23252c]',
+      accent: 'bg-[#f0a23b]',
     },
   },
 ];

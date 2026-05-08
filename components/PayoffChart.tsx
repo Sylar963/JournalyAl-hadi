@@ -174,7 +174,7 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
   })();
 
   const subtitle = liveFutureView ? t('modal.entry.payoff_live') : t('modal.entry.payoff_simulation');
-  const accentColor = liveFutureView ? '#22d3ee' : '#818cf8';
+  const accentColor = liveFutureView ? '#38bdf8' : '#8eb8ff';
 
   return (
     <motion.div
@@ -182,18 +182,19 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
       animate={{ opacity: 1, scale: 1, maxHeight: 500 }}
       exit={{ opacity: 0, scale: 0.98, maxHeight: 0 }}
       transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-      className="w-full relative overflow-hidden rounded-xl border border-[color:var(--glass-border)] bg-black/40 backdrop-blur-md mb-6 shadow-2xl"
+      className="w-full relative overflow-hidden rounded-xl journal-panel mb-6"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
 
       <div className="relative z-10 flex items-start justify-between gap-3 px-4 pt-4">
         <div className="flex flex-col">
-          <h4 className="text-sm font-bold text-white tracking-wide shadow-black drop-shadow-md">{type.toUpperCase()}</h4>
-          <span className="text-[10px] font-mono" style={{ color: accentColor }}>{subtitle.toUpperCase()}</span>
+          <p className="journal-kicker">Trade Structure</p>
+          <h4 className="text-sm font-semibold text-[var(--text-main)] tracking-wide mt-1 journal-metric">{type.toUpperCase()}</h4>
+          <span className="text-[10px] font-mono mt-1" style={{ color: accentColor }}>{subtitle.toUpperCase()}</span>
         </div>
 
         {liveFutureView?.currentPnl !== undefined && (
-          <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-mono text-white backdrop-blur-sm">
+          <div className="rounded-full border border-[var(--panel-border)] bg-[var(--surface-2)] px-3 py-1 text-[11px] font-mono text-[var(--text-main)]">
             {t('bybit.unrealized_pnl')}: {liveFutureView.currentPnl >= 0 ? '+' : ''}{liveFutureView.currentPnl.toFixed(2)}
           </div>
         )}
@@ -202,19 +203,19 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-52 md:h-60 object-cover"
-        style={{ filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.5))' }}
+        style={{ filter: 'drop-shadow(0 0 12px rgba(0,0,0,0.35))' }}
       >
         <defs>
           <linearGradient id="pnl-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(46, 213, 115, 0.25)" />
-            <stop offset="45%" stopColor="rgba(46, 213, 115, 0.1)" />
-            <stop offset="50%" stopColor="rgba(46, 213, 115, 0)" />
-            <stop offset="50%" stopColor="rgba(255, 71, 87, 0)" />
-            <stop offset="55%" stopColor="rgba(255, 71, 87, 0.1)" />
-            <stop offset="100%" stopColor="rgba(255, 71, 87, 0.25)" />
+            <stop offset="0%" stopColor="rgba(74, 222, 128, 0.22)" />
+            <stop offset="45%" stopColor="rgba(74, 222, 128, 0.08)" />
+            <stop offset="50%" stopColor="rgba(74, 222, 128, 0)" />
+            <stop offset="50%" stopColor="rgba(248, 113, 113, 0)" />
+            <stop offset="55%" stopColor="rgba(248, 113, 113, 0.08)" />
+            <stop offset="100%" stopColor="rgba(248, 113, 113, 0.22)" />
           </linearGradient>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(148,163,184,0.08)" strokeWidth="1" />
           </pattern>
         </defs>
 
@@ -225,7 +226,7 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
           y1={liveFutureView ? liveFutureView.zeroY : fallbackData?.zeroY ?? height / 2}
           x2={width}
           y2={liveFutureView ? liveFutureView.zeroY : fallbackData?.zeroY ?? height / 2}
-          stroke="rgba(255,255,255,0.2)"
+          stroke="rgba(148,163,184,0.25)"
           strokeWidth="1"
         />
 
@@ -265,19 +266,19 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{ duration: 0.8, ease: 'easeInOut' }}
               fill="none"
-              stroke="#22d3ee"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="drop-shadow(0 0 10px rgba(34,211,238,0.65))"
-            />
+               stroke="#38bdf8"
+               strokeWidth="3"
+               strokeLinecap="round"
+               strokeLinejoin="round"
+               filter="drop-shadow(0 0 8px rgba(56,189,248,0.45))"
+             />
 
             {trade?.markPrice !== undefined && liveFutureView.currentPnl !== undefined && (
               <circle
                 cx={liveFutureView.priceToX(trade.markPrice)}
                 cy={liveFutureView.pnlToY(liveFutureView.currentPnl)}
                 r="4.5"
-                fill="#22d3ee"
+                fill="#38bdf8"
                 stroke="rgba(255,255,255,0.85)"
                 strokeWidth="1.5"
               />
@@ -309,18 +310,18 @@ const PayoffChart: React.FC<PayoffChartProps> = ({ type, trade }) => {
         ) : null}
       </svg>
 
-      {liveFutureView && trade && (
-        <div className="grid grid-cols-3 gap-2 border-t border-white/5 bg-black/20 px-4 py-3 text-[11px] text-gray-300">
-          <div className="rounded-lg bg-white/5 px-3 py-2">
-            <div className="text-gray-500">{t('bybit.entry_price')}</div>
-            <div className="font-mono text-white">{isFiniteNumber(trade.entryPrice ?? trade.price) ? (trade.entryPrice ?? trade.price)!.toFixed(4) : '--'}</div>
+       {liveFutureView && trade && (
+        <div className="grid grid-cols-3 gap-2 border-t journal-divider bg-[var(--surface-1)] px-4 py-3 text-[11px] text-[var(--text-muted)]">
+          <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+            <div className="text-[var(--text-subtle)]">{t('bybit.entry_price')}</div>
+            <div className="font-mono text-[var(--text-main)]">{isFiniteNumber(trade.entryPrice ?? trade.price) ? (trade.entryPrice ?? trade.price)!.toFixed(4) : '--'}</div>
           </div>
-          <div className="rounded-lg bg-white/5 px-3 py-2">
-            <div className="text-gray-500">{t('bybit.mark_price')}</div>
-            <div className="font-mono text-white">{isFiniteNumber(trade.markPrice) ? trade.markPrice.toFixed(4) : '--'}</div>
+          <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+            <div className="text-[var(--text-subtle)]">{t('bybit.mark_price')}</div>
+            <div className="font-mono text-[var(--text-main)]">{isFiniteNumber(trade.markPrice) ? trade.markPrice.toFixed(4) : '--'}</div>
           </div>
-          <div className="rounded-lg bg-white/5 px-3 py-2">
-            <div className="text-gray-500">{t('bybit.liquidation_price')}</div>
+          <div className="rounded-lg bg-[var(--surface-2)] px-3 py-2">
+            <div className="text-[var(--text-subtle)]">{t('bybit.liquidation_price')}</div>
             <div className="font-mono text-amber-200">{isFiniteNumber(trade.liquidationPrice) ? trade.liquidationPrice.toFixed(4) : '--'}</div>
           </div>
         </div>

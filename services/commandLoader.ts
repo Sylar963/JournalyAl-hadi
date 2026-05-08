@@ -40,7 +40,7 @@ const registerThemeCommand = () => {
   SlashCommandRegistry.register({
     name: 'theme',
     description: 'Change the app theme',
-    usage: '/theme [twilight|ocean|forest|sunset]',
+    usage: '/theme [insilico|cscalp|bloomberg]',
     execute: async (args) => {
       const themeName = args[0];
       console.log('Set theme:', themeName);
