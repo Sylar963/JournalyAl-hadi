@@ -135,6 +135,15 @@ export const AD_MESSAGES = [
     creativeType: 'logo'
   },
   {
+    title: "Thalex Funded Account",
+    message: "Preview the funded-account campaign, then join Thalex with referral code OWNBZS.",
+    url: "https://thalex.com/exchange/sign-up?referral=OWNBZS",
+    icon: 'exchange',
+    creativeType: 'site-preview',
+    previewUrl: 'https://thalex.com/funded-account',
+    previewHighlights: ['1K ABC', '80% profit share']
+  },
+  {
     title: "Coincall Exchange",
     message: "Options trading with deep liquidity. Use referral code 43394533 to get started.",
     url: "https://www.coincall.com/r/43394533",

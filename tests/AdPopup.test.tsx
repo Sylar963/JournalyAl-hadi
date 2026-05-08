@@ -26,6 +26,8 @@ function AdSystemHarness() {
           url={adContent.url}
           bannerImageUrl={adContent.bannerImageUrl}
           creativeType={adContent.creativeType}
+          previewUrl={adContent.previewUrl}
+          previewHighlights={adContent.previewHighlights}
         />
       )}
     </>
@@ -132,6 +134,29 @@ describe('AdPopup', () => {
 
     expect(screen.getByText('Partner Exchange')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /thalex exchange logo/i })).toHaveAttribute('src', '/Thalex%20Logo.svg');
+  });
+
+  it('renders a website preview treatment for the funded-account ad', () => {
+    render(
+      <I18nProvider>
+        <AdPopup
+          isOpen={true}
+          onClose={() => {}}
+          title="Thalex Funded Account"
+          message="Preview the funded-account campaign, then join Thalex with referral code OWNBZS."
+          icon={<span>icon</span>}
+          url="https://thalex.com/exchange/sign-up?referral=OWNBZS"
+          creativeType="site-preview"
+          previewUrl="https://thalex.com/funded-account"
+          previewHighlights={['1K ABC', '80% profit share']}
+        />
+      </I18nProvider>
+    );
+
+    expect(screen.getByText('Funded Account')).toBeInTheDocument();
+    expect(screen.getByText('1x Profit Boost')).toBeInTheDocument();
+    expect(screen.getByText('thalex.com')).toBeInTheDocument();
+    expect(screen.getByText('80% profit share')).toBeInTheDocument();
   });
 
   it('renders spanish translations for ad copy when spanish is selected', async () => {

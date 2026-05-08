@@ -9,12 +9,32 @@ interface AdPopupProps {
   icon: React.ReactNode;
   url?: string;
   bannerImageUrl?: string;
-  creativeType?: 'banner' | 'logo';
+  creativeType?: 'banner' | 'logo' | 'site-preview';
+  previewUrl?: string;
+  previewHighlights?: string[];
 }
 
-const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon, url, bannerImageUrl, creativeType = 'banner' }) => {
+const AdPopup: React.FC<AdPopupProps> = ({
+  isOpen,
+  onClose,
+  title,
+  message,
+  icon,
+  url,
+  bannerImageUrl,
+  creativeType = 'banner',
+  previewUrl,
+  previewHighlights,
+}) => {
   const { t } = useI18n();
   const [isShowing, setIsShowing] = useState(false);
+  const previewHost = previewUrl ? (() => {
+    try {
+      return new URL(previewUrl).hostname.replace(/^www\./, '');
+    } catch {
+      return previewUrl;
+    }
+  })() : null;
 
   useEffect(() => {
     if (isOpen) {
@@ -45,7 +65,7 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
         isShowing ? 'translate-x-0 opacity-100' : 'translate-x-[110%] opacity-0'
       }`}
     >
-      {bannerImageUrl && (
+      {(bannerImageUrl || creativeType === 'site-preview') && (
         creativeType === 'logo' ? (
           <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(6,10,20,0.96),rgba(18,28,45,0.92))] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
             <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">
@@ -57,6 +77,44 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
                 alt={`${title} logo`}
                 className="block h-16 w-auto max-w-full object-contain"
               />
+            </div>
+          </div>
+        ) : creativeType === 'site-preview' ? (
+          <div className="mb-4 overflow-hidden rounded-xl border border-[#d9a441]/30 bg-[linear-gradient(160deg,rgba(10,13,22,0.98),rgba(20,27,40,0.96))] p-3 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+            <div className="overflow-hidden rounded-lg border border-white/10 bg-[#0a0f18]">
+              <div className="flex items-center gap-2 border-b border-white/10 bg-[#121926] px-3 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ff6b6b]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#f7b955]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#4cd38a]" />
+                <div className="ml-2 flex-1 rounded-md border border-white/10 bg-black/20 px-2 py-1 text-[10px] text-slate-400">
+                  {previewHost}
+                </div>
+              </div>
+              <div className="space-y-3 bg-[radial-gradient(circle_at_top_right,rgba(217,164,65,0.16),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))] p-4">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#d9a441]">
+                    Funded Account
+                  </div>
+                  <div className="mt-1 text-lg font-semibold leading-tight text-white">
+                    1x Profit Boost
+                  </div>
+                  <div className="mt-1 text-xs text-slate-300">
+                    Start from 1k ABC, be profitable, and earn more ABCs.
+                  </div>
+                </div>
+                {previewHighlights && previewHighlights.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {previewHighlights.map((highlight) => (
+                      <span
+                        key={highlight}
+                        className="rounded-full border border-[#d9a441]/30 bg-[#d9a441]/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-[#f6d28d]"
+                      >
+                        {highlight}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (

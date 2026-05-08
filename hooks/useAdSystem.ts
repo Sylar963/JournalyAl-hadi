@@ -16,7 +16,9 @@ export interface AdContent {
   icon: React.ReactNode;
   url?: string;
   bannerImageUrl?: string;
-  creativeType?: 'banner' | 'logo';
+  creativeType?: 'banner' | 'logo' | 'site-preview';
+  previewUrl?: string;
+  previewHighlights?: string[];
 }
 
 const AD_ICONS: Record<string, React.ReactNode> = {
@@ -60,7 +62,9 @@ export function useAdSystem(isUserLoggedIn: boolean) {
             icon: AD_ICONS[randomReferral.icon] || React.createElement(IconExchange, { className: "w-6 h-6" }),
             url: randomReferral.url,
             bannerImageUrl: randomReferral.bannerImageUrl,
-            creativeType: randomReferral.creativeType
+            creativeType: randomReferral.creativeType,
+            previewUrl: randomReferral.previewUrl,
+            previewHighlights: randomReferral.previewHighlights,
         });
     } else {
         const randomTip = tipAds[Math.floor(Math.random() * tipAds.length)];
