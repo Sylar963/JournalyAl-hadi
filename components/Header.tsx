@@ -47,8 +47,8 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4 ml-auto">
-          <button onClick={onNewEntryClick} className="journal-button-primary flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium hover:opacity-95 transition-all duration-200 focus:outline-none">
-            <IconPlus className="w-5 h-5 mr-2 -ml-1" />
+          <button onClick={onNewEntryClick} className="journal-button-primary flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-medium leading-tight hover:opacity-95 transition-all duration-200 focus:outline-none sm:px-3 sm:py-1.5 sm:text-sm lg:px-3.5">
+            <IconPlus className="mr-1.5 h-4 w-4 -ml-0.5 sm:mr-1.5 sm:h-4 sm:w-4 sm:-ml-0.5 lg:mr-2 lg:h-5 lg:w-5 lg:-ml-1" />
             {t('dashboard.header.new_entry')}
           </button>
           
