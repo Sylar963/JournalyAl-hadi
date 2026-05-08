@@ -136,7 +136,8 @@ export const AD_MESSAGES = [
     title: "Coincall Exchange",
     message: "Options trading with deep liquidity. Use referral code 43394533 to get started.",
     url: "https://www.coincall.com/r/43394533",
-    icon: 'exchange'
+    icon: 'exchange',
+    bannerImageUrl: '/bannercoincall.png'
   },
   {
     title: "Bybit Exchange",

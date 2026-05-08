@@ -22,6 +22,7 @@ function AdSystemHarness() {
           message={adContent.message}
           icon={adContent.icon}
           url={adContent.url}
+          bannerImageUrl={adContent.bannerImageUrl}
         />
       )}
     </>
@@ -80,5 +81,23 @@ describe('AdPopup', () => {
 
     openSpy.mockRestore();
     randomSpy.mockRestore();
+  });
+
+  it('renders a banner when the ad includes one', () => {
+    render(
+      <I18nProvider>
+        <AdPopup
+          isOpen={true}
+          onClose={() => {}}
+          title="Coincall Exchange"
+          message="Options trading with deep liquidity."
+          icon={<span>icon</span>}
+          url="https://www.coincall.com/r/43394533"
+          bannerImageUrl="/bannercoincall.png"
+        />
+      </I18nProvider>
+    );
+
+    expect(screen.getByRole('img', { name: /coincall exchange banner/i })).toHaveAttribute('src', '/bannercoincall.png');
   });
 });

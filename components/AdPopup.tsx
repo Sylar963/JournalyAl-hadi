@@ -8,9 +8,10 @@ interface AdPopupProps {
   message: string;
   icon: React.ReactNode;
   url?: string;
+  bannerImageUrl?: string;
 }
 
-const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon, url }) => {
+const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon, url, bannerImageUrl }) => {
   const { t } = useI18n();
   const [isShowing, setIsShowing] = useState(false);
 
@@ -43,6 +44,15 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
         isShowing ? 'translate-x-0 opacity-100' : 'translate-x-[110%] opacity-0'
       }`}
     >
+      {bannerImageUrl && (
+        <div className="mb-4 overflow-hidden rounded-lg border border-[color:var(--glass-border)]/60 bg-black/20">
+          <img
+            src={bannerImageUrl}
+            alt={`${title} banner`}
+            className="block h-auto w-full"
+          />
+        </div>
+      )}
       <div className="flex items-start">
         <div className="flex-shrink-0 w-10 h-10 bg-[var(--accent-primary)]/10 rounded-lg flex items-center justify-center text-[var(--accent-primary)] shadow-[0_0_10px_var(--chart-glow-color-1)]">
           {icon}
