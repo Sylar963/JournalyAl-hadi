@@ -94,12 +94,12 @@ describe('AdPopup', () => {
           message="Options trading with deep liquidity."
           icon={<span>icon</span>}
           url="https://www.coincall.com/r/43394533"
-          bannerImageUrl="/bannercoincall.png"
+          bannerImageUrl="/bannercoincall2.svg"
         />
       </I18nProvider>
     );
 
-    expect(screen.getByRole('img', { name: /coincall exchange banner/i })).toHaveAttribute('src', '/bannercoincall.png');
+    expect(screen.getByRole('img', { name: /coincall exchange banner/i })).toHaveAttribute('src', '/bannercoincall2.svg');
   });
 
   it('renders the logo treatment when the ad uses logo creative', () => {

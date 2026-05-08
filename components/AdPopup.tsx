@@ -60,12 +60,14 @@ const AdPopup: React.FC<AdPopupProps> = ({ isOpen, onClose, title, message, icon
             </div>
           </div>
         ) : (
-          <div className="mb-4 overflow-hidden rounded-lg border border-[color:var(--glass-border)]/60 bg-black/20">
-            <img
-              src={bannerImageUrl}
-              alt={`${title} banner`}
-              className="block h-auto w-full"
-            />
+          <div className="mb-4 overflow-hidden rounded-xl border border-[color:var(--glass-border)]/60 bg-[linear-gradient(160deg,rgba(7,17,26,0.96),rgba(16,30,45,0.92))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="flex h-40 items-center justify-center rounded-lg bg-black/20 px-3 py-2">
+              <img
+                src={bannerImageUrl}
+                alt={`${title} banner`}
+                className="block max-h-full w-full object-contain"
+              />
+            </div>
           </div>
         )
       )}
