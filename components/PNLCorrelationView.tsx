@@ -210,46 +210,44 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
 
     return (
         <div className="space-y-6 animate-fade-in">
-            {/* Stats Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="glass-panel p-4 rounded-xl">
-                    <h4 className="text-xs text-gray-400 font-medium uppercase">Total PNL</h4>
-                    <p className={`text-2xl font-bold mt-1 ${parseFloat(stats.totalPNL) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <div className="journal-panel p-4 rounded-xl">
+                    <h4 className="journal-kicker">Total PNL</h4>
+                    <p className={`journal-metric text-2xl font-semibold mt-3 ${parseFloat(stats.totalPNL) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         ${stats.totalPNL}
                     </p>
                 </div>
-                <div className="glass-panel p-4 rounded-xl">
-                    <h4 className="text-xs text-gray-400 font-medium uppercase">Win Rate</h4>
-                    <p className="text-2xl font-bold text-white mt-1">{stats.winRate}%</p>
+                <div className="journal-panel p-4 rounded-xl">
+                    <h4 className="journal-kicker">Win Rate</h4>
+                    <p className="journal-metric text-2xl font-semibold text-[var(--text-main)] mt-3">{stats.winRate}%</p>
                 </div>
-                 <div className="glass-panel p-4 rounded-xl">
-                    <h4 className="text-xs text-gray-400 font-medium uppercase">Avg Daily PNL</h4>
-                    <p className={`text-2xl font-bold mt-1 ${parseFloat(stats.avgPNL) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                 <div className="journal-panel p-4 rounded-xl">
+                    <h4 className="journal-kicker">Avg Daily PNL</h4>
+                    <p className={`journal-metric text-2xl font-semibold mt-3 ${parseFloat(stats.avgPNL) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         ${stats.avgPNL}
                     </p>
                 </div>
-                 <div className="glass-panel p-4 rounded-xl">
-                    <h4 className="text-xs text-gray-400 font-medium uppercase">Total Trades</h4>
-                    <p className="text-2xl font-bold text-white mt-1">{stats.totalTrades}</p>
+                 <div className="journal-panel p-4 rounded-xl">
+                    <h4 className="journal-kicker">Total Trades</h4>
+                    <p className="journal-metric text-2xl font-semibold text-[var(--text-main)] mt-3">{stats.totalTrades}</p>
                 </div>
             </div>
 
-            {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-panel p-6 rounded-2xl h-80">
-                     <Scatter options={scatterOptions as any} data={emotionalAlphaData} />
-                </div>
-                <div className="glass-panel p-6 rounded-2xl h-80">
-                     <Bar options={barOptions as any} data={pnlByEmotionData} />
-                </div>
-                <div className="glass-panel p-6 rounded-2xl h-80 lg:col-span-2">
-                     <Line options={lineOptions as any} data={equityCurveData} />
-                </div>
+                <div className="journal-panel p-6 rounded-2xl h-80">
+                      <Scatter options={scatterOptions as any} data={emotionalAlphaData} />
+                 </div>
+                <div className="journal-panel p-6 rounded-2xl h-80">
+                      <Bar options={barOptions as any} data={pnlByEmotionData} />
+                 </div>
+                <div className="journal-panel p-6 rounded-2xl h-80 lg:col-span-2">
+                      <Line options={lineOptions as any} data={equityCurveData} />
+                 </div>
             </div>
             
             {entriesWithPNL.length === 0 && (
-                <div className="text-center p-8 bg-white/5 rounded-xl border border-dashed border-gray-700">
-                    <p className="text-gray-400">No PNL data found. Log your daily PNL in the "Trading" tab of your entries to see analytics here.</p>
+                <div className="text-center p-8 journal-panel-muted rounded-xl border border-dashed border-[var(--panel-border)]">
+                    <p className="text-[var(--text-muted)]">No PNL data found. Log your daily PNL in the "Trading" tab of your entries to see analytics here.</p>
                 </div>
             )}
         </div>

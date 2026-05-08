@@ -263,11 +263,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
 
   return (
     <div className="space-y-6 animate-content-entry">
-      <h1 className="text-2xl font-bold text-white">{t('settings.title')}</h1>
+      <div>
+        <p className="journal-kicker">Workspace Configuration</p>
+        <h1 className="text-2xl font-semibold text-[var(--text-main)] mt-1">{t('settings.title')}</h1>
+      </div>
 
-      <div className="glass-panel p-6 rounded-2xl">
-        <h2 className="text-lg font-semibold text-white mb-4">{t('settings.appearance_title')}</h2>
-        <p className="text-sm text-gray-400 mb-6">{t('settings.appearance_subtitle')}</p>
+      <div className="journal-panel p-6 rounded-2xl">
+        <p className="journal-kicker mb-2">Visual System</p>
+        <h2 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('settings.appearance_title')}</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-6">{t('settings.appearance_subtitle')}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {THEMES_CONFIG.map((theme) => {
@@ -276,14 +280,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
               <button
                 key={theme.id}
                 onClick={() => onThemeChange(theme.id)}
-                className={`relative p-4 rounded-xl border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-[var(--accent-primary)] ${
+                className={`relative p-4 rounded-xl border transition-all duration-200 focus:outline-none ${
                   isActive
-                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-                    : 'bg-white/5 border-[color:var(--glass-border)] hover:bg-white/10 hover:border-white/20'
+                    ? 'border-[var(--panel-border-strong)] bg-[var(--surface-3)]'
+                    : 'bg-[var(--surface-2)] border-[var(--panel-border)] hover:border-[var(--panel-border-strong)]'
                 }`}
                 aria-pressed={isActive}
               >
-                <h3 className="font-semibold text-white">{t(`theme.${theme.id}` as TranslationKey)}</h3>
+                <h3 className="font-semibold text-[var(--text-main)]">{t(`theme.${theme.id}` as TranslationKey)}</h3>
                 <div className="flex items-center space-x-2 mt-3">
                   <div className={`w-6 h-6 rounded-full ${theme.colors.background}`}></div>
                   <div className={`w-6 h-6 rounded-full ${theme.colors.primary}`}></div>
@@ -303,13 +307,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
         </div>
       </div>
 
-      <div className="glass-panel p-6 rounded-2xl space-y-5">
+      <div className="journal-panel p-6 rounded-2xl space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-white">{t('bybit.settings_title')}</h2>
-            <p className="text-sm text-gray-400 mt-1">{t('bybit.settings_subtitle')}</p>
+            <p className="journal-kicker mb-1">Broker Connectivity</p>
+            <h2 className="text-lg font-semibold text-[var(--text-main)]">{t('bybit.settings_title')}</h2>
+            <p className="text-sm text-[var(--text-muted)] mt-1">{t('bybit.settings_subtitle')}</p>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${validationClasses[status]}`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium journal-metric ${validationClasses[status]}`}>
             {t(`bybit.status.${status}` as TranslationKey)}
           </span>
         </div>
@@ -321,46 +326,46 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
         ) : (
           <>
             {maskedKey && (
-              <div className="rounded-xl border border-[color:var(--glass-border)] bg-white/5 p-4 text-sm text-gray-300">
-                <p>{t('bybit.connected_key')}: <span className="font-mono text-white">{maskedKey}</span></p>
-                {lastValidatedAt && <p className="mt-1 text-gray-400">{t('bybit.last_validated')}: {new Date(lastValidatedAt).toLocaleString()}</p>}
-                {lastSyncAt && <p className="mt-1 text-gray-400">{t('bybit.last_sync')}: {new Date(lastSyncAt).toLocaleString()}</p>}
+              <div className="rounded-xl journal-panel-muted p-4 text-sm text-[var(--text-muted)]">
+                <p>{t('bybit.connected_key')}: <span className="font-mono text-[var(--text-main)]">{maskedKey}</span></p>
+                {lastValidatedAt && <p className="mt-1 journal-metric">{t('bybit.last_validated')}: {new Date(lastValidatedAt).toLocaleString()}</p>}
+                {lastSyncAt && <p className="mt-1 journal-metric">{t('bybit.last_sync')}: {new Date(lastSyncAt).toLocaleString()}</p>}
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="text-sm text-gray-300">
+              <label className="text-sm text-[var(--text-muted)]">
                 <span className="block mb-2">{t('bybit.environment')}</span>
                 <select
                   value={environment}
                   onChange={(event) => setEnvironment(event.target.value as BybitEnvironment)}
-                  className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+                  className="journal-input w-full rounded-xl p-3"
                 >
                   <option value="mainnet">{t('bybit.environment.mainnet')}</option>
                   <option value="testnet">{t('bybit.environment.testnet')}</option>
                 </select>
               </label>
 
-              <label className="text-sm text-gray-300">
+              <label className="text-sm text-[var(--text-muted)]">
                 <span className="block mb-2">{t('bybit.api_key')}</span>
                 <input
                   type="text"
                   value={apiKey}
                   onChange={(event) => setApiKey(event.target.value)}
                   placeholder={t('bybit.api_key_placeholder')}
-                  className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+                  className="journal-input w-full rounded-xl p-3"
                 />
               </label>
             </div>
 
-            <label className="text-sm text-gray-300 block">
+            <label className="text-sm text-[var(--text-muted)] block">
               <span className="block mb-2">{t('bybit.api_secret')}</span>
               <input
                 type="password"
                 value={apiSecret}
                 onChange={(event) => setApiSecret(event.target.value)}
                 placeholder={t('bybit.api_secret_placeholder')}
-                className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white"
+                className="journal-input w-full rounded-xl p-3"
               />
             </label>
 
@@ -369,7 +374,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 type="button"
                 onClick={() => void handleTestConnection()}
                 disabled={!apiKey || !apiSecret || isTesting || isSaving || isLoading}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="journal-button-secondary px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isTesting ? t('bybit.testing') : t('bybit.test')}
               </button>
@@ -377,7 +382,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 type="button"
                 onClick={() => void handleSaveConnection()}
                 disabled={!apiKey || !apiSecret || isSaving || isTesting || isLoading}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="journal-button-primary px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSaving ? t('bybit.connecting') : t('bybit.connect')}
               </button>
@@ -385,32 +390,33 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 type="button"
                 onClick={() => void handleDeleteConnection()}
                 disabled={!maskedKey || isDeleting || isSaving || isTesting}
-                className="px-4 py-2 rounded-xl text-sm font-medium bg-red-500/15 text-red-300 border border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="journal-button-danger px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? t('bybit.disconnecting') : t('bybit.disconnect')}
               </button>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-[color:var(--glass-border)]">
-              <h3 className="text-sm font-medium text-white mb-3">Bulk Import History</h3>
-              <p className="text-xs text-gray-400 mb-3">Pull all Bybit trades for a date range. Creates journal entries with trades filled in.</p>
+            <div className="mt-6 pt-6 border-t journal-divider">
+              <p className="journal-kicker mb-2">Backfill</p>
+              <h3 className="text-sm font-medium text-[var(--text-main)] mb-3">Bulk Import History</h3>
+              <p className="text-xs text-[var(--text-muted)] mb-3">Pull all Bybit trades for a date range. Creates journal entries with trades filled in.</p>
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <label className="text-xs text-gray-300">
+                <label className="text-xs text-[var(--text-muted)]">
                   <span className="block mb-1">Start Date</span>
                   <input
                     type="date"
                     value={bulkImportStart}
                     onChange={(e) => setBulkImportStart(e.target.value)}
-                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-2 text-white text-xs"
+                    className="journal-input w-full rounded-lg p-2 text-xs journal-metric"
                   />
                 </label>
-                <label className="text-xs text-gray-300">
+                <label className="text-xs text-[var(--text-muted)]">
                   <span className="block mb-1">End Date</span>
                   <input
                     type="date"
                     value={bulkImportEnd}
                     onChange={(e) => setBulkImportEnd(e.target.value)}
-                    className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-2 text-white text-xs"
+                    className="journal-input w-full rounded-lg p-2 text-xs journal-metric"
                   />
                 </label>
               </div>
@@ -418,7 +424,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 type="button"
                 onClick={() => void handleBulkImport()}
                 disabled={!bulkImportStart || !bulkImportEnd || isBulkImporting}
-                className="w-full px-4 py-2 rounded-xl text-sm font-medium bg-blue-600/80 text-white border border-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="journal-button-secondary w-full px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isBulkImporting ? 'Importing...' : 'Import All Trades'}
               </button>
@@ -426,10 +432,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 <p className="mt-2 text-xs text-green-400">{bulkImportProgress}</p>
               )}
               {bulkImportResults.length > 0 && (
-                <div className="mt-3 max-h-32 overflow-auto rounded-lg bg-black/30 text-xs">
+                <div className="mt-3 max-h-32 overflow-auto rounded-lg journal-panel-muted text-xs">
                   <table className="w-full">
                     <thead>
-                      <tr className="text-gray-400 border-b border-white/10">
+                      <tr className="text-[var(--text-muted)] border-b border-[var(--panel-border)]">
                         <th className="p-2 text-left">Date</th>
                         <th className="p-2 text-right">Trades</th>
                         <th className="p-2 text-right">PnL</th>
@@ -438,9 +444,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                     </thead>
                     <tbody>
                       {bulkImportResults.slice(0, 10).map(r => (
-                        <tr key={r.date} className="border-b border-white/5">
-                          <td className="p-2 text-gray-300">{r.date}</td>
-                          <td className="p-2 text-right text-gray-300">{r.trades}</td>
+                        <tr key={r.date} className="border-b border-[var(--panel-border)]">
+                          <td className="p-2 text-[var(--text-main)] journal-metric">{r.date}</td>
+                          <td className="p-2 text-right text-[var(--text-main)] journal-metric">{r.trades}</td>
                           <td className={`p-2 text-right ${r.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>{r.pnl >= 0 ? '+' : ''}{r.pnl.toFixed(2)}</td>
                           <td className={`p-2 text-center ${r.created ? 'text-green-400' : 'text-gray-500'}`}>{r.created ? '✓' : '-'}</td>
                         </tr>
@@ -455,7 +461,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
             </div>
 
             {feedback && (
-              <div className="rounded-xl border border-[color:var(--glass-border)] bg-black/20 p-4 text-sm text-gray-200">
+              <div className="rounded-xl journal-panel-muted p-4 text-sm text-[var(--text-main)]">
                 {feedback}
               </div>
             )}
@@ -467,12 +473,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                   <button
                     type="button"
                     onClick={() => void handleCopySetupSql()}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-black/30 text-white border border-white/10"
+                    className="journal-button-secondary px-3 py-1.5 rounded-lg text-xs font-medium"
                   >
                     {copiedSetupSql ? 'Copied!' : 'Copy SQL'}
                   </button>
                 </div>
-                <pre className="max-h-72 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-gray-200">
+                <pre className="max-h-72 overflow-auto rounded-lg bg-black/40 p-3 text-xs text-gray-200 journal-metric">
                   <code>{BYBIT_SETUP_SQL.trim()}</code>
                 </pre>
               </div>

@@ -267,23 +267,24 @@ callbacks: {
     };
 
     return (
-        <div className="glass-panel p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">{capitalizedMonthName} {summary.year}</h2>
+        <div className="journal-panel p-6 rounded-2xl">
+            <p className="journal-kicker">Archived Review</p>
+            <h2 className="text-xl font-semibold text-[var(--text-main)] mt-1">{capitalizedMonthName} <span className="journal-metric">{summary.year}</span></h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 mb-8">
-                <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_total')}</h3>
-                    <p className="text-2xl font-bold text-white mt-1">{summary.totalEntries}</p>
+                <div className="journal-panel-muted p-4 rounded-xl">
+                    <h3 className="journal-kicker">{t('trends.stat_total')}</h3>
+                    <p className="journal-metric text-2xl font-semibold text-[var(--text-main)] mt-3">{summary.totalEntries}</p>
                 </div>
-                <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_frequent')}</h3>
-                    <p className="text-2xl font-bold text-white mt-1">{summary.mostFrequent !== 'N/A' ? t(`emotion.${summary.mostFrequent}` as TranslationKey) : 'N/A'}</p>
+                <div className="journal-panel-muted p-4 rounded-xl">
+                    <h3 className="journal-kicker">{t('trends.stat_frequent')}</h3>
+                    <p className="text-2xl font-semibold text-[var(--text-main)] mt-3">{summary.mostFrequent !== 'N/A' ? t(`emotion.${summary.mostFrequent}` as TranslationKey) : 'N/A'}</p>
                 </div>
-                <div className="bg-white/5 p-4 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-sm font-medium text-gray-400">{t('trends.stat_intensity')}</h3>
-                    <p className="text-2xl font-bold text-white mt-1">{summary.avgIntensity.toFixed(1)}</p>
-                    <div className="w-full bg-white/10 rounded-full h-2 mt-2">
+                <div className="journal-panel-muted p-4 rounded-xl">
+                    <h3 className="journal-kicker">{t('trends.stat_intensity')}</h3>
+                    <p className="journal-metric text-2xl font-semibold text-[var(--text-main)] mt-3">{summary.avgIntensity.toFixed(1)}</p>
+                    <div className="w-full bg-[var(--surface-3)] rounded-full h-2 mt-2">
                         <div 
-                            className="bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] h-2 rounded-full shadow-[0_0_10px_var(--chart-glow-color-1)]" 
+                            className="bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] h-2 rounded-full" 
                             style={{ width: `${(summary.avgIntensity / 10) * 100}%` }}
                             title={`${t('trends.stat_intensity')}: ${summary.avgIntensity.toFixed(1)} / 10`}
                         ></div>
@@ -291,26 +292,26 @@ callbacks: {
                 </div>
             </div>
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_distribution')}</h3>
+                <div className="journal-panel-muted p-5 rounded-xl">
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_distribution')}</h3>
                     <div className="h-64">
                         <Bar options={chartOptions as any} data={distChartData} />
                     </div>
                 </div>
-                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_intensity')}</h3>
+                <div className="journal-panel-muted p-5 rounded-xl">
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_intensity')}</h3>
                     <div className="h-64">
                          <Line options={intensityChartOptions as any} data={intensityChartData} />
                     </div>
                 </div>
-                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('trends.chart_weekly')}</h3>
+                <div className="journal-panel-muted p-5 rounded-xl">
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_weekly')}</h3>
                     <div className="h-64">
                         <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
                     </div>
                 </div>
-                <div className="bg-white/5 p-5 rounded-xl border border-[color:var(--glass-border)] backdrop-blur-sm">
-                    <h3 className="text-lg font-semibold text-white mb-4">{t('history.chart_heatmap')}</h3>
+                <div className="journal-panel-muted p-5 rounded-xl">
+                    <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('history.chart_heatmap')}</h3>
                     <MonthlyHeatmap year={summary.year} month={summary.month} entries={entries} />
                 </div>
             </div>
@@ -384,7 +385,10 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
 
     return (
         <div className="space-y-6 animate-content-entry">
-            <h1 className="text-2xl font-bold text-white">{t('history.title')}</h1>
+            <div>
+                <p className="journal-kicker">Monthly Archive</p>
+                <h1 className="text-2xl font-semibold text-[var(--text-main)] mt-1">{t('history.title')}</h1>
+            </div>
             
             {monthlyData.length > 0 ? (
                 <div className="space-y-6">
@@ -393,10 +397,10 @@ const HistoryView: React.FC<HistoryViewProps> = ({ entries }) => {
                     ))}
                 </div>
             ) : (
-                <div className="text-center p-8 bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-800">
-                     <IconHistory className="w-12 h-12 mx-auto text-gray-600" />
-                     <h3 className="mt-4 text-lg font-medium text-gray-400">{t('history.empty_title')}</h3>
-                     <p className="mt-1 text-sm text-gray-500">{t('history.empty_subtitle')}</p>
+                <div className="text-center p-8 journal-panel-muted rounded-lg border-2 border-dashed border-[var(--panel-border)]">
+                     <IconHistory className="w-12 h-12 mx-auto text-[var(--text-subtle)]" />
+                     <h3 className="mt-4 text-lg font-medium text-[var(--text-muted)]">{t('history.empty_title')}</h3>
+                     <p className="mt-1 text-sm text-[var(--text-subtle)]">{t('history.empty_subtitle')}</p>
                  </div>
             )}
         </div>

@@ -212,7 +212,7 @@ const AppContent: React.FC = () => {
                         onQuestsClick={() => setIsQuestsOpen(prev => !prev)}
                         onSignOut={signOut}
                     />
-                    <nav className="md:hidden border-b journal-divider bg-[var(--surface-1)]/90 backdrop-blur-xl">
+                    <nav className="md:hidden border-b journal-divider bg-[var(--surface-1)] backdrop-blur-xl">
                         <div className="flex gap-2 overflow-x-auto px-4 py-3 custom-scrollbar">
                             {mobileNavItems.map((item) => (
                                 <button
