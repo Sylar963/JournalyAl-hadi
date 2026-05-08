@@ -159,6 +159,29 @@ describe('AdPopup', () => {
     expect(screen.getByText('80% profit share')).toBeInTheDocument();
   });
 
+  it('uses mobile-safe popup positioning for narrow screens', () => {
+    render(
+      <I18nProvider>
+        <AdPopup
+          isOpen={true}
+          onClose={() => {}}
+          title="Thalex Funded Account"
+          message="Preview the funded-account campaign, then join Thalex with referral code OWNBZS."
+          icon={<span>icon</span>}
+          url="https://thalex.com/exchange/sign-up?referral=OWNBZS"
+          creativeType="site-preview"
+          previewUrl="https://thalex.com/funded-account"
+          previewHighlights={['1K ABC', '80% profit share']}
+        />
+      </I18nProvider>
+    );
+
+    const popup = screen.getByRole('alert');
+    expect(popup.className).toContain('left-4 right-4');
+    expect(popup.className).toContain('sm:right-5');
+    expect(popup.style.bottom).toBe('max(1rem, env(safe-area-inset-bottom))');
+  });
+
   it('renders spanish translations for ad copy when spanish is selected', async () => {
     localStorage.setItem('app-language', 'es');
 

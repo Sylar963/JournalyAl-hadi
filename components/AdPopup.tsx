@@ -61,8 +61,9 @@ const AdPopup: React.FC<AdPopupProps> = ({
   return (
     <div
       role="alert"
-      className={`fixed bottom-5 right-5 w-full max-w-sm glass-panel border-[color:var(--glass-border)] rounded-xl shadow-2xl p-4 z-50 transition-all duration-500 ease-in-out ${
-        isShowing ? 'translate-x-0 opacity-100' : 'translate-x-[110%] opacity-0'
+      style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+      className={`fixed left-4 right-4 z-50 w-auto max-w-[calc(100vw-2rem)] glass-panel border-[color:var(--glass-border)] rounded-2xl p-4 shadow-2xl transition-all duration-500 ease-out sm:left-auto sm:right-5 sm:w-full sm:max-w-sm ${
+        isShowing ? 'translate-x-0 translate-y-0 opacity-100' : 'translate-y-6 opacity-0 sm:translate-x-[110%] sm:translate-y-0'
       }`}
     >
       {(bannerImageUrl || creativeType === 'site-preview') && (
