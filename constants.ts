@@ -70,8 +70,8 @@ export const THEMES_CONFIG: ThemeConfig[] = [
     label: 'CScalp',
     colors: {
       background: 'bg-[#0a0d12]',
-      primary: 'bg-[#141a22]',
-      secondary: 'bg-[#1d2632]',
+      primary: 'bg-[#121418]',
+      secondary: 'bg-[#1c1f24]',
       accent: 'bg-[#d7dde5]',
     },
   },

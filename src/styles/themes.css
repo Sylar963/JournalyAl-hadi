@@ -73,7 +73,7 @@
 }
 
 [data-theme="cscalp"] .day-fr {
-    color: #38bdf8;
+    color: #a1a1aa;
 }
 
 [data-theme="cscalp"] .day-sa {
@@ -84,21 +84,21 @@
     --bg-color: #0a0d12;
     --app-bg: #0a0d12;
     --surface-1: rgba(10, 13, 18, 0.94);
-    --surface-2: rgba(20, 26, 34, 0.94);
-    --surface-3: rgba(29, 38, 50, 0.98);
+    --surface-2: rgba(18, 20, 24, 0.95);
+    --surface-3: rgba(28, 31, 36, 0.98);
     --glass-bg: rgba(10, 13, 18, 0.8);
-    --glass-border: rgba(100, 116, 139, 0.18);
-    --panel-border: rgba(100, 116, 139, 0.16);
-    --panel-border-strong: rgba(148, 163, 184, 0.28);
+    --glass-border: rgba(161, 161, 170, 0.14);
+    --panel-border: rgba(161, 161, 170, 0.12);
+    --panel-border-strong: rgba(212, 212, 216, 0.2);
     --accent-primary: #d7dde5;
-    --accent-secondary: #7f8a99;
+    --accent-secondary: #8f98a3;
     --accent-soft: rgba(215, 221, 229, 0.12);
     --text-main: #edf1f5;
-    --text-muted: #b7c1cc;
-    --text-subtle: #7b8795;
-    --grid-line-color: rgba(100, 116, 139, 0.08);
-    --chart-glow-color-1: rgba(148, 163, 184, 0.04);
-    --chart-glow-color-2: rgba(34, 197, 94, 0.04);
+    --text-muted: #c2c7cf;
+    --text-subtle: #888f99;
+    --grid-line-color: rgba(161, 161, 170, 0.06);
+    --chart-glow-color-1: rgba(212, 212, 216, 0.03);
+    --chart-glow-color-2: rgba(34, 197, 94, 0.025);
     --calendar-border: var(--panel-border);
     color: var(--text-main);
 }
@@ -183,6 +183,10 @@
     background-color: rgba(17, 24, 39, 0.72) !important;
 }
 
+[data-theme="cscalp"] .bg-gray-900\/50 {
+    background-color: rgba(10, 13, 18, 0.72) !important;
+}
+
 [data-theme="insilico"] .bg-gray-800,
 [data-theme="insilico"] .hover\:bg-gray-800:hover,
 [data-theme="cscalp"] .bg-gray-800,
@@ -196,6 +200,10 @@
 [data-theme="cscalp"] .bg-gray-800\/50,
 [data-theme="bloomberg"] .bg-gray-800\/50 {
     background-color: rgba(31, 41, 55, 0.5) !important;
+}
+
+[data-theme="cscalp"] .bg-gray-800\/50 {
+    background-color: rgba(18, 20, 24, 0.58) !important;
 }
 
 [data-theme="insilico"] .bg-gray-700,
