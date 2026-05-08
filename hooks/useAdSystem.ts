@@ -95,15 +95,15 @@ export function useAdSystem(isUserLoggedIn: boolean) {
   useEffect(() => {
     resetAdTimer(); // Start/reset on load or login status change
 
-    window.addEventListener('mousedown', resetAdTimer);
-    window.addEventListener('keydown', resetAdTimer);
+    window.addEventListener('click', resetAdTimer);
+    window.addEventListener('keyup', resetAdTimer);
 
     return () => {
       if (adTimerRef.current) {
         clearTimeout(adTimerRef.current);
       }
-      window.removeEventListener('mousedown', resetAdTimer);
-      window.removeEventListener('keydown', resetAdTimer);
+      window.removeEventListener('click', resetAdTimer);
+      window.removeEventListener('keyup', resetAdTimer);
     };
   }, [resetAdTimer]);
 
