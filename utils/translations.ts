@@ -25,6 +25,10 @@ export const translations = {
     'common.operation_failed': 'Operation Failed',
     'common.dismiss': 'Dismiss',
     'common.error': 'Error',
+    'update.banner.badge': 'Update ready',
+    'update.banner.title': 'A new version is available.',
+    'update.banner.body': 'Reload to get the latest fixes and improvements.',
+    'update.banner.reload': 'Reload',
     
     // Pricing (Partial for now)
     'pricing.title': 'TRANSFORM YOUR PROCESS',
@@ -359,6 +363,10 @@ export const translations = {
     'common.operation_failed': 'Operación Fallida',
     'common.dismiss': 'Descartar',
     'common.error': 'Error',
+    'update.banner.badge': 'Actualizacion lista',
+    'update.banner.title': 'Hay una nueva version disponible.',
+    'update.banner.body': 'Recarga para obtener las ultimas correcciones y mejoras.',
+    'update.banner.reload': 'Recargar',
     
     // Pricing
     'pricing.title': 'TRANSFORMA TU PROCESO',

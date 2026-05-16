@@ -4,12 +4,28 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  const packageVersion = process.env.npm_package_version ?? '0.0.0';
+  const commitSha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12);
+  const buildVersion = commitSha ?? `${packageVersion}-${new Date().toISOString()}`;
+
   return {
     server: {
       port: 5173,
       host: '0.0.0.0',
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      {
+        name: 'app-version-manifest',
+        generateBundle() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'version.json',
+            source: JSON.stringify({ version: buildVersion }, null, 2),
+          });
+        },
+      },
+    ],
     build: {
       rollupOptions: {
         output: {
@@ -51,7 +67,8 @@ export default defineConfig(({ mode }) => {
       'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL),
       'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY),
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      __APP_VERSION__: JSON.stringify(buildVersion),
     },
     resolve: {
       alias: {
