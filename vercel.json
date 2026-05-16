@@ -10,18 +10,6 @@
       "destination": "/index.html"
     }
   ],
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "https://oggregator.xyz/#chain",
-      "statusCode": 301
-    },
-    {
-      "source": "/index.html",
-      "destination": "https://oggregator.xyz/#chain",
-      "statusCode": 301
-    }
-  ],
   "headers": [
     {
       "source": "/assets/(.*)",
