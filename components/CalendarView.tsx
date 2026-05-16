@@ -58,9 +58,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
 
   const renderCalendarDays = () => {
     const days = [];
+    const previousMonthDays = new Date(year, month, 0).getDate();
+
     // Previous month's days
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`prev-${i}`} className="border-r border-b border-[color:var(--glass-border)] bg-transparent"></div>);
+      const dayNumber = previousMonthDays - firstDayOfMonth + i + 1;
+
+      days.push(
+        <div
+          key={`prev-${i}`}
+          aria-hidden="true"
+          className="border-r border-b border-[color:var(--calendar-border)] bg-gray-500/10 p-3 min-h-[126px]"
+        >
+          <div className="font-semibold text-gray-500 journal-metric">{dayNumber}</div>
+        </div>
+      );
     }
     // Current month's days
     for (let day = 1; day <= daysInMonth; day++) {
@@ -122,7 +134,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
     const totalCells = days.length;
     const remainingCells = (7 - (totalCells % 7)) % 7;
     for (let i = 0; i < remainingCells; i++) {
-      days.push(<div key={`next-${i}`} className="border-r border-b border-[color:var(--glass-border)] bg-transparent"></div>);
+      days.push(
+        <div
+          key={`next-${i}`}
+          aria-hidden="true"
+          className="border-r border-b border-[color:var(--calendar-border)] bg-gray-500/10 p-3 min-h-[126px]"
+        >
+          <div className="font-semibold text-gray-500 journal-metric">{i + 1}</div>
+        </div>
+      );
     }
 
     return days;
