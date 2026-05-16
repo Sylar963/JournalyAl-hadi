@@ -221,6 +221,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
                       const emotionLabel = entry?.emotion && EMOTIONS_CONFIG[entry.emotion] ? t(`emotion.${entry.emotion}` as TranslationKey) : null;
                       const tradeCount = entry?.tradingData?.trades?.length ?? 0;
                       const isTodayCell = date.getTime() === today.getTime();
+                      const isAnimatingCell = animatingDateKey === dateKey;
                       const titleParts = [date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })];
 
                       if (emotionLabel) {
@@ -238,7 +239,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
                           onClick={() => handleCellClick(date)}
                           title={titleParts.join(' • ')}
                           aria-label={titleParts.join(', ')}
-                          className={`h-3.5 w-3.5 rounded-[4px] border border-black/10 transition-all duration-200 hover:scale-[1.18] hover:-translate-y-0.5 ${getFoldedCellClasses(entry)} ${isTodayCell ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface-1)]' : ''}`}
+                          className={`h-3.5 w-3.5 rounded-[4px] border border-[color:var(--calendar-border)]/40 transition-all duration-200 hover:scale-[1.18] hover:-translate-y-0.5 ${getFoldedCellClasses(entry)} ${isTodayCell ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface-1)]' : ''} ${isAnimatingCell ? 'animate-cell-click' : ''}`}
                         />
                       );
                     })}
@@ -278,8 +279,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
           </div>
           <div className="flex items-center space-x-2">
             <button onClick={() => onYearChange(-1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.prev_year')}><IconChevronsLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(-1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.prev_month')}><IconChevronLeft className="w-5 h-5" /></button>
-            <button onClick={() => onMonthChange(1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.next_month')}><IconChevronRight className="w-5 h-5" /></button>
+            {!isFolded && <button onClick={() => onMonthChange(-1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.prev_month')}><IconChevronLeft className="w-5 h-5" /></button>}
+            {!isFolded && <button onClick={() => onMonthChange(1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.next_month')}><IconChevronRight className="w-5 h-5" /></button>}
             <button onClick={() => onYearChange(1)} className="journal-button-secondary p-2 rounded-lg transition-colors" title={t('calendar.next_year')}><IconChevronsLeft className="w-5 h-5 rotate-180" /></button>
           </div>
         </div>
