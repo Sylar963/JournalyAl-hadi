@@ -20,6 +20,22 @@ const DAY_TEXT_CLASSES = [
   'day-su', 'day-mo', 'day-tu', 'day-we', 'day-th', 'day-fr', 'day-sa'
 ];
 
+const FOLDED_HEATMAP_LEVELS = [
+  'bg-[var(--surface-3)]/70',
+  'bg-amber-700/45',
+  'bg-amber-600/60',
+  'bg-amber-500/75',
+  'bg-amber-300'
+];
+
+const getDateKey = (date: Date) => {
+  const y = date.getFullYear();
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const d = date.getDate().toString().padStart(2, '0');
+
+  return `${y}-${m}-${d}`;
+};
+
 const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange, onYearChange, onGoToToday, onDateClick, entries }) => {
   const { t } = useI18n();
   const [animatingDateKey, setAnimatingDateKey] = useState<string | null>(null);
@@ -32,10 +48,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const handleCellClick = (date: Date) => {
-    const y = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const d = date.getDate().toString().padStart(2, '0');
-    const dateKey = `${y}-${m}-${d}`;
+    const dateKey = getDateKey(date);
 
     setAnimatingDateKey(dateKey);
 
@@ -60,11 +73,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
     // Current month's days
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-
-      const y = date.getFullYear();
-      const m = (date.getMonth() + 1).toString().padStart(2, '0');
-      const d = date.getDate().toString().padStart(2, '0');
-      const dateKey = `${y}-${m}-${d}`;
+      const dateKey = getDateKey(date);
 
       const entry = entries[dateKey];
       const isToday = date.getTime() === today.getTime();
@@ -127,6 +136,102 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
     return days;
   };
 
+  const getFoldedCellLevel = (entry?: EmotionEntry) => {
+    if (!entry) {
+      return 0;
+    }
+
+    const tradeCount = entry.tradingData?.trades?.length ?? 0;
+    const intensityLevel = Math.max(1, Math.min(4, Math.ceil((entry.intensity || 0) / 3)));
+    const tradeLevel = tradeCount > 0 ? Math.max(1, Math.min(4, Math.ceil(tradeCount / 2))) : 0;
+
+    return Math.max(intensityLevel, tradeLevel);
+  };
+
+  const renderFoldedCalendar = () => {
+    const weeks: Array<Array<Date | null>> = [];
+    let currentWeek: Array<Date | null> = Array.from({ length: firstDayOfMonth }, () => null);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      currentWeek.push(new Date(year, month, day));
+
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push(null);
+      }
+      weeks.push(currentWeek);
+    }
+
+    return (
+      <div className="animate-in fade-in slide-in-from-top-4 duration-500 rounded-xl border border-[color:var(--calendar-border)] bg-[linear-gradient(180deg,rgba(245,158,11,0.08),rgba(245,158,11,0)_55%)] p-3 sm:p-4">
+        <div className="flex items-center justify-end">
+          <div className="hidden md:flex items-center gap-2 text-[11px] text-[var(--text-muted)] journal-metric">
+            <span>0</span>
+            {FOLDED_HEATMAP_LEVELS.map((levelClass, index) => (
+              <span key={levelClass + index} className={`h-3 w-3 rounded-[4px] ${levelClass}`} />
+            ))}
+            <span>4</span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <div className="hidden sm:grid grid-rows-7 gap-1 pt-0.5 text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            {WEEK_DAYS.map((day, index) => (
+              <div key={`folded-label-${day}`} className="flex h-3 items-center justify-end pr-1">
+                {index === 1 || index === 3 || index === 5 ? t(`weekday.${day.toLowerCase()}` as TranslationKey) : ''}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex min-w-max gap-1.5">
+            {weeks.map((week, weekIndex) => (
+              <div key={`week-${weekIndex}`} className="grid grid-rows-7 gap-1.5">
+                {week.map((date, dayIndex) => {
+                  if (!date) {
+                    return <div key={`empty-${weekIndex}-${dayIndex}`} className="h-3.5 w-3.5 rounded-[4px] opacity-0" />;
+                  }
+
+                  const dateKey = getDateKey(date);
+                  const entry = entries[dateKey];
+                  const level = getFoldedCellLevel(entry);
+                  const emotionLabel = entry?.emotion && EMOTIONS_CONFIG[entry.emotion] ? t(`emotion.${entry.emotion}` as TranslationKey) : null;
+                  const tradeCount = entry?.tradingData?.trades?.length ?? 0;
+                  const isTodayCell = date.getTime() === today.getTime();
+                  const titleParts = [date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })];
+
+                  if (emotionLabel) {
+                    titleParts.push(`${emotionLabel} ${entry.intensity}/10`);
+                  }
+
+                  if (tradeCount > 0) {
+                    titleParts.push(`${tradeCount} ${tradeCount === 1 ? 'trade' : 'trades'}`);
+                  }
+
+                  return (
+                    <button
+                      key={dateKey}
+                      type="button"
+                      onClick={() => handleCellClick(date)}
+                      title={titleParts.join(' • ')}
+                      aria-label={titleParts.join(', ')}
+                      className={`h-3.5 w-3.5 rounded-[4px] transition-all duration-200 hover:scale-[1.18] hover:-translate-y-0.5 ${FOLDED_HEATMAP_LEVELS[level]} ${isTodayCell ? 'ring-1 ring-amber-200 ring-offset-1 ring-offset-[var(--surface-1)]' : ''}`}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const [isFolded, setIsFolded] = useState(false);
 
   const totalEntries = Object.values(entries).filter((e: EmotionEntry) => {
@@ -166,7 +271,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
         </div>
       </div>
 
-      {!isFolded && (
+      {isFolded ? (
+        renderFoldedCalendar()
+      ) : (
         <div className="grid grid-cols-7 border-t border-l border-[color:var(--calendar-border)] animate-in fade-in slide-in-from-top-4 duration-500 rounded-tl-lg rounded-tr-lg overflow-hidden bg-[var(--surface-1)]">
           {WEEK_DAYS.map((day, index) => (
             <div
