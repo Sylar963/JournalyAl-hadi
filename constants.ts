@@ -9,17 +9,19 @@ interface EmotionConfig {
   hoverColor: string;
 }
 
+export const EMOTION_KEYS: EmotionType[] = ['confident', 'composed', 'anxious', 'hesitant', 'frustrated', 'euphoric'];
+
 export const EMOTIONS_CONFIG: Record<EmotionType, EmotionConfig> = {
-  happy: {
-    label: 'Happy',
-    emoji: '😄',
+  confident: {
+    label: 'Confident',
+    emoji: '😎',
     color: 'bg-yellow-400/20 border-yellow-300',
     solidColor: 'bg-yellow-400',
     textColor: 'text-yellow-300',
     hoverColor: 'hover:bg-yellow-400/40'
   },
-  calm: {
-    label: 'Calm',
+  composed: {
+    label: 'Composed',
     emoji: '😌',
     color: 'bg-blue-400/20 border-blue-300',
     solidColor: 'bg-blue-400',
@@ -34,22 +36,39 @@ export const EMOTIONS_CONFIG: Record<EmotionType, EmotionConfig> = {
     textColor: 'text-amber-400',
     hoverColor: 'hover:bg-amber-500/40'
   },
-  sad: {
-    label: 'Sad',
-    emoji: '😢',
-    color: 'bg-blue-600/20 border-blue-500',
-    solidColor: 'bg-blue-600',
-    textColor: 'text-blue-500',
-    hoverColor: 'hover:bg-blue-600/40'
+  hesitant: {
+    label: 'Hesitant',
+    emoji: '😬',
+    color: 'bg-slate-500/20 border-slate-400',
+    solidColor: 'bg-slate-500',
+    textColor: 'text-slate-300',
+    hoverColor: 'hover:bg-slate-500/40'
   },
-  angry: {
-    label: 'Angry',
-    emoji: '😠',
+  frustrated: {
+    label: 'Frustrated',
+    emoji: '😤',
     color: 'bg-red-500/20 border-red-400',
     solidColor: 'bg-red-500',
     textColor: 'text-red-400',
     hoverColor: 'hover:bg-red-500/40'
   },
+  euphoric: {
+    label: 'Euphoric',
+    emoji: '🤩',
+    color: 'bg-fuchsia-500/20 border-fuchsia-400',
+    solidColor: 'bg-fuchsia-500',
+    textColor: 'text-fuchsia-300',
+    hoverColor: 'hover:bg-fuchsia-500/40'
+  },
+};
+
+export const EMOTION_CHART_COLORS: Record<EmotionType, { bg: string; border: string }> = {
+  confident: { bg: 'rgba(250, 204, 21, 0.5)', border: 'rgb(250, 204, 21)' },
+  composed: { bg: 'rgba(96, 165, 250, 0.5)', border: 'rgb(147, 197, 253)' },
+  anxious: { bg: 'rgba(245, 158, 11, 0.5)', border: 'rgb(245, 158, 11)' },
+  hesitant: { bg: 'rgba(100, 116, 139, 0.5)', border: 'rgb(148, 163, 184)' },
+  frustrated: { bg: 'rgba(239, 68, 68, 0.5)', border: 'rgb(248, 113, 113)' },
+  euphoric: { bg: 'rgba(217, 70, 239, 0.5)', border: 'rgb(232, 121, 249)' },
 };
 
 export const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];

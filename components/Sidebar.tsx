@@ -198,9 +198,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate, onNewEntryCli
           <>
             <h2 className="px-4 mt-8 mb-3 journal-kicker">{t('dashboard.sidebar.quick_actions')}</h2>
             <nav className="space-y-1">
-                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-[var(--accent-primary)]"/>} label={t('dashboard.sidebar.log_happy')} onClick={() => onNewEntryClick('happy')} />
-                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-blue-300"/>} label={t('dashboard.sidebar.log_calm')} onClick={() => onNewEntryClick('calm')} />
-                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-red-400"/>} label={t('dashboard.sidebar.log_angry')} onClick={() => onNewEntryClick('angry')} />
+                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-[var(--accent-primary)]"/>} label={t('dashboard.sidebar.log_confident')} onClick={() => onNewEntryClick('confident')} />
+                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-blue-300"/>} label={t('dashboard.sidebar.log_composed')} onClick={() => onNewEntryClick('composed')} />
+                <QuickActionItem icon={<IconPlus className="w-5 h-5 text-red-400"/>} label={t('dashboard.sidebar.log_frustrated')} onClick={() => onNewEntryClick('frustrated')} />
             </nav>
           </>
         )}

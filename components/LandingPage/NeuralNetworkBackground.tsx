@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { type EmotionType } from '../../types';
-import { EMOTIONS_CONFIG } from '../../constants';
+import { EMOTION_KEYS } from '../../constants';
 
 interface Neuron {
   x: number;
@@ -22,18 +22,19 @@ const NeuralNetworkBackground: React.FC = () => {
   const mouseRef = useRef<{ x: number; y: number }>({ x: -1000, y: -1000 });
   const animationFrameRef = useRef<number | undefined>(undefined);
   
-  const emotions: EmotionType[] = ['happy', 'calm', 'anxious', 'sad', 'angry'];
-  const [currentEmotion, setCurrentEmotion] = useState<EmotionType>('happy');
-  const [nextEmotion, setNextEmotion] = useState<EmotionType>('calm');
+  const emotions: EmotionType[] = EMOTION_KEYS;
+  const [currentEmotion, setCurrentEmotion] = useState<EmotionType>(EMOTION_KEYS[0]);
+  const [nextEmotion, setNextEmotion] = useState<EmotionType>(EMOTION_KEYS[1]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Emotion color mapping
   const emotionColors: Record<EmotionType, { primary: string; secondary: string; rgb: string }> = {
-    happy: { primary: '#fbbf24', secondary: '#f59e0b', rgb: '251, 191, 36' },
-    calm: { primary: '#60a5fa', secondary: '#3b82f6', rgb: '96, 165, 250' },
+    confident: { primary: '#fbbf24', secondary: '#f59e0b', rgb: '251, 191, 36' },
+    composed: { primary: '#60a5fa', secondary: '#3b82f6', rgb: '96, 165, 250' },
     anxious: { primary: '#fb923c', secondary: '#f97316', rgb: '251, 146, 60' },
-    sad: { primary: '#3b82f6', secondary: '#2563eb', rgb: '59, 130, 246' },
-    angry: { primary: '#ef4444', secondary: '#dc2626', rgb: '239, 68, 68' },
+    hesitant: { primary: '#94a3b8', secondary: '#64748b', rgb: '148, 163, 184' },
+    frustrated: { primary: '#ef4444', secondary: '#dc2626', rgb: '239, 68, 68' },
+    euphoric: { primary: '#e879f9', secondary: '#d946ef', rgb: '232, 121, 249' },
   };
 
   // Initialize neurons

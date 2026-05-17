@@ -109,7 +109,7 @@ describe('tradingIndexService', () => {
 
     const entries: EmotionEntry[] = [{
       date: '2026-04-06',
-      emotion: 'calm',
+      emotion: 'composed',
       intensity: 5,
       notes: null,
       tradingData: { trades: [manualTrade, bybitTrade] },
@@ -124,7 +124,7 @@ describe('tradingIndexService', () => {
   it('falls back to trade-level pnl when entry pnl is empty', () => {
     const entry: EmotionEntry = {
       date: '2026-04-06',
-      emotion: 'happy',
+      emotion: 'confident',
       intensity: 8,
       notes: null,
       tradingData: {

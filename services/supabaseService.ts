@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexCachedTrade, type ThalexCachedPosition, type ThalexTradeCacheResult, type ThalexEnvironment, type ThalexInstrumentType } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage } from '../utils/errorHelpers';
+import { normalizeEmotionValue } from '../utils/emotions';
 import { createTradeFingerprint, normalizeEntryTradingData, normalizeTradeTypeFromSide, resolveFutureTradeType } from './tradingIndexService';
 
 export type Database = {
@@ -1276,7 +1277,7 @@ export async function getEntries(): Promise<Record<string, EmotionEntry>> {
         for (const e of rows) {
             entriesRecord[e.date] = {
                 date: e.date,
-                emotion: e.emotion as EmotionType,
+                emotion: normalizeEmotionValue(e.emotion) as EmotionType,
                 intensity: e.intensity,
                 notes: e.notes,
                 imageUrl: e.image_url ?? undefined,
@@ -1313,7 +1314,7 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
     const savedData = data as Database['public']['Tables']['entries']['Row'];
     return {
         date: savedData.date,
-        emotion: savedData.emotion as EmotionType,
+        emotion: normalizeEmotionValue(savedData.emotion) as EmotionType,
         intensity: savedData.intensity,
         notes: savedData.notes,
         imageUrl: savedData.image_url ?? undefined,

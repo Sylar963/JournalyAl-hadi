@@ -12,8 +12,8 @@ import {
   ScatterController
 } from 'chart.js';
 import { Scatter, Bar, Line } from 'react-chartjs-2';
-import { type EmotionEntry, type EmotionType } from '../types';
-import { EMOTIONS_CONFIG } from '../constants';
+import { type EmotionEntry } from '../types';
+import { EMOTION_KEYS, EMOTIONS_CONFIG } from '../constants';
 import { buildTradingIndex } from '../services/tradingIndexService';
 
 ChartJS.register(
@@ -115,10 +115,9 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
 
     // 2. Average PNL by Emotion (Bar Chart)
     const pnlByEmotionData = useMemo(() => {
-        const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
         const grouped: Record<string, { total: number, count: number }> = {};
 
-        emotionKeys.forEach(k => grouped[k] = { total: 0, count: 0 });
+        EMOTION_KEYS.forEach(k => grouped[k] = { total: 0, count: 0 });
 
         entriesWithPNL.forEach(e => {
             if (grouped[e.emotion]) {
@@ -127,8 +126,8 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
             }
         });
 
-        const labels = emotionKeys.map(k => EMOTIONS_CONFIG[k].label);
-        const data = emotionKeys.map(k => {
+        const labels = EMOTION_KEYS.map(k => EMOTIONS_CONFIG[k].label);
+        const data = EMOTION_KEYS.map(k => {
             const g = grouped[k];
             return g.count > 0 ? g.total / g.count : 0;
         });

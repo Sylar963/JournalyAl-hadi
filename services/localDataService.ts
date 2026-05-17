@@ -1,5 +1,6 @@
 import { type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexTradeCacheResult } from '../types';
 import { normalizeEntryTradingData } from './tradingIndexService';
+import { normalizeEmotionValue } from '../utils/emotions';
 
 const ENTRIES_KEY = 'emotion-journal-entries';
 const PROFILE_KEY = 'emotion-journal-profile';
@@ -29,6 +30,7 @@ export async function getEntries(): Promise<Record<string, EmotionEntry>> {
             date,
             {
                 ...entry,
+                emotion: normalizeEmotionValue(entry.emotion) as EmotionEntry['emotion'],
                 tradingData: normalizeEntryTradingData(entry.tradingData),
             },
         ])

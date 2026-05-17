@@ -14,7 +14,7 @@ import {
   Legend,
 } from 'chart.js';
 import { type EmotionEntry, type EmotionType } from '../types';
-import { EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
+import { EMOTION_CHART_COLORS, EMOTION_KEYS, EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
 import { getTrendsSummary } from '../services/geminiService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
@@ -88,17 +88,9 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         };
     }, [currentMonthEntries, t]);
 
-    const emotionColors: Record<string, {bg: string, border: string}> = {
-        Happy: {bg: 'rgba(250, 204, 21, 0.5)', border: 'rgb(250, 204, 21)'}, // yellow-400
-        Calm: {bg: 'rgba(96, 165, 250, 0.5)', border: 'rgb(147, 197, 253)'}, // blue-400 / blue-300
-        Anxious: {bg: 'rgba(245, 158, 11, 0.5)', border: 'rgb(245, 158, 11)'}, // amber-500
-        Sad: {bg: 'rgba(37, 99, 235, 0.5)', border: 'rgb(59, 130, 246)'}, // blue-600 / blue-500
-        Angry: {bg: 'rgba(239, 68, 68, 0.5)', border: 'rgb(248, 113, 113)'}, // red-500 / red-400
-    };
-
     const distributionChartData = useMemo(() => {
-        const labels = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => t(`emotion.${key}` as TranslationKey));
-        const data = (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(emotionKey => {
+        const labels = EMOTION_KEYS.map(key => t(`emotion.${key}` as TranslationKey));
+        const data = EMOTION_KEYS.map(emotionKey => {
             return currentMonthEntries.filter(e => e.emotion === emotionKey).length;
         });
 
@@ -107,8 +99,8 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             datasets: [{
                 label: t('trends.chart_emotion_count'),
                 data,
-                backgroundColor: (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => emotionColors[EMOTIONS_CONFIG[key].label]?.bg || 'rgba(255, 255, 255, 0.5)'),
-                borderColor: (Object.keys(EMOTIONS_CONFIG) as EmotionType[]).map(key => emotionColors[EMOTIONS_CONFIG[key].label]?.border || 'rgb(255, 255, 255)'),
+                backgroundColor: EMOTION_KEYS.map(key => EMOTION_CHART_COLORS[key].bg),
+                borderColor: EMOTION_KEYS.map(key => EMOTION_CHART_COLORS[key].border),
                 borderWidth: 1,
                 borderRadius: 4,
             }]
@@ -167,7 +159,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         
         const labels = sortedEntries.map(e => new Date(e.date + 'T00:00:00').toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }));
         const data = sortedEntries.map(e => e.intensity);
-        const pointBgColors = sortedEntries.map(e => emotionColors[EMOTIONS_CONFIG[e.emotion]?.label]?.border || '#ffffff');
+        const pointBgColors = sortedEntries.map(e => EMOTION_CHART_COLORS[e.emotion]?.border || '#ffffff');
       
         return {
           labels,
@@ -221,25 +213,26 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     };
 
     const dayOfWeekChartData = useMemo(() => {
-        const counts: Record<EmotionType, number[]> = { happy: [0,0,0,0,0,0,0], calm: [0,0,0,0,0,0,0], anxious: [0,0,0,0,0,0,0], sad: [0,0,0,0,0,0,0], angry: [0,0,0,0,0,0,0] };
+        const counts = Object.fromEntries(
+            EMOTION_KEYS.map((emotion) => [emotion, [0, 0, 0, 0, 0, 0, 0]])
+        ) as Record<EmotionType, number[]>;
         currentMonthEntries.forEach(entry => {
             if (!entry.emotion || !counts[entry.emotion]) return;
             const dayIndex = new Date(entry.date + 'T00:00:00').getDay();
             counts[entry.emotion][dayIndex]++;
         });
-        const emotionKeys = Object.keys(EMOTIONS_CONFIG) as EmotionType[];
         return {
             labels: WEEK_DAYS.map(day => t(`weekday.${day.toLowerCase()}` as TranslationKey)),
-            datasets: emotionKeys.map(emotion => ({
+            datasets: EMOTION_KEYS.map(emotion => ({
                 label: t(`emotion.${emotion}` as TranslationKey),
                 data: counts[emotion],
-                backgroundColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.bg,
-                borderColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.border,
+                backgroundColor: EMOTION_CHART_COLORS[emotion].bg,
+                borderColor: EMOTION_CHART_COLORS[emotion].border,
                 borderWidth: 1.5,
-                pointBackgroundColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.border,
+                pointBackgroundColor: EMOTION_CHART_COLORS[emotion].border,
                 pointBorderColor: '#fff',
                 pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: emotionColors[EMOTIONS_CONFIG[emotion]?.label]?.border,
+                pointHoverBorderColor: EMOTION_CHART_COLORS[emotion].border,
             }))
         };
     }, [currentMonthEntries, t]);

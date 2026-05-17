@@ -43,9 +43,9 @@ export const translations = {
     'dashboard.sidebar.review': 'Performance Review',
     'dashboard.sidebar.settings': 'Settings',
     'dashboard.sidebar.quick_actions': 'Quick Actions',
-    'dashboard.sidebar.log_happy': 'Log Happy',
-    'dashboard.sidebar.log_calm': 'Log Calm',
-    'dashboard.sidebar.log_angry': 'Log Angry',
+    'dashboard.sidebar.log_confident': 'Log Confident',
+    'dashboard.sidebar.log_composed': 'Log Composed',
+    'dashboard.sidebar.log_frustrated': 'Log Frustrated',
     'dashboard.sidebar.purpose_title': "My Journal's Purpose",
     'dashboard.sidebar.purpose_placeholder': "Click 'Edit' to set your journal's purpose.",
     'dashboard.sidebar.collapse': 'Collapse',
@@ -183,11 +183,12 @@ export const translations = {
     'month.11': 'December',
     
     // Emotions
-    'emotion.happy': 'Happy',
-    'emotion.calm': 'Calm',
+    'emotion.confident': 'Confident',
+    'emotion.composed': 'Composed',
     'emotion.anxious': 'Anxious',
-    'emotion.sad': 'Sad',
-    'emotion.angry': 'Angry',
+    'emotion.hesitant': 'Hesitant',
+    'emotion.frustrated': 'Frustrated',
+    'emotion.euphoric': 'Euphoric',
 
     // Trends
     'trends.title': 'Analytics Overview',
@@ -381,9 +382,9 @@ export const translations = {
     'dashboard.sidebar.review': 'Revisión de Desempeño',
     'dashboard.sidebar.settings': 'Configuración',
     'dashboard.sidebar.quick_actions': 'Acciones Rápidas',
-    'dashboard.sidebar.log_happy': 'Log Feliz',
-    'dashboard.sidebar.log_calm': 'Log Calma',
-    'dashboard.sidebar.log_angry': 'Log Enfadado',
+    'dashboard.sidebar.log_confident': 'Registrar Confianza',
+    'dashboard.sidebar.log_composed': 'Registrar Serenidad',
+    'dashboard.sidebar.log_frustrated': 'Registrar Frustracion',
     'dashboard.sidebar.purpose_title': 'Propósito de mi Diario',
     'dashboard.sidebar.purpose_placeholder': "Haz clic en 'Editar' para definir el propósito.",
     'dashboard.sidebar.collapse': 'Contraer',
@@ -489,11 +490,12 @@ export const translations = {
     'month.11': 'Diciembre',
 
     // Emotions
-    'emotion.happy': 'Feliz',
-    'emotion.calm': 'Calma',
+    'emotion.confident': 'Confiado',
+    'emotion.composed': 'Sereno',
     'emotion.anxious': 'Ansioso',
-    'emotion.sad': 'Triste',
-    'emotion.angry': 'Enfadado',
+    'emotion.hesitant': 'Vacilante',
+    'emotion.frustrated': 'Frustrado',
+    'emotion.euphoric': 'Euforico',
 
     // Trends
     'trends.title': 'Resumen Analítico',

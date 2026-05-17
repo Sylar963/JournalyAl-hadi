@@ -5,7 +5,7 @@ const WEIGHT_EMOTIONAL = 0.4;
 const WEIGHT_REVENGE = 0.4;
 const WEIGHT_LEVERAGE = 0.2;
 
-const NEGATIVE_EMOTIONS: EmotionType[] = ['angry', 'anxious', 'sad'];
+const HIGH_RISK_EMOTIONS: EmotionType[] = ['anxious', 'hesitant', 'frustrated', 'euphoric'];
 
 /**
  * Calculates a 'Tilt Index' (0-100) indicating the likelihood of emotional trading.
@@ -55,11 +55,11 @@ export function calculateTiltIndex(
 }
 
 function calculateEmotionalFactor(entry: EmotionEntry): number {
-  if (NEGATIVE_EMOTIONS.includes(entry.emotion)) {
+  if (HIGH_RISK_EMOTIONS.includes(entry.emotion)) {
     // Maps intensity 1-10 to 10-100
     return entry.intensity * 10; 
   }
-  return 0; // 'happy' or 'calm' don't contribute to baseline emotional tilt
+  return 0; // 'confident' and 'composed' do not contribute to baseline emotional tilt
 }
 
 function calculateRevengeFactor(currentEntry: EmotionEntry, allTrades: TradeDetails[]): number {
