@@ -1,14 +1,12 @@
 
 import React from 'react';
 import IconQuest from './icons/IconQuest';
-import IconPlus from './icons/IconPlus';
 import IconLogout from './icons/IconLogout';
 import Clock from './Clock';
 import { type UserProfile } from '../types';
 import { useI18n } from '../hooks/useI18n';
 
 interface HeaderProps {
-    onNewEntryClick: () => void;
     userProfile: UserProfile;
     onProfileClick: () => void;
     onQuestsClick: () => void;
@@ -23,7 +21,7 @@ const getInitials = (name: string): string => {
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
 };
 
-const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfileClick, onQuestsClick, onSignOut }) => {
+const Header: React.FC<HeaderProps> = ({ userProfile, onProfileClick, onQuestsClick, onSignOut }) => {
   const { t } = useI18n();
   return (
     <header className="flex-shrink-0 journal-topbar rounded-none z-10">
@@ -47,15 +45,6 @@ const Header: React.FC<HeaderProps> = ({ onNewEntryClick, userProfile, onProfile
         </div>
 
         <div className="ml-auto flex w-full items-center justify-end gap-1.5 sm:w-auto sm:gap-3 md:gap-4">
-          <button
-            onClick={onNewEntryClick}
-            aria-label={t('dashboard.header.new_entry')}
-            className="journal-button-primary flex h-10 min-w-10 items-center justify-center rounded-xl px-2.5 text-xs font-medium leading-tight hover:opacity-95 transition-all duration-200 focus:outline-none sm:px-3 sm:text-sm lg:px-3.5"
-          >
-            <IconPlus className="h-4 w-4 sm:mr-1.5 lg:mr-2 lg:h-5 lg:w-5" />
-            <span className="hidden sm:inline">{t('dashboard.header.new_entry')}</span>
-          </button>
-          
           <div className="hidden sm:block">
             <Clock />
           </div>
