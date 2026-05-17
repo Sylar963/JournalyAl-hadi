@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
-import { WidgetData } from '../../../types';
+import React, { useEffect, useState } from 'react';
+import { DailyBiasWidgetData } from '../../../types';
 
-const DailyBiasPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = ({ data, onUpdate }) => {
-  const [view, setView] = useState<'daily' | 'weekly'>('daily');
-  const [bias, setBias] = useState<'bullish' | 'bearish' | 'neutral'>('neutral');
-  const [notes, setNotes] = useState('');
+const DailyBiasPlugin: React.FC<{ data: DailyBiasWidgetData; onUpdate: (data: DailyBiasWidgetData) => void }> = ({ data, onUpdate }) => {
+  const [view, setView] = useState<BiasView>(data.view ?? 'daily');
+  const [bias, setBias] = useState<BiasDirection>(data.bias ?? 'neutral');
+  const [notes, setNotes] = useState(data.notes ?? '');
+
+  useEffect(() => {
+    setView(data.view ?? 'daily');
+    setBias(data.bias ?? 'neutral');
+    setNotes(data.notes ?? '');
+  }, [data.bias, data.notes, data.view]);
+
+  const syncData = (nextData: Partial<DailyBiasWidgetData>) => {
+    onUpdate({
+      view,
+      bias,
+      notes,
+      ...nextData,
+    });
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -12,7 +27,10 @@ const DailyBiasPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = 
         {(['daily', 'weekly'] as const).map((v) => (
           <button
             key={v}
-            onClick={() => setView(v)}
+            onClick={() => {
+              setView(v);
+              syncData({ view: v });
+            }}
             className={`flex-1 text-xs py-1 rounded-md font-medium capitalize transition-all ${
               view === v 
                 ? 'bg-white/10 text-white shadow-sm' 
@@ -28,7 +46,10 @@ const DailyBiasPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = 
          {(['bullish', 'neutral', 'bearish'] as const).map((b) => (
             <button
               key={b}
-              onClick={() => setBias(b)}
+              onClick={() => {
+                setBias(b);
+                syncData({ bias: b });
+              }}
               className={`border border-white/5 rounded-lg py-2 flex flex-col items-center justify-center transition-all ${
                  bias === b 
                    ? b === 'bullish' ? 'bg-green-500/20 border-green-500/50 text-green-400' 
@@ -49,7 +70,11 @@ const DailyBiasPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = 
         className="flex-grow bg-black/20 border border-white/5 rounded-lg p-3 text-sm text-gray-300 resize-none focus:outline-none focus:border-white/20 placeholder-gray-600"
         placeholder={`Write your ${view} market thesis...`}
         value={notes}
-        onChange={(e) => setNotes(e.target.value)}
+        onChange={(e) => {
+          const nextNotes = e.target.value;
+          setNotes(nextNotes);
+          syncData({ notes: nextNotes });
+        }}
       />
     </div>
   );

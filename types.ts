@@ -260,15 +260,42 @@ export interface Quest {
 // Pre-Market Routine Types
 
 export interface WidgetData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export interface RoutinePlugin {
+export type BiasView = 'daily' | 'weekly';
+export type BiasDirection = 'bullish' | 'bearish' | 'neutral';
+
+export interface DailyBiasWidgetData extends WidgetData {
+  view?: BiasView;
+  bias?: BiasDirection;
+  notes?: string;
+}
+
+export interface ChecklistTask {
+  id: number;
+  text: string;
+  done: boolean;
+}
+
+export interface ChecklistWidgetData extends WidgetData {
+  tasks?: ChecklistTask[];
+}
+
+export interface CorrelationMatrixWidgetData extends WidgetData {}
+
+export interface RoutinePluginComponentProps<TData extends WidgetData = WidgetData> {
+  data: TData;
+  onUpdate: (data: TData) => void;
+  isLocked?: boolean;
+}
+
+export interface RoutinePlugin<TData extends WidgetData = WidgetData> {
   id: string;
   title: string;
   description: string;
   defaultSize: { w: number; h: number }; // Grid units
-  component: React.ComponentType<{ data: any; onUpdate: (data: any) => void; isLocked?: boolean }>;
+  component: React.ComponentType<RoutinePluginComponentProps<TData>>;
   icon?: React.ReactNode;
 }
 
@@ -284,7 +311,7 @@ export interface RoutineLayoutItem {
 
 export interface RoutineLayout {
   items: RoutineLayoutItem[];
-  thesis: 'bullish' | 'bearish' | 'neutral' | null;
+  thesis: BiasDirection | null;
   lastUpdated: string;
 }
 

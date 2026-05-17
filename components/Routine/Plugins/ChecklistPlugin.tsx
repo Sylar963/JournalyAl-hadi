@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
-import { WidgetData } from '../../../types';
+import React, { useEffect, useState } from 'react';
+import { ChecklistTask, ChecklistWidgetData } from '../../../types';
 
-const ChecklistPlugin: React.FC<{ data: any; onUpdate: (data: any) => void }> = () => {
-    // Mock initial data
-    const [tasks, setTasks] = useState([
-        { id: 1, text: "Check Economic Calendar", done: false },
-        { id: 2, text: "Mark DXY Levels", done: false },
-        { id: 3, text: "Review Weekly VWAP", done: false },
-        { id: 4, text: "Journal Previous Day", done: true },
-    ]);
+const DEFAULT_TASKS: ChecklistTask[] = [
+    { id: 1, text: 'Check Economic Calendar', done: false },
+    { id: 2, text: 'Mark DXY Levels', done: false },
+    { id: 3, text: 'Review Weekly VWAP', done: false },
+    { id: 4, text: 'Journal Previous Day', done: true },
+];
+
+const ChecklistPlugin: React.FC<{ data: ChecklistWidgetData; onUpdate: (data: ChecklistWidgetData) => void }> = ({ data, onUpdate }) => {
+    const [tasks, setTasks] = useState<ChecklistTask[]>(data.tasks ?? DEFAULT_TASKS);
+
+    useEffect(() => {
+        setTasks(data.tasks ?? DEFAULT_TASKS);
+    }, [data.tasks]);
 
     const toggleTask = (id: number) => {
-        setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+        const nextTasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+        setTasks(nextTasks);
+        onUpdate({ tasks: nextTasks });
     };
 
     const progress = Math.round((tasks.filter(t => t.done).length / tasks.length) * 100);

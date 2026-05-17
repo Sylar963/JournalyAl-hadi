@@ -1,40 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { routineService } from '../../services/routineService';
-import { pluginRegistry } from '../../services/pluginRegistry';
+import { getRoutinePlugin, getRoutinePlugins } from '../../services/routinePlugins';
 import RoutineWidget from './RoutineWidget';
-import { correlationMatrixConfig } from './Plugins/CorrelationMatrixPlugin';
-import { dailyBiasConfig } from './Plugins/DailyBiasPlugin';
-import { checklistConfig } from './Plugins/ChecklistPlugin';
-import { RoutineLayout, RoutinePlugin } from '../../types';
+import { BiasDirection, RoutineLayout, RoutinePlugin, WidgetData } from '../../types';
 import { useI18n } from '../../hooks/useI18n';
 import { TranslationKey } from '../../utils/translations';
 
-// Register plugins (normally done at app bootstrap)
-pluginRegistry.register(correlationMatrixConfig);
-pluginRegistry.register(dailyBiasConfig);
-pluginRegistry.register(checklistConfig);
+const createDefaultLayout = (plugins: RoutinePlugin[]): RoutineLayout => ({
+    items: plugins.map((plugin, index) => ({
+        i: plugin.id,
+        x: index % 3,
+        y: Math.floor(index / 3),
+        w: plugin.defaultSize.w,
+        h: plugin.defaultSize.h,
+        pluginId: plugin.id,
+        data: {},
+    })),
+    thesis: null,
+    lastUpdated: new Date().toISOString(),
+});
 
 const RoutineDashboard: React.FC = () => {
     const { t } = useI18n();
     // Get today's layout
     const today = new Date().toISOString().split('T')[0];
     const [layout, setLayout] = useState<RoutineLayout | null>(null);
-    const [activePlugins, setActivePlugins] = useState<RoutinePlugin[]>([]);
+    const activePlugins = getRoutinePlugins();
 
     useEffect(() => {
         const stored = routineService.getLayout(today);
         if (stored) {
             setLayout(stored);
-            // Rehydrate plugins based on stored layout
-            // For MVP version, we just show all registered plugins or default set
-            setActivePlugins(pluginRegistry.getAll());
-        } else {
-            // Default setup for new day
-            const defaultPlugins = pluginRegistry.getAll();
-            setActivePlugins(defaultPlugins);
+            return;
         }
+
+        const defaultLayout = createDefaultLayout(activePlugins);
+        setLayout(defaultLayout);
+        routineService.saveLayout(today, defaultLayout);
+        routineService.saveTemplate(defaultLayout);
     }, [today]);
+
+    const handlePluginUpdate = (pluginId: string, data: WidgetData) => {
+        setLayout((currentLayout) => {
+            const baseLayout = currentLayout ?? createDefaultLayout(activePlugins);
+            const plugin = getRoutinePlugin(pluginId);
+            const existingItem = baseLayout.items.find((item) => item.pluginId === pluginId);
+            const items = existingItem
+                ? baseLayout.items.map((item) => (
+                    item.pluginId === pluginId
+                        ? { ...item, data: { ...item.data, ...data } }
+                        : item
+                ))
+                : [
+                    ...baseLayout.items,
+                    {
+                        i: pluginId,
+                        x: 0,
+                        y: baseLayout.items.length,
+                        w: plugin?.defaultSize.w ?? 1,
+                        h: plugin?.defaultSize.h ?? 1,
+                        pluginId,
+                        data,
+                    },
+                ];
+            const nextLayout = {
+                ...baseLayout,
+                items,
+                thesis: pluginId === 'daily-bias' && typeof data.bias === 'string'
+                    ? data.bias as BiasDirection
+                    : baseLayout.thesis,
+                lastUpdated: new Date().toISOString(),
+            };
+
+            routineService.saveLayout(today, nextLayout);
+            routineService.saveTemplate(nextLayout);
+            return nextLayout;
+        });
+    };
 
     // Simple Grid for MVP
     return (
@@ -51,8 +94,8 @@ const RoutineDashboard: React.FC = () => {
                     >
                          <RoutineWidget title={t(plugin.title as TranslationKey)} icon={plugin.icon}>
                              <plugin.component 
-                                data={{}} 
-                                onUpdate={() => {}} 
+                                data={layout?.items.find((item) => item.pluginId === plugin.id)?.data ?? {}} 
+                                onUpdate={(data) => handlePluginUpdate(plugin.id, data)} 
                              />
                          </RoutineWidget>
                     </motion.div>

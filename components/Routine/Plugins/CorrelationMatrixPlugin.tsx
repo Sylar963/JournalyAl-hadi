@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { WidgetData } from '../../../types';
+import { CorrelationMatrixWidgetData } from '../../../types';
 import { getAssetCorrelations } from '../../../services/hyperliquidService';
 
-const CorrelationMatrixPlugin: React.FC<{ data: WidgetData; onUpdate: (data: any) => void }> = () => {
+const CorrelationMatrixPlugin: React.FC<{ data: CorrelationMatrixWidgetData; onUpdate: (data: CorrelationMatrixWidgetData) => void }> = () => {
   const [pairs, setPairs] = useState<{ symbol: string; name: string; correlation: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
