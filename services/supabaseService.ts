@@ -531,21 +531,21 @@ export const supabase: SupabaseClient<Database> | null =
               storage: {
                 getItem: (key: string) => {
                   try {
-                    return localStorage.getItem(key) ?? null;
+                    return sessionStorage.getItem(key) ?? null;
                   } catch {
                     return null;
                   }
                 },
                 setItem: (_key: string, _value: string) => {
                   try {
-                    localStorage.setItem(_key, _value);
+                    sessionStorage.setItem(_key, _value);
                   } catch {
                     // Ignore storage errors (e.g., private browsing)
                   }
                 },
                 removeItem: (key: string) => {
                   try {
-                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
                   } catch {
                     // Ignore
                   }
@@ -626,6 +626,37 @@ CREATE POLICY "Users can manage their own quests"
 ON public.quests FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+`;
+
+export const SECURITY_RATE_LIMITS_TABLE_SETUP_SQL = `
+-- Shared request throttling used by public and credential-sync edge functions
+CREATE TABLE IF NOT EXISTS public.request_limits (
+  action TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  window_started_at TIMESTAMPTZ NOT NULL,
+  attempt_count INT NOT NULL DEFAULT 1 CHECK (attempt_count >= 1),
+  last_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (action, actor)
+);
+
+ALTER TABLE public.request_limits ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION update_request_limits_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_request_limits_updated_at ON public.request_limits;
+
+CREATE TRIGGER update_request_limits_updated_at
+BEFORE UPDATE ON public.request_limits
+FOR EACH ROW
+EXECUTE FUNCTION update_request_limits_updated_at();
 `;
 
 export const BYBIT_CONNECTIONS_TABLE_SETUP_SQL = `
@@ -743,37 +774,169 @@ USING (auth.uid() = user_id);
 `;
 
 const clientNotConfiguredError = 'Supabase client is not initialized. Check your environment variables.';
-export const BYBIT_SETUP_SQL = `${BYBIT_CONNECTIONS_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_TRADE_CACHE_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_POSITION_CACHE_TABLE_SETUP_SQL.trim()}`;
+export const BYBIT_SETUP_SQL = `${SECURITY_RATE_LIMITS_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_CONNECTIONS_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_TRADE_CACHE_TABLE_SETUP_SQL.trim()}\n\n${BYBIT_POSITION_CACHE_TABLE_SETUP_SQL.trim()}`;
 
 export function isMissingBybitSchemaError(message: string): boolean {
     const normalized = message.toLowerCase();
     return normalized.includes('relation "public.bybit_connections" does not exist')
         || normalized.includes('relation "public.bybit_trade_cache" does not exist')
         || normalized.includes('relation "public.bybit_position_cache" does not exist')
+        || normalized.includes('relation "public.request_limits" does not exist')
         || (normalized.includes('bybit_connections') && normalized.includes('column') && normalized.includes('does not exist'))
         || (normalized.includes('bybit_trade_cache') && normalized.includes('column') && normalized.includes('does not exist'))
         || (normalized.includes('bybit_position_cache') && normalized.includes('column') && normalized.includes('does not exist'))
+        || (normalized.includes('request_limits') && normalized.includes('column') && normalized.includes('does not exist'))
         || (normalized.includes('bybit_connections') && normalized.includes('schema cache'))
         || (normalized.includes('bybit_trade_cache') && normalized.includes('schema cache'))
-        || (normalized.includes('bybit_position_cache') && normalized.includes('schema cache'));
+        || (normalized.includes('bybit_position_cache') && normalized.includes('schema cache'))
+        || (normalized.includes('request_limits') && normalized.includes('schema cache'));
 }
 
 export function getBybitSchemaErrorMessage(): string {
-    return 'Bybit tables are missing in Supabase. Run the SQL from supabase/sql/bybit_setup.sql, then refresh the app.';
+    return 'Bybit security tables are missing in Supabase. Run the SQL from supabase/sql/bybit_setup.sql, then refresh the app.';
 }
 
-// Thalex setup SQL is read from the static file embedded as a template string.
-// In production, the UI copies this and asks the user to run it in Supabase SQL Editor.
-export const THALEX_SETUP_SQL = `-- Run this in Supabase SQL Editor to enable Thalex integration.
--- Full SQL is in supabase/sql/thalex_setup.sql
--- See docs/THALEX_INTEGRATION.md for instructions.
+export const THALEX_SETUP_SQL = `${SECURITY_RATE_LIMITS_TABLE_SETUP_SQL.trim()}
 
--- Quick check:
-SELECT table_name FROM information_schema.tables
-WHERE table_schema='public' AND table_name IN ('thalex_connections','thalex_trade_cache','thalex_position_cache');`;
+-- ====================================================================================
+-- Thalex Integration Tables
+-- Run this SQL in your Supabase Project's SQL Editor.
+-- ====================================================================================
+
+-- 1. Thalex Connections (stores encrypted RSA key pair metadata)
+CREATE TABLE IF NOT EXISTS public.thalex_connections (
+  user_id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  environment      TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
+
+  -- Key name (e.g. K123456789) — stored plaintext as it is semi-public
+  key_name         TEXT NOT NULL,
+  key_name_masked  TEXT NOT NULL,
+  key_name_last4   TEXT NOT NULL,
+
+  -- RSA private key, AES-GCM encrypted (same key as Bybit uses)
+  private_key_ciphertext TEXT NOT NULL,
+  private_key_iv         TEXT NOT NULL,
+  private_key_version    TEXT NOT NULL DEFAULT 'v1',
+
+  validation_status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (validation_status IN ('not_connected', 'pending', 'valid', 'invalid')),
+
+  permission_snapshot JSONB,
+  last_validated_at   TIMESTAMPTZ,
+  last_sync_at        TIMESTAMPTZ,
+  sync_status         TEXT DEFAULT 'idle'
+    CHECK (sync_status IN ('idle', 'syncing', 'ready', 'error')),
+  sync_error          TEXT,
+
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.thalex_connections ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can manage their own thalex connection" ON public.thalex_connections;
+CREATE POLICY "Users can manage their own thalex connection"
+ON public.thalex_connections FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE OR REPLACE FUNCTION update_thalex_connections_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_thalex_connections_updated_at ON public.thalex_connections;
+CREATE TRIGGER update_thalex_connections_updated_at
+    BEFORE UPDATE ON public.thalex_connections
+    FOR EACH ROW
+    EXECUTE FUNCTION update_thalex_connections_updated_at();
+
+
+-- 2. Thalex Trade Cache (stores normalized historical trades)
+CREATE TABLE IF NOT EXISTS public.thalex_trade_cache (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  environment      TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
+
+  trade_day        DATE NOT NULL,
+  external_trade_id TEXT NOT NULL,
+  order_id         TEXT NOT NULL,
+
+  instrument_name  TEXT NOT NULL,
+  instrument_type  TEXT NOT NULL DEFAULT 'unknown'
+    CHECK (instrument_type IN ('option', 'future', 'perpetual', 'combination', 'unknown')),
+
+  side             TEXT NOT NULL CHECK (side IN ('Buy', 'Sell', 'Unknown')),
+
+  executed_at      TIMESTAMPTZ NOT NULL,
+  quantity         NUMERIC NOT NULL,
+  price            NUMERIC NOT NULL,
+  fee              NUMERIC,
+  fee_currency     TEXT,
+  closed_pnl       NUMERIC,
+  trade_fingerprint TEXT NOT NULL,
+  raw_trade         JSONB,
+
+  synced_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  UNIQUE(user_id, environment, external_trade_id)
+);
+
+CREATE INDEX IF NOT EXISTS thalex_trade_cache_user_day_idx
+ON public.thalex_trade_cache (user_id, trade_day, executed_at DESC);
+
+ALTER TABLE public.thalex_trade_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own thalex cache" ON public.thalex_trade_cache;
+CREATE POLICY "Users can read their own thalex cache"
+ON public.thalex_trade_cache FOR SELECT
+USING (auth.uid() = user_id);
+
+
+-- 3. Thalex Position Cache (stores current portfolio positions)
+CREATE TABLE IF NOT EXISTS public.thalex_position_cache (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  environment      TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),
+
+  instrument_name  TEXT NOT NULL,
+  instrument_type  TEXT NOT NULL DEFAULT 'unknown'
+    CHECK (instrument_type IN ('option', 'future', 'perpetual', 'combination', 'unknown')),
+
+  position         NUMERIC NOT NULL,
+  side             TEXT NOT NULL CHECK (side IN ('Buy', 'Sell', 'Unknown')),
+  position_status  TEXT NOT NULL DEFAULT 'open' CHECK (position_status IN ('open', 'closed')),
+  mark_price       NUMERIC,
+  start_price      NUMERIC,
+  average_price    NUMERIC,
+  unrealised_pnl   NUMERIC,
+  realised_pnl     NUMERIC,
+  entry_value      NUMERIC,
+  iv               NUMERIC,
+  index_price      NUMERIC,
+  external_position_id TEXT NOT NULL,
+  updated_at       TIMESTAMPTZ,
+  raw_position     JSONB,
+  synced_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  UNIQUE(user_id, environment, external_position_id)
+);
+
+CREATE INDEX IF NOT EXISTS thalex_position_cache_user_env_idx
+ON public.thalex_position_cache (user_id, environment, instrument_name);
+
+ALTER TABLE public.thalex_position_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can read their own thalex positions" ON public.thalex_position_cache;
+CREATE POLICY "Users can read their own thalex positions"
+ON public.thalex_position_cache FOR SELECT
+USING (auth.uid() = user_id);`;
 
 export function getThalexSchemaErrorMessage(): string {
-    return 'Thalex tables are missing in Supabase. Run the SQL from supabase/sql/thalex_setup.sql, then refresh the app.';
+    return 'Thalex security tables are missing in Supabase. Run the SQL from supabase/sql/thalex_setup.sql, then refresh the app.';
 }
 
 function isResponseLike(value: unknown): value is Response {
@@ -807,8 +970,20 @@ function mapFunctionSetupError(name: string, message: string, response?: Respons
         return getBybitSchemaErrorMessage();
     }
 
+    if (message.toLowerCase().includes('relation "public.request_limits" does not exist')) {
+        return 'Supabase security tables are missing. Run the updated SQL setup from the supabase/sql directory, then try again.';
+    }
+
     if (message === 'Missing Authorization header.' || message === 'User not authenticated. Could not get user ID.') {
-        return 'Your Supabase session is missing or expired. Sign out and back in, then try the Bybit action again.';
+        return 'Your Supabase session is missing or expired. Sign out and back in, then try again.';
+    }
+
+    if (message.includes('Missing required environment variable: GEMINI_API_KEY')) {
+        return 'Supabase Edge Function secret GEMINI_API_KEY is missing. Add it in Supabase, redeploy the AI function, then try again.';
+    }
+
+    if (message.toLowerCase().includes('relation "public.leads" does not exist')) {
+        return 'The Supabase leads table is missing. Create public.leads with the updated SQL setup, then try again.';
     }
 
     if (message.includes('Missing required environment variable: BYBIT_CREDENTIAL_ENCRYPTION_KEY')) {
@@ -828,7 +1003,7 @@ function mapFunctionSetupError(name: string, message: string, response?: Respons
     }
 
     if (response?.status === 401 || response?.status === 403 || message === 'Unauthorized') {
-        return 'Your Supabase session is not authorized to call the Bybit Edge Functions. Sign out and back in, then try again.';
+        return 'Your Supabase session is not authorized to call this Edge Function. Sign out and back in, then try again.';
     }
 
     if (message.startsWith('10003:') || message.startsWith('10004:')) {
@@ -1018,7 +1193,7 @@ async function invokeBrowserSafeRegionalFunction<T>(
     throw new Error(getErrorMessage(lastError) || `Function invocation failed: ${name}`);
 }
 
-async function invokeFunction<T>(name: string, body?: Record<string, unknown>): Promise<T> {
+export async function invokeAppFunction<T>(name: string, body?: Record<string, unknown>): Promise<T> {
     if (!supabase) throw new Error(clientNotConfiguredError);
 
     if (name.startsWith('bybit-')) {
@@ -1309,7 +1484,7 @@ export async function deleteQuest(id: string): Promise<void> {
 // --- Bybit Integration ---
 export async function getBybitConnection(): Promise<BybitConnection | null> {
     try {
-        const result = await invokeFunction<{ connection: BybitConnection | null }>('bybit-get-connection');
+        const result = await invokeAppFunction<{ connection: BybitConnection | null }>('bybit-get-connection');
         return result.connection;
     } catch (error) {
         const message = getErrorMessage(error);
@@ -1321,18 +1496,18 @@ export async function getBybitConnection(): Promise<BybitConnection | null> {
 }
 
 export async function saveBybitConnection(input: BybitCredentialInput): Promise<BybitConnection> {
-    const result = await invokeFunction<{ connection: BybitConnection }>('bybit-upsert-credentials', input as unknown as Record<string, unknown>);
+    const result = await invokeAppFunction<{ connection: BybitConnection }>('bybit-upsert-credentials', input as unknown as Record<string, unknown>);
     return result.connection;
 }
 
 export async function validateBybitConnection(input: BybitCredentialInput): Promise<BybitConnection> {
-    const result = await invokeFunction<{ connection: BybitConnection }>('bybit-validate-credentials', input as unknown as Record<string, unknown>);
+    const result = await invokeAppFunction<{ connection: BybitConnection }>('bybit-validate-credentials', input as unknown as Record<string, unknown>);
     return result.connection;
 }
 
 export async function deleteBybitConnection(): Promise<void> {
     try {
-        await invokeFunction('bybit-delete-connection');
+        await invokeAppFunction('bybit-delete-connection');
     } catch (error) {
         const message = getErrorMessage(error);
         if (isMissingBybitSchemaError(message)) {
@@ -1386,7 +1561,7 @@ export async function getCachedBybitTradesForDate(date: string): Promise<BybitTr
 
 export async function refreshBybitTradesForDate(date: string, timezone: string): Promise<BybitTradeCacheResult> {
     try {
-        const result = await invokeFunction<BybitTradeCacheResult>('bybit-sync-trades', {
+        const result = await invokeAppFunction<BybitTradeCacheResult>('bybit-sync-trades', {
             date,
             timezone,
         });
@@ -1547,7 +1722,7 @@ export const LEADS_TABLE_SETUP_SQL = `
 -- 1. Create the table for leads
 CREATE TABLE public.leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
@@ -1555,11 +1730,8 @@ CREATE TABLE public.leads (
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 
 -- 3. Create policies for RLS
--- Allow public inserts (anyone can sign up)
-CREATE POLICY "Enable insert for everyone" ON public.leads FOR INSERT WITH CHECK (true);
-
--- Allow only authenticated admins (or no one by default if not set up) to view
--- For now, we'll just leave read access restricted to service role or specific users
+-- Lead writes now happen only through the capture-lead edge function.
+DROP POLICY IF EXISTS "Enable insert for everyone" ON public.leads;
 `;
 
 export async function getReviews(): Promise<PerformanceReview[]> {
@@ -1636,11 +1808,7 @@ export async function deleteReview(year: number): Promise<void> {
 }
 
 export async function addLead(email: string): Promise<void> {
-    // Lead capture is public, so no getUserId() needed here for RLS (policy is insert only)
-    await performSupabaseOp(
-        () => supabase!.from('leads').insert({ email }).select(), // Select to ensure it really happened if we care, or just to satisfy typings if reusing op
-        'Error adding lead'
-    );
+    await invokeAppFunction<{ ok: boolean }>('capture-lead', { email });
 }
 
 // ====================================================================================

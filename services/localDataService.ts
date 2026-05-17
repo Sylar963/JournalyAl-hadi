@@ -7,16 +7,20 @@ const QUESTS_KEY = 'emotion-journal-quests';
 const REVIEWS_KEY = 'emotion-journal-reviews';
 const LOCAL_USER_ID = 'local-user';
 
+function getSessionStore(): Storage {
+    return sessionStorage;
+}
+
 const DEFAULT_PROFILE: UserProfile = {
     name: 'Welcome!',
-    alias: 'Journal is stored locally',
+    alias: 'Session-only local mode',
     picture: undefined,
     journalPurpose: "This diary I fill it on the mornings so represent the way I wake up",
 };
 
 // --- Entry Functions ---
 export async function getEntries(): Promise<Record<string, EmotionEntry>> {
-    const data = localStorage.getItem(ENTRIES_KEY);
+    const data = getSessionStore().getItem(ENTRIES_KEY);
     if (!data) return {};
 
     const parsed = JSON.parse(data) as Record<string, EmotionEntry>;
@@ -38,19 +42,19 @@ export async function saveEntry(entry: EmotionEntry): Promise<EmotionEntry> {
         tradingData: normalizeEntryTradingData(entry.tradingData),
     };
     entries[entry.date] = normalizedEntry;
-    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+    getSessionStore().setItem(ENTRIES_KEY, JSON.stringify(entries));
     return normalizedEntry;
 }
 
 export async function deleteEntry(date: string): Promise<void> {
     const entries = await getEntries();
     delete entries[date];
-    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+    getSessionStore().setItem(ENTRIES_KEY, JSON.stringify(entries));
 }
 
 // --- Profile Functions ---
 export async function getProfile(): Promise<UserProfile> {
-    const data = localStorage.getItem(PROFILE_KEY);
+    const data = getSessionStore().getItem(PROFILE_KEY);
     if (data) {
         const profile = JSON.parse(data);
         if (!profile.alias) {
@@ -65,13 +69,13 @@ export async function getProfile(): Promise<UserProfile> {
 }
 
 export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    getSessionStore().setItem(PROFILE_KEY, JSON.stringify(profile));
     return profile;
 }
 
 // --- Quest Functions ---
 export async function getQuests(): Promise<Quest[]> {
-    const data = localStorage.getItem(QUESTS_KEY);
+    const data = getSessionStore().getItem(QUESTS_KEY);
     const quests: Quest[] = data ? JSON.parse(data) : [];
     // Sort by creation date, ascending
     return quests.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -86,7 +90,7 @@ export async function addQuest(text: string): Promise<Quest> {
         createdAt: new Date().toISOString(),
     };
     quests.push(newQuest);
-    localStorage.setItem(QUESTS_KEY, JSON.stringify(quests));
+    getSessionStore().setItem(QUESTS_KEY, JSON.stringify(quests));
     return newQuest;
 }
 
@@ -97,26 +101,24 @@ export async function updateQuestStatus(id: string, completed: boolean): Promise
         throw new Error("Quest not found");
     }
     quests[questIndex].completed = completed;
-    localStorage.setItem(QUESTS_KEY, JSON.stringify(quests));
+    getSessionStore().setItem(QUESTS_KEY, JSON.stringify(quests));
     return quests[questIndex];
 }
 
 export async function deleteQuest(id: string): Promise<void> {
     let quests = await getQuests();
     quests = quests.filter(q => q.id !== id);
-    localStorage.setItem(QUESTS_KEY, JSON.stringify(quests));
+    getSessionStore().setItem(QUESTS_KEY, JSON.stringify(quests));
 }
 
 // --- Lead Functions ---
 export async function addLead(email: string): Promise<void> {
-    const leads = JSON.parse(localStorage.getItem('emotion-journal-leads') || '[]');
-    leads.push({ email, createdAt: new Date().toISOString() });
-    localStorage.setItem('emotion-journal-leads', JSON.stringify(leads));
+    throw new Error('Lead capture requires Supabase-backed mode.');
 }
 
 // --- Review Functions ---
 export async function getReviews(): Promise<PerformanceReview[]> {
-    const data = localStorage.getItem(REVIEWS_KEY);
+    const data = getSessionStore().getItem(REVIEWS_KEY);
     const reviews: PerformanceReview[] = data ? JSON.parse(data) : [];
     return reviews
         .map((review) => ({ ...review, userId: review.userId || LOCAL_USER_ID }))
@@ -143,14 +145,14 @@ export async function saveReview(review: Omit<PerformanceReview, 'id' | 'created
             updatedAt: now
         });
     }
-    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+    getSessionStore().setItem(REVIEWS_KEY, JSON.stringify(reviews));
     return reviews.find(r => r.year === normalizedReview.year)!;
 }
 
 export async function deleteReview(year: number): Promise<void> {
     let reviews = await getReviews();
     reviews = reviews.filter(r => r.year !== year);
-    localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+    getSessionStore().setItem(REVIEWS_KEY, JSON.stringify(reviews));
 }
 
 export async function getBybitConnection(): Promise<BybitConnection | null> {

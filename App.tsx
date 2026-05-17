@@ -166,6 +166,7 @@ const AppContent: React.FC = () => {
 
   const entriesArray = Object.values(entries);
   const isAppAccessible = !!session || !isSupabaseConfigured;
+  const isLocalMode = !isSupabaseConfigured;
   const effectiveTheme = isAppAccessible ? theme : 'insilico';
   const mobileNavItems: Array<{ view: ActiveView; label: string; icon: React.ReactNode }> = [
     { view: 'journal', label: t('dashboard.sidebar.journal'), icon: <IconJournal className="w-4 h-4" /> },
@@ -234,6 +235,11 @@ const AppContent: React.FC = () => {
                         </div>
                     </nav>
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+                        {isLocalMode && (
+                            <div className="mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100">
+                                Local mode stores journal data only for the current browser tab and clears it when the tab closes. AI, lead capture, and broker integrations require Supabase-backed mode.
+                            </div>
+                        )}
                         {isDataLoading ? (
                             <div className="flex items-center justify-center h-full">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent-primary)]"></div>

@@ -3,6 +3,34 @@
 -- Run this SQL in your Supabase Project's SQL Editor.
 -- ====================================================================================
 
+CREATE TABLE IF NOT EXISTS public.request_limits (
+  action TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  window_started_at TIMESTAMPTZ NOT NULL,
+  attempt_count INT NOT NULL DEFAULT 1 CHECK (attempt_count >= 1),
+  last_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (action, actor)
+);
+
+ALTER TABLE public.request_limits ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION update_request_limits_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_request_limits_updated_at ON public.request_limits;
+
+CREATE TRIGGER update_request_limits_updated_at
+    BEFORE UPDATE ON public.request_limits
+    FOR EACH ROW
+    EXECUTE FUNCTION update_request_limits_updated_at();
+
 -- 1. Thalex Connections (stores encrypted RSA key pair metadata)
 CREATE TABLE IF NOT EXISTS public.thalex_connections (
   user_id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,

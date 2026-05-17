@@ -1,6 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { corsPreflightResponse, encryptSecret, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
-import { createThalexJwt, thalexGet } from '../_shared/thalex.ts';
+import { thalexGet } from '../_shared/thalex.ts';
+import { assertRateLimit } from '../_shared/request-limits.ts';
 
 /**
  * thalex-upsert-credentials
@@ -14,6 +15,13 @@ Deno.serve(async (req: Request) => {
 
   try {
     const { userId, supabase } = await getAuthedContext(req);
+    await assertRateLimit(supabase, {
+      action: 'thalex-upsert-credentials',
+      actor: userId,
+      maxAttempts: 6,
+      windowSeconds: 15 * 60,
+      minIntervalSeconds: 15,
+    });
 
     const body = await req.json() as {
       keyName: string;

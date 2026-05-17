@@ -5,6 +5,7 @@ import {
   getAuthedContext,
   jsonResponse,
 } from '../_shared/integration-runtime.ts';
+import { assertRateLimit } from '../_shared/request-limits.ts';
 import {
   parseThalexInstrumentType,
   resolveThalexTradeType,
@@ -58,6 +59,12 @@ Deno.serve(async (req: Request) => {
 
   try {
     const { userId, supabase } = await getAuthedContext(req);
+    await assertRateLimit(supabase, {
+      action: 'thalex-sync-trades',
+      actor: userId,
+      maxAttempts: 120,
+      windowSeconds: 60 * 60,
+    });
 
     const body = await req.json() as { date?: string; timezone?: string };
     const { date, timezone = 'UTC' } = body;

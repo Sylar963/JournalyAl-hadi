@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { type EmotionEntry, type ReportAnalysis } from '../types';
 import { getReportAnalysis } from '../services/geminiService';
+import { isJournalAiEnabled } from '../services/journalAiService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import IconSparkles from './icons/IconSparkles';
 import IconCalendar from './icons/IconCalendar';
@@ -30,6 +31,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
     const [report, setReport] = useState<ReportAnalysis | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
+    const aiEnabled = isJournalAiEnabled();
 
     const filteredEntries = useMemo(() => {
         if (!startDate || !endDate) return [];
@@ -97,7 +99,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                      <div className="w-full sm:w-auto sm:self-end">
                           <button 
                             onClick={handleGenerateReport} 
-                            disabled={isLoading || filteredEntries.length === 0}
+                            disabled={!aiEnabled || isLoading || filteredEntries.length === 0}
                             className="journal-button-primary w-full flex-shrink-0 flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                          >
                              <IconSparkles className="w-5 h-5 mr-2" />
@@ -108,6 +110,7 @@ const ReportsView: React.FC<{ entries: EmotionEntry[] }> = ({ entries }) => {
                   {filteredEntries.length === 0 && !isLoading && (
                      <p className="text-sm text-[var(--text-muted)] mt-3">{t('reports.no_entries')}</p>
                   )}
+                  {!aiEnabled && <p className="text-sm text-[var(--text-muted)] mt-3">AI reports require Supabase-backed mode.</p>}
             </div>
 
             {isLoading && (

@@ -35,6 +35,10 @@ export function getEnv(name: string): string {
   return value;
 }
 
+export function getServiceRoleClient() {
+  return createClient(getEnv('SUPABASE_URL'), getEnv('SUPABASE_SERVICE_ROLE_KEY'));
+}
+
 function encodeBase64(bytes: Uint8Array): string {
   let binary = '';
   bytes.forEach((byte) => {
@@ -85,7 +89,7 @@ export async function getAuthedContext(req: Request): Promise<AuthedContext> {
   if (!authHeader) throw new Error('Missing Authorization header.');
 
   const token = authHeader.replace('Bearer ', '');
-  const supabase = createClient(getEnv('SUPABASE_URL'), getEnv('SUPABASE_SERVICE_ROLE_KEY'));
+  const supabase = getServiceRoleClient();
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) throw new Error('Unauthorized');
 

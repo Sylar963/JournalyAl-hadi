@@ -1,6 +1,34 @@
 -- Bybit integration setup for DeltaJournal
 -- Run this after the core profiles / entries / quests tables are created.
 
+CREATE TABLE IF NOT EXISTS public.request_limits (
+  action TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  window_started_at TIMESTAMPTZ NOT NULL,
+  attempt_count INT NOT NULL DEFAULT 1 CHECK (attempt_count >= 1),
+  last_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (action, actor)
+);
+
+ALTER TABLE public.request_limits ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION update_request_limits_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_request_limits_updated_at ON public.request_limits;
+
+CREATE TRIGGER update_request_limits_updated_at
+BEFORE UPDATE ON public.request_limits
+FOR EACH ROW
+EXECUTE FUNCTION update_request_limits_updated_at();
+
 CREATE TABLE IF NOT EXISTS public.bybit_connections (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   environment TEXT NOT NULL CHECK (environment IN ('mainnet', 'testnet')),

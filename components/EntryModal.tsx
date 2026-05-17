@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { type BybitCachedPosition, type BybitCachedTrade, type EmotionEntry, type EmotionType, type TradeDetails } from '../types';
 import { EMOTIONS_CONFIG } from '../constants';
 import { getEmotionInsight } from '../services/geminiService';
+import { isJournalAiEnabled } from '../services/journalAiService';
 import { createTradeFingerprint, findDuplicateTrade } from '../services/tradingIndexService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import { useI18n } from '../hooks/useI18n';
@@ -51,6 +52,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
   const [aiInsight, setAiInsight] = useState<string>('');
   const [isInsightLoading, setIsInsightLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string>('');
+  const aiEnabled = isJournalAiEnabled();
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -293,23 +295,23 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
       setIsInsightLoading(true);
       setAiError('');
       setAiInsight('');
-      try {
-          const currentEntryState: EmotionEntry = {
-              ...(entry),
-              emotion: selectedEmotion,
+       try {
+           const currentEntryState: EmotionEntry = {
+               ...(entry),
+               emotion: selectedEmotion,
               intensity,
               notes,
               imageUrl: image,
           };
-          const insight = await getEmotionInsight(currentEntryState);
-          setAiInsight(insight);
-      } catch(error) {
-          console.error(error);
-          setAiError('Failed to get insight. Please try again.');
-      } finally {
-          setIsInsightLoading(false);
-      }
-  }, [entry, selectedEmotion, intensity, notes, image]);
+           const insight = await getEmotionInsight(currentEntryState);
+           setAiInsight(insight);
+       } catch(error) {
+           console.error(error);
+           setAiError(getErrorMessage(error) || 'Failed to get insight. Please try again.');
+       } finally {
+           setIsInsightLoading(false);
+       }
+   }, [entry, selectedEmotion, intensity, notes, image]);
 
   const selectedDateKey = `${selectedDate.getFullYear()}-${(selectedDate.getMonth() + 1).toString().padStart(2, '0')}-${selectedDate.getDate().toString().padStart(2, '0')}`;
   const todayKey = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${new Date().getDate().toString().padStart(2, '0')}`;
@@ -526,10 +528,11 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     
                     {entry && (
                         <div>
-                            <button onClick={handleFetchInsight} disabled={isInsightLoading || !selectedEmotion} className="journal-button-primary w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                            <button onClick={handleFetchInsight} disabled={!aiEnabled || isInsightLoading || !selectedEmotion} className="journal-button-primary w-full flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
                                 <IconSparkles className="w-5 h-5 mr-2" />
                                 {isInsightLoading ? t('modal.entry.generating') : t('modal.entry.get_insight')}
                             </button>
+                            {!aiEnabled && <p className="text-center text-sm text-[var(--text-subtle)] mt-2">AI insights require Supabase-backed mode.</p>}
                             {isInsightLoading && <p className="text-center text-sm text-[var(--text-muted)] mt-2 animate-pulse">{t('modal.entry.ai_thinking')}</p>}
                             {aiError && <p className="text-center text-sm text-red-400 mt-2">{aiError}</p>}
                             {aiInsight && (

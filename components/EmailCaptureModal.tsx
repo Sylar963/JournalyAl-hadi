@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { addLead } from '../services/dataService';
+import { addLead, isUsingSupabase } from '../services/dataService';
 import { getErrorMessage } from '../utils/errorHelpers';
 import { useI18n } from '../hooks/useI18n';
 
@@ -14,10 +14,16 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const leadCaptureEnabled = isUsingSupabase;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    if (!leadCaptureEnabled) {
+      setStatus('error');
+      setErrorMessage('Notify-me signup requires Supabase-backed mode.');
+      return;
+    }
 
     setStatus('submitting');
     try {
@@ -119,7 +125,7 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
 
                       <button
                         type="submit"
-                        disabled={status === 'submitting'}
+                        disabled={!leadCaptureEnabled || status === 'submitting'}
                         className="w-full bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] hover:opacity-90 text-white font-bold py-3 rounded-xl transition-all shadow-[0_0_20px_var(--chart-glow-color-1)] flex items-center justify-center gap-2 group"
                       >
                         {status === 'submitting' ? (
@@ -133,6 +139,9 @@ const EmailCaptureModal: React.FC<EmailCaptureModalProps> = ({ isOpen, onClose }
                           </>
                         )}
                       </button>
+                      {!leadCaptureEnabled && (
+                        <p className="text-xs text-left text-gray-400">Notify-me signup requires Supabase-backed mode.</p>
+                      )}
                     </form>
                   </>
                 )}

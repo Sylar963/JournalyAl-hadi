@@ -14,7 +14,8 @@
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `BYBIT_CREDENTIAL_ENCRYPTION_KEY`
-5. Deploy the Bybit functions from a non-U.S. region. Bybit documents U.S. IP restrictions and may return HTTP `403`.
+5. The setup SQL now also creates a shared `public.request_limits` table used to throttle credential validation and sync abuse.
+6. Deploy the Bybit functions from a non-U.S. region. Bybit documents U.S. IP restrictions and may return HTTP `403`.
 
 ## Backend Shape
 - The browser talks only to Supabase Edge Functions for Bybit credential validation, storage, and sync.
@@ -57,7 +58,7 @@ DJ_SMOKE_EMAIL="you@example.com" \
 DJ_SMOKE_PASSWORD="your-app-password" \
 SUPABASE_URL="https://your-project.supabase.co" \
 SUPABASE_ANON_KEY="your-anon-key" \
-npm run smoke:bybit
+pnpm run smoke:bybit
 ```
 
 - Optional environment variables:
@@ -79,6 +80,7 @@ npm run smoke:bybit
 
 ## Security Audit Checklist
 - Confirm the client never writes Bybit credentials to `localStorage`, Vite env vars, or logs.
+- Confirm validation and sync requests are rate-limited through `public.request_limits`.
 - Confirm only masked API key metadata is ever rendered in the UI.
 - Confirm `BYBIT_CREDENTIAL_ENCRYPTION_KEY` exists in the Edge Function environment.
 - Confirm there is no direct authenticated client policy on `bybit_connections`; only service-role Edge Functions should touch it.

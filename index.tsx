@@ -9,15 +9,6 @@ if (!rootElement) {
 }
 
 (async () => {
-  try {
-    if (navigator.storage?.persist) {
-      const isPersisted = await navigator.storage.persisted();
-      if (!isPersisted) {
-        await navigator.storage.persist();
-      }
-    }
-  } catch (e) {}
-
   sessionStorage.setItem('app_loaded', '1');
   const root = ReactDOM.createRoot(rootElement);
   root.render(<App />);

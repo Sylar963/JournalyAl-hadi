@@ -7,7 +7,7 @@ const SESSION_KEY = 'dj-supabase-session';
 
 function getStoredSession(): Session | null {
   try {
-    const stored = localStorage.getItem(SESSION_KEY);
+    const stored = sessionStorage.getItem(SESSION_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed?.expires_at && Date.now() > parsed.expires_at * 1000) {

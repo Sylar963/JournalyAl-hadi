@@ -8,6 +8,7 @@ import {
   mapBybitTradeRow,
 } from '../_shared/bybit.ts';
 import { corsPreflightResponse, decryptSecret, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
+import { assertRateLimit } from '../_shared/request-limits.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,6 +24,12 @@ serve(async (req) => {
   try {
     authContext = await getAuthedContext(req);
     const { userId, supabase } = authContext;
+    await assertRateLimit(supabase, {
+      action: 'bybit-sync-trades',
+      actor: userId,
+      maxAttempts: 120,
+      windowSeconds: 60 * 60,
+    });
     const { date, timezone, symbol, previewOnly } = await req.json();
 
     if (!date || !timezone) {

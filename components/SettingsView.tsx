@@ -349,10 +349,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
               <label className="text-sm text-[var(--text-muted)]">
                 <span className="block mb-2">{t('bybit.api_key')}</span>
                 <input
-                  type="text"
+                  type="password"
                   value={apiKey}
                   onChange={(event) => setApiKey(event.target.value)}
                   placeholder={t('bybit.api_key_placeholder')}
+                  autoComplete="off"
+                  spellCheck={false}
                   className="journal-input w-full rounded-xl p-3"
                 />
               </label>
@@ -360,13 +362,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
 
             <label className="text-sm text-[var(--text-muted)] block">
               <span className="block mb-2">{t('bybit.api_secret')}</span>
-              <input
-                type="password"
-                value={apiSecret}
-                onChange={(event) => setApiSecret(event.target.value)}
-                placeholder={t('bybit.api_secret_placeholder')}
-                className="journal-input w-full rounded-xl p-3"
-              />
+                <input
+                  type="password"
+                  value={apiSecret}
+                  onChange={(event) => setApiSecret(event.target.value)}
+                  placeholder={t('bybit.api_secret_placeholder')}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="journal-input w-full rounded-xl p-3"
+                />
             </label>
 
             <div className="flex flex-wrap gap-3">
@@ -541,6 +545,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                   value={thalexKeyName}
                   onChange={(e) => setThalexKeyName(e.target.value)}
                   placeholder="K123456789"
+                  autoComplete="off"
+                  spellCheck={false}
                   className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white font-mono"
                 />
               </label>
@@ -553,6 +559,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
                 onChange={(e) => setThalexPrivateKey(e.target.value)}
                 placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
                 rows={5}
+                autoComplete="off"
+                spellCheck={false}
                 className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-xl p-3 text-white font-mono text-xs resize-none"
               />
             </label>

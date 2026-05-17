@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { validateBybitCredentials } from '../_shared/bybit.ts';
 import { corsPreflightResponse, getAuthedContext, jsonResponse } from '../_shared/integration-runtime.ts';
+import { assertRateLimit } from '../_shared/request-limits.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,7 +12,14 @@ serve(async (req) => {
   }
 
   try {
-    await getAuthedContext(req);
+    const { userId, supabase } = await getAuthedContext(req);
+    await assertRateLimit(supabase, {
+      action: 'bybit-validate-credentials',
+      actor: userId,
+      maxAttempts: 10,
+      windowSeconds: 15 * 60,
+      minIntervalSeconds: 5,
+    });
     const { environment, apiKey, apiSecret } = await req.json();
 
     if (!environment || !apiKey || !apiSecret) {

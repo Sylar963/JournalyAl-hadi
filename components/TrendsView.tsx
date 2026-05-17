@@ -24,7 +24,8 @@ import { TranslationKey } from '../utils/translations';
 import { TiltIndexGauge } from './TiltIndexGauge';
 import { BehavioralInsights } from './BehavioralInsights';
 import { calculateTiltIndex } from '../services/tiltEngineService';
-import { learnTraderSignature, predictNextSessionRisk, TraderProfile, RiskPrediction } from '../services/behaviorLearner';
+import { learnTraderSignature, predictNextSessionRisk, RiskPrediction } from '../services/behaviorLearner';
+import { isJournalAiEnabled } from '../services/journalAiService';
 import { TiltMetrics } from '../types';
 
 ChartJS.register(
@@ -53,6 +54,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     const [tiltMetrics, setTiltMetrics] = useState<TiltMetrics | undefined>();
     const [riskPrediction, setRiskPrediction] = useState<RiskPrediction | undefined>();
     const [isTiltLoading, setIsTiltLoading] = useState(false);
+    const aiEnabled = isJournalAiEnabled();
 
     const currentMonthEntries = useMemo(() => {
         const today = new Date();
@@ -301,6 +303,11 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                     const metrics = calculateTiltIndex(currentEntry, historicalEntries);
                     setTiltMetrics(metrics);
 
+                    if (!aiEnabled || historicalEntries.length === 0) {
+                        setRiskPrediction(undefined);
+                        return;
+                    }
+
                     const profile = await learnTraderSignature(historicalEntries);
                     const prediction = await predictNextSessionRisk(profile, currentEntry);
                     setRiskPrediction(prediction);
@@ -312,7 +319,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             }
         };
         loadTiltData();
-    }, [activeTab, entries, tiltMetrics]);
+    }, [activeTab, aiEnabled, entries, tiltMetrics]);
 
   return (
     <div className="space-y-6 animate-content-entry">
@@ -420,11 +427,12 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mt-1">{t('trends.ai_title')}</h3>
                     <p className="text-sm text-[var(--text-muted)] mt-1">{t('trends.ai_subtitle')}</p>
                     </div>
-                    <button onClick={handleGenerateSummary} disabled={isSummaryLoading || currentMonthEntries.length === 0} className="journal-button-primary flex-shrink-0 flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button onClick={handleGenerateSummary} disabled={!aiEnabled || isSummaryLoading || currentMonthEntries.length === 0} className="journal-button-primary flex-shrink-0 flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                         <IconSparkles className="w-5 h-5 mr-2" />
                         {isSummaryLoading ? t('trends.ai_analyzing') : t('trends.ai_button')}
                     </button>
                 </div>
+                {!aiEnabled && <p className="text-sm text-[var(--text-subtle)] mt-4">AI summaries and behavioral coaching require Supabase-backed mode.</p>}
                 {isSummaryLoading && <p className="text-center text-sm text-[var(--text-muted)] mt-4">{t('trends.ai_thinking')}</p>}
                 {summaryError && <p className="text-center text-sm text-red-400 mt-4">{summaryError}</p>}
                 {aiSummary && (
@@ -432,12 +440,12 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                         <p className="text-sm text-[var(--text-main)] whitespace-pre-wrap font-light leading-relaxed">{aiSummary}</p>
                     </div>
                 )}
-                {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length > 0 && (
+                {!aiSummary && !isSummaryLoading && !summaryError && aiEnabled && currentMonthEntries.length > 0 && (
                     <p className="text-sm text-[var(--text-subtle)] mt-4 text-center sm:text-left">
                         {t('trends.ai_get_started')}
                     </p>
                 )}
-                {!aiSummary && !isSummaryLoading && !summaryError && currentMonthEntries.length === 0 && (
+                {!aiSummary && !isSummaryLoading && !summaryError && aiEnabled && currentMonthEntries.length === 0 && (
                     <p className="text-sm text-[var(--text-subtle)] mt-4 text-center sm:text-left">
                         {t('trends.ai_log_entries')}
                     </p>
