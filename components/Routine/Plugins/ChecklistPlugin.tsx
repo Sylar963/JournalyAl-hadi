@@ -8,8 +8,14 @@ const DEFAULT_TASKS: ChecklistTask[] = [
     { id: 4, text: 'Journal Previous Day', done: true },
 ];
 
+const getNextTaskId = (currentTasks: ChecklistTask[]) => (
+    currentTasks.reduce((maxId, task) => Math.max(maxId, task.id), 0) + 1
+);
+
 const ChecklistPlugin: React.FC<{ data: ChecklistWidgetData; onUpdate: (data: ChecklistWidgetData) => void }> = ({ data, onUpdate }) => {
     const [tasks, setTasks] = useState<ChecklistTask[]>(data.tasks ?? DEFAULT_TASKS);
+    const [draftTask, setDraftTask] = useState('');
+    const [isAddingTask, setIsAddingTask] = useState(false);
 
     useEffect(() => {
         setTasks(data.tasks ?? DEFAULT_TASKS);
@@ -21,7 +27,29 @@ const ChecklistPlugin: React.FC<{ data: ChecklistWidgetData; onUpdate: (data: Ch
         onUpdate({ tasks: nextTasks });
     };
 
-    const progress = Math.round((tasks.filter(t => t.done).length / tasks.length) * 100);
+    const addTask = () => {
+        const trimmedTask = draftTask.trim();
+        if (!trimmedTask) {
+            return;
+        }
+
+        const nextTasks = [
+            ...tasks,
+            { id: getNextTaskId(tasks), text: trimmedTask, done: false },
+        ];
+        setTasks(nextTasks);
+        setDraftTask('');
+        setIsAddingTask(false);
+        onUpdate({ tasks: nextTasks });
+    };
+
+    const removeTask = (id: number) => {
+        const nextTasks = tasks.filter((task) => task.id !== id);
+        setTasks(nextTasks);
+        onUpdate({ tasks: nextTasks });
+    };
+
+    const progress = tasks.length === 0 ? 0 : Math.round((tasks.filter(t => t.done).length / tasks.length) * 100);
 
     return (
         <div className="h-full flex flex-col">
@@ -42,28 +70,86 @@ const ChecklistPlugin: React.FC<{ data: ChecklistWidgetData; onUpdate: (data: Ch
                 {tasks.map(task => (
                     <div 
                         key={task.id}
-                        onClick={() => toggleTask(task.id)}
-                        className={`group flex items-center p-2 rounded-lg cursor-pointer transition-all ${
+                        className={`group flex items-center gap-3 p-2 rounded-lg transition-all ${
                             task.done ? 'bg-green-500/5' : 'hover:bg-white/5'
                         }`}
                     >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center mr-3 transition-colors ${
-                            task.done 
-                                ? 'bg-green-500 border-green-500 text-black' 
-                                : 'border-gray-600 group-hover:border-gray-400'
-                        }`}>
+                        <button
+                            type="button"
+                            onClick={() => toggleTask(task.id)}
+                            aria-label={`${task.done ? 'Mark task as incomplete' : 'Mark task as complete'}: ${task.text}`}
+                            className={`w-4 h-4 shrink-0 rounded border flex items-center justify-center transition-colors ${
+                                task.done
+                                    ? 'bg-green-500 border-green-500 text-black'
+                                    : 'border-gray-600 group-hover:border-gray-400'
+                            }`}
+                        >
                             {task.done && <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </div>
-                        <span className={`text-sm ${task.done ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => toggleTask(task.id)}
+                            className={`flex-1 text-left text-sm ${task.done ? 'text-gray-500 line-through' : 'text-gray-300'}`}
+                        >
                             {task.text}
-                        </span>
+                        </button>
+                        {task.done && (
+                            <button
+                                type="button"
+                                onClick={() => removeTask(task.id)}
+                                aria-label={`Remove task: ${task.text}`}
+                                className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-gray-500 transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                                X
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
-            
-            <button className="mt-2 w-full py-2 border border-dashed border-white/10 rounded-lg text-xs text-gray-500 hover:text-white hover:border-white/30 transition-all">
-                + Add Task
-            </button>
+
+            {isAddingTask ? (
+                <form
+                    className="mt-2 space-y-2"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        addTask();
+                    }}
+                >
+                    <input
+                        autoFocus
+                        value={draftTask}
+                        onChange={(event) => setDraftTask(event.target.value)}
+                        placeholder="Add a pre-flight task"
+                        className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-white/25"
+                    />
+                    <div className="flex gap-2">
+                        <button
+                            type="submit"
+                            className="flex-1 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
+                        >
+                            Save Task
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setDraftTask('');
+                                setIsAddingTask(false);
+                            }}
+                            className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-gray-400 transition-colors hover:border-white/25 hover:text-white"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            ) : (
+                <button
+                    type="button"
+                    onClick={() => setIsAddingTask(true)}
+                    className="mt-2 w-full py-2 border border-dashed border-white/10 rounded-lg text-xs text-gray-500 hover:text-white hover:border-white/30 transition-all"
+                >
+                    + Add Task
+                </button>
+            )}
         </div>
     );
 };

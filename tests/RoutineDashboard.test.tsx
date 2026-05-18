@@ -67,4 +67,35 @@ describe('RoutineDashboard', () => {
     const task = await screen.findByText('Check Economic Calendar');
     expect(task.className).toContain('line-through');
   });
+
+  it('adds and removes custom checklist tasks', async () => {
+    const storageKey = `journaly_routine_${new Date().toISOString().split('T')[0]}`;
+    const customTask = 'Check liquidity before London open';
+
+    render(
+      <I18nProvider>
+        <RoutineDashboard />
+      </I18nProvider>
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: /\+ add task/i }));
+    fireEvent.change(screen.getByPlaceholderText(/add a pre-flight task/i), {
+      target: { value: customTask },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /save task/i }));
+
+    expect(await screen.findByText(customTask)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(localStorage.getItem(storageKey)).toContain(customTask);
+    });
+
+    fireEvent.click(screen.getByText(customTask));
+    fireEvent.click(await screen.findByRole('button', { name: `Remove task: ${customTask}` }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(customTask)).not.toBeInTheDocument();
+      expect(localStorage.getItem(storageKey)).not.toContain(customTask);
+    });
+  });
 });
