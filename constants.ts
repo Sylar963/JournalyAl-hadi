@@ -178,7 +178,7 @@ export const AD_MESSAGES = [
   {
     title: "Oggregator",
     message: "The all-in-one options aggregator. Compare spreads across exchanges and find the best prices.",
-    url: "https://www.oggregator.xyz",
+    url: "https://oggregator.xyz",
     icon: 'exchange'
   }
 ];
