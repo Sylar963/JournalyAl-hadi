@@ -268,8 +268,10 @@ export type BiasDirection = 'bullish' | 'bearish' | 'neutral';
 
 export interface DailyBiasWidgetData extends WidgetData {
   view?: BiasView;
-  bias?: BiasDirection;
-  notes?: string;
+  dailyBias?: BiasDirection;
+  dailyNotes?: string;
+  weeklyBias?: BiasDirection;
+  weeklyNotes?: string;
 }
 
 export interface ChecklistTask {

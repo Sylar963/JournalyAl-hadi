@@ -3,20 +3,26 @@ import { DailyBiasWidgetData } from '../../../types';
 
 const DailyBiasPlugin: React.FC<{ data: DailyBiasWidgetData; onUpdate: (data: DailyBiasWidgetData) => void }> = ({ data, onUpdate }) => {
   const [view, setView] = useState<BiasView>(data.view ?? 'daily');
-  const [bias, setBias] = useState<BiasDirection>(data.bias ?? 'neutral');
-  const [notes, setNotes] = useState(data.notes ?? '');
+  const [dailyBias, setDailyBias] = useState<BiasDirection>(data.dailyBias ?? 'neutral');
+  const [dailyNotes, setDailyNotes] = useState(data.dailyNotes ?? '');
+  const [weeklyBias, setWeeklyBias] = useState<BiasDirection>(data.weeklyBias ?? 'neutral');
+  const [weeklyNotes, setWeeklyNotes] = useState(data.weeklyNotes ?? '');
 
   useEffect(() => {
     setView(data.view ?? 'daily');
-    setBias(data.bias ?? 'neutral');
-    setNotes(data.notes ?? '');
-  }, [data.bias, data.notes, data.view]);
+    setDailyBias(data.dailyBias ?? 'neutral');
+    setDailyNotes(data.dailyNotes ?? '');
+    setWeeklyBias(data.weeklyBias ?? 'neutral');
+    setWeeklyNotes(data.weeklyNotes ?? '');
+  }, [data.view, data.dailyBias, data.dailyNotes, data.weeklyBias, data.weeklyNotes]);
 
   const syncData = (nextData: Partial<DailyBiasWidgetData>) => {
     onUpdate({
       view,
-      bias,
-      notes,
+      dailyBias,
+      dailyNotes,
+      weeklyBias,
+      weeklyNotes,
       ...nextData,
     });
   };
@@ -47,12 +53,17 @@ const DailyBiasPlugin: React.FC<{ data: DailyBiasWidgetData; onUpdate: (data: Da
             <button
               key={b}
               onClick={() => {
-                setBias(b);
-                syncData({ bias: b });
+                if (view === 'daily') {
+                  setDailyBias(b);
+                  syncData({ dailyBias: b });
+                } else {
+                  setWeeklyBias(b);
+                  syncData({ weeklyBias: b });
+                }
               }}
               className={`border border-white/5 rounded-lg py-2 flex flex-col items-center justify-center transition-all ${
-                 bias === b 
-                   ? b === 'bullish' ? 'bg-green-500/20 border-green-500/50 text-green-400' 
+                 (view === 'daily' ? dailyBias : weeklyBias) === b
+                   ? b === 'bullish' ? 'bg-green-500/20 border-green-500/50 text-green-400'
                    : b === 'bearish' ? 'bg-red-500/20 border-red-500/50 text-red-400'
                    : 'bg-gray-500/20 border-gray-500/50 text-gray-300'
                    : 'hover:bg-white/5 text-gray-500'
@@ -66,14 +77,19 @@ const DailyBiasPlugin: React.FC<{ data: DailyBiasWidgetData; onUpdate: (data: Da
          ))}
       </div>
 
-      <textarea 
+      <textarea
         className="flex-grow bg-black/20 border border-white/5 rounded-lg p-3 text-sm text-gray-300 resize-none focus:outline-none focus:border-white/20 placeholder-gray-600"
         placeholder={`Write your ${view} market thesis...`}
-        value={notes}
+        value={view === 'daily' ? dailyNotes : weeklyNotes}
         onChange={(e) => {
           const nextNotes = e.target.value;
-          setNotes(nextNotes);
-          syncData({ notes: nextNotes });
+          if (view === 'daily') {
+            setDailyNotes(nextNotes);
+            syncData({ dailyNotes: nextNotes });
+          } else {
+            setWeeklyNotes(nextNotes);
+            syncData({ weeklyNotes: nextNotes });
+          }
         }}
       />
     </div>

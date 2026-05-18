@@ -67,8 +67,8 @@ const RoutineDashboard: React.FC = () => {
             const nextLayout = {
                 ...baseLayout,
                 items,
-                thesis: pluginId === 'daily-bias' && typeof data.bias === 'string'
-                    ? data.bias as BiasDirection
+                thesis: pluginId === 'daily-bias' && typeof data.view === 'string'
+                    ? (data.view === 'daily' ? data.dailyBias : data.weeklyBias) as BiasDirection ?? baseLayout.thesis
                     : baseLayout.thesis,
                 lastUpdated: new Date().toISOString(),
             };

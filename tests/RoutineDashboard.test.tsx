@@ -31,7 +31,9 @@ describe('RoutineDashboard', () => {
     });
 
     await waitFor(() => {
-      expect(localStorage.getItem(storageKey)).toContain(note);
+      const stored = localStorage.getItem(storageKey);
+      expect(stored).toContain(note);
+      expect(stored).toContain('dailyNotes');
     });
 
     unmount();
