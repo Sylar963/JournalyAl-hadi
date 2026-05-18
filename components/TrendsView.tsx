@@ -12,6 +12,8 @@ import {
   Title,
   Tooltip,
   Legend,
+  type ChartOptions,
+  type TooltipItem,
 } from 'chart.js';
 import { type EmotionEntry, type EmotionType } from '../types';
 import { EMOTION_CHART_COLORS, EMOTION_KEYS, EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
@@ -108,7 +110,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
     }, [currentMonthEntries, t]);
 
 
-    const barChartOptions = {
+    const barChartOptions: ChartOptions<'bar'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -128,8 +130,8 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                 displayColors: true,
                 boxPadding: 5,
                 callbacks: {
-                    title: (tooltipItems: any[]) => tooltipItems[0].label,
-                    label: (context: any) => {
+                    title: (tooltipItems: TooltipItem<'bar'>[]) => tooltipItems[0]?.label ?? '',
+                    label: (context: TooltipItem<'bar'>) => {
                          const count = context.parsed.y;
                          if (count !== null) {
                             return `${count} ${count === 1 ? t('trends.chart_day') : t('trends.chart_days')}`;
@@ -178,7 +180,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         };
     }, [currentMonthEntries, t, language]);
       
-    const intensityChartOptions = {
+    const intensityChartOptions: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -187,13 +189,16 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
             tooltip: {
                 ...barChartOptions.plugins.tooltip,
                 callbacks: {
-                    title: (tooltipItems: any[]) => {
-                        const index = tooltipItems[0].dataIndex;
+                    title: (tooltipItems: TooltipItem<'line'>[]) => {
+                        const index = tooltipItems[0]?.dataIndex;
+                        if (index === undefined) {
+                            return '';
+                        }
                         const sorted = [...currentMonthEntries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                         const entry = sorted[index];
-                        return `${tooltipItems[0].label} - ${entry?.emotion ? t(`emotion.${entry.emotion}` as TranslationKey) : 'N/A'}`;
+                        return `${tooltipItems[0]?.label ?? ''} - ${entry?.emotion ? t(`emotion.${entry.emotion}` as TranslationKey) : 'N/A'}`;
                     },
-                    label: (context: any) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
+                    label: (context: TooltipItem<'line'>) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
                 }
             }
         },
@@ -237,7 +242,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
         };
     }, [currentMonthEntries, t]);
 
-    const radarChartOptions = {
+    const radarChartOptions: ChartOptions<'radar'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -246,8 +251,8 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
              tooltip: {
                 ...barChartOptions.plugins.tooltip,
                 callbacks: {
-                    title: (tooltipItems: any[]) => tooltipItems[0].label,
-                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? t('trends.chart_day') : t('trends.chart_days')}`,
+                    title: (tooltipItems: TooltipItem<'radar'>[]) => tooltipItems[0]?.label ?? '',
+                    label: (context: TooltipItem<'radar'>) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? t('trends.chart_day') : t('trends.chart_days')}`,
                 }
             }
         },
@@ -377,7 +382,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_distribution')}</h3>
                     <div className="h-80">
                     {currentMonthEntries.length > 0 ? (
-                        <Bar options={barChartOptions as any} data={distributionChartData} />
+                        <Bar options={barChartOptions} data={distributionChartData} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-[var(--text-subtle)]">
                             {t('trends.no_data')}
@@ -390,7 +395,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_intensity')}</h3>
                     <div className="h-80">
                     {currentMonthEntries.length > 0 ? (
-                        <Line options={intensityChartOptions as any} data={intensityChartData} />
+                        <Line options={intensityChartOptions} data={intensityChartData} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-[var(--text-subtle)]">
                             {t('trends.no_intensity')}
@@ -403,7 +408,7 @@ const TrendsView: React.FC<TrendsViewProps> = ({ entries }) => {
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_weekly')}</h3>
                     <div className="h-96">
                     {currentMonthEntries.length > 0 ? (
-                        <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
+                        <Radar options={radarChartOptions} data={dayOfWeekChartData} />
                     ) : (
                         <div className="flex items-center justify-center h-full text-[var(--text-subtle)]">
                             {t('trends.no_weekly')}

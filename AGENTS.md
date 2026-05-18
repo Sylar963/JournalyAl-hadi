@@ -35,7 +35,7 @@
 - `dist/` and `test-results/` are generated outputs. Do not edit them unless the task is specifically about build or Playwright artifacts.
 
 ## Emotions Configuration
-- Valid `EmotionType` values: `happy`, `calm`, `anxious`, `sad`, `angry`
+- Valid `EmotionType` values: `confident`, `composed`, `anxious`, `hesitant`, `frustrated`, `euphoric`
 - Defined in `constants.ts` as `EMOTIONS_CONFIG`
 - Used throughout components (`CalendarView.tsx`, `EntryModal.tsx`, `HistoryView.tsx`, `TrendsView.tsx`, `PNLCorrelationView.tsx`)
-- Auto-synced entries from Bybit use emotion `neutral` which is NOT a valid EmotionType - calendar handles this gracefully by checking for trades instead
+- Legacy values like `happy`, `calm`, `sad`, `angry`, and `neutral` are normalized in `utils/emotions.ts`

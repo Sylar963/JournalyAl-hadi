@@ -20,10 +20,6 @@ export function resolveFutureTradeType(side?: string, isClosingPosition = false)
   return side === 'Sell' ? 'Short Future' : 'Long Future';
 }
 
-export function normalizeTradeTypeFromSide(side?: string): TradeDetails['type'] {
-  return resolveFutureTradeType(side);
-}
-
 function isClosingTrade(trade: Partial<TradeDetails>) {
   return trade.status === 'closed' || trade.closedPnl !== undefined;
 }

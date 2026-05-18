@@ -3,6 +3,7 @@ const LEGACY_EMOTION_MAP = {
   calm: 'composed',
   sad: 'hesitant',
   angry: 'frustrated',
+  neutral: 'composed',
 } as const;
 
 export function normalizeEmotionValue(emotion: string): string {

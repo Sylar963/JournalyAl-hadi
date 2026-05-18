@@ -9,7 +9,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  ScatterController
+  ScatterController,
+  type ChartOptions,
 } from 'chart.js';
 import { Scatter, Bar, Line } from 'react-chartjs-2';
 import { type EmotionEntry } from '../types';
@@ -89,7 +90,7 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
         };
     }, [entriesWithPNL]);
 
-    const scatterOptions = {
+    const scatterOptions: ChartOptions<'scatter'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -144,7 +145,7 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
         };
     }, [entriesWithPNL]);
 
-    const barOptions = {
+    const barOptions: ChartOptions<'bar'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -187,7 +188,7 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
         };
     }, [entriesWithPNL]);
 
-    const lineOptions = {
+    const lineOptions: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -234,13 +235,13 @@ const PNLCorrelationView: React.FC<PNLCorrelationViewProps> = ({ entries }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="journal-panel p-6 rounded-2xl h-80">
-                      <Scatter options={scatterOptions as any} data={emotionalAlphaData} />
+                      <Scatter options={scatterOptions} data={emotionalAlphaData} />
                  </div>
                 <div className="journal-panel p-6 rounded-2xl h-80">
-                      <Bar options={barOptions as any} data={pnlByEmotionData} />
+                      <Bar options={barOptions} data={pnlByEmotionData} />
                  </div>
                 <div className="journal-panel p-6 rounded-2xl h-80 lg:col-span-2">
-                      <Line options={lineOptions as any} data={equityCurveData} />
+                      <Line options={lineOptions} data={equityCurveData} />
                  </div>
             </div>
             

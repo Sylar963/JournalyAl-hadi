@@ -2,15 +2,19 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import RoutineDashboard from '../components/Routine/RoutineDashboard';
 import { I18nProvider } from '../hooks/useI18n';
+import { getAssetCorrelations } from '../services/hyperliquidService';
 
 vi.mock('../services/hyperliquidService', () => ({
   getAssetCorrelations: vi.fn().mockResolvedValue([]),
 }));
 
+const mockedGetAssetCorrelations = vi.mocked(getAssetCorrelations);
+
 describe('RoutineDashboard', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
+    mockedGetAssetCorrelations.mockResolvedValue([]);
   });
 
   it('persists market bias notes across reloads', async () => {
@@ -97,5 +101,46 @@ describe('RoutineDashboard', () => {
       expect(screen.queryByText(customTask)).not.toBeInTheDocument();
       expect(localStorage.getItem(storageKey)).not.toContain(customTask);
     });
+  });
+
+  it('reuses the last saved template when today has no layout yet', async () => {
+    localStorage.setItem('journaly_routine_template', JSON.stringify({
+      items: [
+        {
+          i: 'checklist',
+          x: 0,
+          y: 0,
+          w: 1,
+          h: 2,
+          pluginId: 'checklist',
+          data: {
+            tasks: [{ id: 99, text: 'Template checklist task', done: false }],
+          },
+        },
+      ],
+      thesis: null,
+      lastUpdated: new Date().toISOString(),
+    }));
+
+    render(
+      <I18nProvider>
+        <RoutineDashboard />
+      </I18nProvider>
+    );
+
+    expect(await screen.findByText('Template checklist task')).toBeInTheDocument();
+  });
+
+  it('shows an error message when correlation data fails to load', async () => {
+    mockedGetAssetCorrelations.mockRejectedValueOnce(new Error('Correlation request failed'));
+
+    render(
+      <I18nProvider>
+        <RoutineDashboard />
+      </I18nProvider>
+    );
+
+    expect(await screen.findByText('Correlation data is unavailable right now.')).toBeInTheDocument();
+    expect(screen.getByText('Correlation request failed')).toBeInTheDocument();
   });
 });

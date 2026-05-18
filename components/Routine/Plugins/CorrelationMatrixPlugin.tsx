@@ -1,26 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { CorrelationMatrixWidgetData } from '../../../types';
 import { getAssetCorrelations } from '../../../services/hyperliquidService';
+import { getErrorMessage } from '../../../utils/errorHelpers';
 
-const CorrelationMatrixPlugin: React.FC<{ data: CorrelationMatrixWidgetData; onUpdate: (data: CorrelationMatrixWidgetData) => void }> = () => {
+const DEFAULT_BASE_ASSET = 'SP500';
+const DEFAULT_TARGET_ASSETS = ['XYZ100', 'BTC'];
+
+const CorrelationMatrixPlugin: React.FC<{ data: CorrelationMatrixWidgetData; onUpdate: (data: CorrelationMatrixWidgetData) => void }> = ({ data }) => {
   const [pairs, setPairs] = useState<{ symbol: string; name: string; correlation: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const baseAsset = data.baseAsset ?? DEFAULT_BASE_ASSET;
+  const targetAssets = data.targetAssets ?? DEFAULT_TARGET_ASSETS;
 
   useEffect(() => {
-    getAssetCorrelations('SP500', ['XYZ100', 'BTC']).then(data => {
-      setPairs(data);
+    getAssetCorrelations(baseAsset, targetAssets).then(nextPairs => {
+      setPairs(nextPairs);
+      setError(null);
       setLoading(false);
-    }).catch(() => {
+    }).catch((err: unknown) => {
+      setError(getErrorMessage(err));
       setLoading(false);
     });
-  }, []);
+  }, [baseAsset, targetAssets]);
 
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-2 text-xs text-gray-400 border-b border-white/5 pb-1">
           <span>Asset</span>
-          <span className="text-right">Corr (SP500)</span>
+          <span className="text-right">Corr ({baseAsset})</span>
           <span className="text-right">Status</span>
         </div>
         {[1, 2, 3, 4].map(i => (
@@ -34,13 +43,22 @@ const CorrelationMatrixPlugin: React.FC<{ data: CorrelationMatrixWidgetData; onU
     );
   }
 
+  if (error) {
+    return (
+      <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
+        <p className="text-sm font-medium text-red-300">Correlation data is unavailable right now.</p>
+        <p className="mt-1 text-xs text-red-200/80">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2 text-xs text-gray-400 border-b border-white/5 pb-1">
          <span>Asset</span>
-         <span className="text-right">Corr (SP500)</span>
+         <span className="text-right">Corr ({baseAsset})</span>
          <span className="text-right">Status</span>
-      </div>
+       </div>
       
       {pairs.map(pair => (
         <div key={pair.symbol} className="grid grid-cols-3 gap-2 items-center text-sm">

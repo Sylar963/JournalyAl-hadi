@@ -160,6 +160,7 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       console.error('Error adding quest:', message);
+      throw err;
     }
   }, []);
 
@@ -170,6 +171,7 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       console.error('Error updating quest:', message);
+      throw err;
     }
   }, []);
 
@@ -180,6 +182,7 @@ export function useJournalData(session: Session | null, isSupabaseConfigured: bo
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       console.error('Error deleting quest:', message);
+      throw err;
     }
   }, []);
 

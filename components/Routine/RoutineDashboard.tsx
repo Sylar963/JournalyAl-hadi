@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { routineService } from '../../services/routineService';
 import { getRoutinePlugin, getRoutinePlugins } from '../../services/routinePlugins';
@@ -26,7 +26,7 @@ const RoutineDashboard: React.FC = () => {
     // Get today's layout
     const today = new Date().toISOString().split('T')[0];
     const [layout, setLayout] = useState<RoutineLayout | null>(null);
-    const activePlugins = getRoutinePlugins();
+    const activePlugins = useMemo(() => getRoutinePlugins(), []);
 
     useEffect(() => {
         const stored = routineService.getLayout(today);
@@ -35,11 +35,11 @@ const RoutineDashboard: React.FC = () => {
             return;
         }
 
-        const defaultLayout = createDefaultLayout(activePlugins);
+        const defaultLayout = routineService.getLastKnownLayout() ?? createDefaultLayout(activePlugins);
         setLayout(defaultLayout);
         routineService.saveLayout(today, defaultLayout);
         routineService.saveTemplate(defaultLayout);
-    }, [today]);
+    }, [activePlugins, today]);
 
     const handlePluginUpdate = (pluginId: string, data: WidgetData) => {
         setLayout((currentLayout) => {

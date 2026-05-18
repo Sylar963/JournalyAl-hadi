@@ -3,6 +3,7 @@ import { Quest } from '../types';
 import IconPlus from './icons/IconPlus';
 import IconTrash from './icons/IconTrash';
 import { useI18n } from '../hooks/useI18n';
+import { getErrorMessage } from '../utils/errorHelpers';
 
 interface QuestsPopoverProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ const QuestsPopover: React.FC<QuestsPopoverProps> = ({ isOpen, quests, onAddQues
   const { t } = useI18n();
   const [newQuestText, setNewQuestText] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [actionError, setActionError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
@@ -51,13 +53,38 @@ const QuestsPopover: React.FC<QuestsPopoverProps> = ({ isOpen, quests, onAddQues
     e.preventDefault();
     if (newQuestText.trim() === '' || isAdding) return;
     setIsAdding(true);
+    setActionError('');
     try {
         await onAddQuest(newQuestText);
         setNewQuestText('');
     } catch (error) {
-        console.error("Failed to add quest", error);
+        const message = getErrorMessage(error);
+        setActionError(message);
+        console.error("Failed to add quest", message);
     } finally {
         setIsAdding(false);
+    }
+  };
+
+  const handleToggleQuest = async (id: string, completed: boolean) => {
+    setActionError('');
+    try {
+      await onToggleQuest(id, completed);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setActionError(message);
+      console.error('Failed to update quest', message);
+    }
+  };
+
+  const handleDeleteQuest = async (id: string) => {
+    setActionError('');
+    try {
+      await onDeleteQuest(id);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setActionError(message);
+      console.error('Failed to delete quest', message);
     }
   };
   
@@ -80,7 +107,7 @@ const QuestsPopover: React.FC<QuestsPopoverProps> = ({ isOpen, quests, onAddQues
                     {pendingQuests.length > 0 && (
                         <div className="space-y-1">
                             {pendingQuests.map(quest => (
-                                <QuestItem key={quest.id} quest={quest} onToggle={() => onToggleQuest(quest.id, !quest.completed)} onDelete={() => onDeleteQuest(quest.id)} />
+                                <QuestItem key={quest.id} quest={quest} onToggle={() => { void handleToggleQuest(quest.id, !quest.completed); }} onDelete={() => { void handleDeleteQuest(quest.id); }} />
                             ))}
                         </div>
                     )}
@@ -89,7 +116,7 @@ const QuestsPopover: React.FC<QuestsPopoverProps> = ({ isOpen, quests, onAddQues
                           <div className="my-3 border-t border-dashed border-gray-700/50"></div>
                           <div className="space-y-1">
                             {completedQuests.map(quest => (
-                                <QuestItem key={quest.id} quest={quest} onToggle={() => onToggleQuest(quest.id, !quest.completed)} onDelete={() => onDeleteQuest(quest.id)} />
+                                <QuestItem key={quest.id} quest={quest} onToggle={() => { void handleToggleQuest(quest.id, !quest.completed); }} onDelete={() => { void handleDeleteQuest(quest.id); }} />
                             ))}
                           </div>
                         </>
@@ -98,6 +125,7 @@ const QuestsPopover: React.FC<QuestsPopoverProps> = ({ isOpen, quests, onAddQues
             )}
         </div>
         <div className="p-3 bg-black/25 border-t border-gray-800">
+            {actionError && <p className="mb-2 text-xs text-red-400">{actionError}</p>}
             <form onSubmit={handleAddQuest} className="flex items-center space-x-2">
                 <input 
                     ref={inputRef}

@@ -43,14 +43,11 @@ export const routineService = {
     }
   },
 
-  // Helper to maintain "Previous Day's Layout" as a template for today
   getLastKnownLayout: (): RoutineLayout | null => {
-     try {
-       // Naive implementation: iterate keys or store a separate 'template' key
-       // For now, we'll store a dedicated 'template' key whenever a layout is saved
-       const template = getStoredValue(`${STORAGE_KEY_PREFIX}template`);
-       return template ? JSON.parse(template) : null; 
-     } catch (error) {
+      try {
+        const template = getStoredValue(`${STORAGE_KEY_PREFIX}template`);
+        return template ? JSON.parse(template) : null; 
+      } catch (error) {
        return null;
      }
   },

@@ -26,6 +26,7 @@ import { ThemeWrapper } from './components/ThemeWrapper';
 import { I18nProvider } from './hooks/useI18n';
 import CookieBanner from './components/CookieBanner';
 import AppUpdatePrompt from './components/AppUpdatePrompt';
+import AppErrorBoundary from './components/AppErrorBoundary';
 import PrivacyPolicy from './components/Legal/PrivacyPolicy';
 import TermsOfService from './components/Legal/TermsOfService';
 import { Analytics } from '@vercel/analytics/react';
@@ -329,7 +330,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <I18nProvider>
-      <AppContent />
+      <AppErrorBoundary>
+        <AppContent />
+      </AppErrorBoundary>
     </I18nProvider>
   );
 };

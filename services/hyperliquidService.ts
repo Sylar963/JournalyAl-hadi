@@ -2,6 +2,29 @@ const HYPERLIQUID_API_URL = 'https://api.hyperliquid.xyz/info';
 
 const HIP3_SYMBOLS = ['SP500', 'XYZ100'];
 
+interface CandleSnapshot {
+  t: number;
+  o: string;
+  h: string;
+  l: string;
+  c: string;
+  v: string;
+}
+
+function isCandleSnapshot(value: unknown): value is CandleSnapshot {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candle = value as Partial<CandleSnapshot>;
+  return typeof candle.t === 'number'
+    && typeof candle.o === 'string'
+    && typeof candle.h === 'string'
+    && typeof candle.l === 'string'
+    && typeof candle.c === 'string'
+    && typeof candle.v === 'string';
+}
+
 function formatCoinSymbol(coin: string): string {
   if (HIP3_SYMBOLS.includes(coin)) {
     return `xyz:${coin}`;
@@ -47,7 +70,7 @@ async function fetchCandlesWithRetry(coin: string, interval: string = '1d', days
         return [];
       }
 
-      return data.map((c: any) => ({
+      return data.filter(isCandleSnapshot).map((c) => ({
         time: c.t,
         open: parseFloat(c.o),
         high: parseFloat(c.h),

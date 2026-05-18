@@ -7,7 +7,7 @@ const registerCodepatternsCommand = () => {
     usage: '/codepatterns [query]',
     execute: async (args) => {
       const query = args.join(' ');
-      console.log('Searching patterns for:', query);
+      console.debug('Searching patterns for:', query);
     },
   });
 };
@@ -19,7 +19,7 @@ const registerGotoCommand = () => {
     usage: '/goto [view]',
     execute: async (args) => {
       const view = args[0];
-      console.log('Navigate to:', view);
+      console.debug('Navigate to:', view);
     },
   });
 };
@@ -31,7 +31,7 @@ const registerExportCommand = () => {
     usage: '/export [json|csv]',
     execute: async (args) => {
       const format = args[0] || 'json';
-      console.log('Export as:', format);
+      console.debug('Export as:', format);
     },
   });
 };
@@ -43,7 +43,7 @@ const registerThemeCommand = () => {
     usage: '/theme [insilico|cscalp|bloomberg]',
     execute: async (args) => {
       const themeName = args[0];
-      console.log('Set theme:', themeName);
+      console.debug('Set theme:', themeName);
     },
   });
 };
@@ -55,9 +55,9 @@ const registerHelpCommand = () => {
     usage: '/help',
     execute: async () => {
       const commands = SlashCommandRegistry.getAll();
-      console.log('Available commands:');
+      console.debug('Available commands:');
       commands.forEach((cmd) => {
-        console.log(`  /${cmd.name} - ${cmd.description}`);
+        console.debug(`  /${cmd.name} - ${cmd.description}`);
       });
     },
   });

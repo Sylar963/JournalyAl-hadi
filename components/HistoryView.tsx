@@ -12,6 +12,8 @@ import {
   Title,
   Tooltip,
   Legend,
+  type ChartOptions,
+  type TooltipItem,
 } from 'chart.js';
 import { type EmotionEntry, type EmotionType, type MonthlySummary } from '../types';
 import { EMOTION_CHART_COLORS, EMOTION_KEYS, EMOTIONS_CONFIG, WEEK_DAYS } from '../constants';
@@ -91,7 +93,7 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
     const monthName = t(`month.${summary.month}` as TranslationKey);
     const capitalizedMonthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
-    const chartOptions = {
+    const chartOptions: ChartOptions<'bar'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -111,8 +113,8 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
                 displayColors: true,
                 boxPadding: 5,
                 callbacks: {
-                    title: (tooltipItems: any[]) => tooltipItems[0].label,
-                    label: (context: any) => {
+                    title: (tooltipItems: TooltipItem<'bar'>[]) => tooltipItems[0]?.label ?? '',
+                    label: (context: TooltipItem<'bar'>) => {
                         const count = context.parsed.y;
                         if (count !== null) {
                            return `${count} ${count === 1 ? t('trends.chart_day') : t('trends.chart_days')}`;
@@ -182,19 +184,22 @@ const MonthlySummaryCard: React.FC<{ summary: MonthlySummary, entries: EmotionEn
         };
     }, [sortedEntriesForIntensity, language, t]);
 
-    const intensityChartOptions = {
+    const intensityChartOptions: ChartOptions<'line'> = {
         ...chartOptions,
         plugins: {
             ...chartOptions.plugins,
             tooltip: {
                 ...chartOptions.plugins.tooltip,
 callbacks: {
-                    title: (tooltipItems: any[]) => {
-                        const index = tooltipItems[0].dataIndex;
+                    title: (tooltipItems: TooltipItem<'line'>[]) => {
+                        const index = tooltipItems[0]?.dataIndex;
+                        if (index === undefined) {
+                            return '';
+                        }
                         const entry = sortedEntriesForIntensity[index];
-                        return `${tooltipItems[0].label} - ${entry?.emotion ? t(`emotion.${entry.emotion}` as TranslationKey) : 'N/A'}`;
+                        return `${tooltipItems[0]?.label ?? ''} - ${entry?.emotion ? t(`emotion.${entry.emotion}` as TranslationKey) : 'N/A'}`;
                     },
-                    label: (context: any) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
+                    label: (context: TooltipItem<'line'>) => `${t('trends.chart_intensity_label')}: ${context.parsed.y}`,
                 }
             }
         },
@@ -229,7 +234,7 @@ callbacks: {
         };
     }, [entries, t]);
 
-    const radarChartOptions = {
+    const radarChartOptions: ChartOptions<'radar'> = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -238,8 +243,8 @@ callbacks: {
              tooltip: {
                 ...chartOptions.plugins.tooltip,
                 callbacks: {
-                    title: (tooltipItems: any[]) => tooltipItems[0].label,
-                    label: (context: any) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? t('trends.chart_day') : t('trends.chart_days')}`,
+                    title: (tooltipItems: TooltipItem<'radar'>[]) => tooltipItems[0]?.label ?? '',
+                    label: (context: TooltipItem<'radar'>) => `${context.dataset.label}: ${context.parsed.r} ${context.parsed.r === 1 ? t('trends.chart_day') : t('trends.chart_days')}`,
                 }
             }
         },
@@ -288,19 +293,19 @@ callbacks: {
                 <div className="journal-panel-muted p-5 rounded-xl">
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_distribution')}</h3>
                     <div className="h-64">
-                        <Bar options={chartOptions as any} data={distChartData} />
+                        <Bar options={chartOptions} data={distChartData} />
                     </div>
                 </div>
                 <div className="journal-panel-muted p-5 rounded-xl">
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_intensity')}</h3>
                     <div className="h-64">
-                         <Line options={intensityChartOptions as any} data={intensityChartData} />
+                         <Line options={intensityChartOptions} data={intensityChartData} />
                     </div>
                 </div>
                 <div className="journal-panel-muted p-5 rounded-xl">
                     <h3 className="text-lg font-semibold text-[var(--text-main)] mb-4">{t('trends.chart_weekly')}</h3>
                     <div className="h-64">
-                        <Radar options={radarChartOptions as any} data={dayOfWeekChartData} />
+                        <Radar options={radarChartOptions} data={dayOfWeekChartData} />
                     </div>
                 </div>
                 <div className="journal-panel-muted p-5 rounded-xl">

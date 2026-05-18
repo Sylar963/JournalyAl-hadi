@@ -1,20 +1,24 @@
 import { supabase } from './supabaseService';
-import type { SignInWithPasswordCredentials, SignUpWithPasswordCredentials, AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { AuthError, type SignInWithPasswordCredentials, type SignUpWithPasswordCredentials, type AuthChangeEvent, type Session, type AuthOtpResponse, type AuthResponse, type AuthTokenResponsePassword } from '@supabase/supabase-js';
 
 const clientNotConfiguredError = "Supabase client is not initialized. Make sure to set SUPABASE_URL and SUPABASE_ANON_KEY secrets for the project.";
 
-export function signUp(credentials: SignUpWithPasswordCredentials) {
+function createClientNotConfiguredAuthError() {
+    return new AuthError(clientNotConfiguredError, undefined, 'client_not_configured');
+}
+
+export function signUp(credentials: SignUpWithPasswordCredentials): Promise<AuthResponse> {
     if (!supabase) {
         console.error(clientNotConfiguredError);
-        return Promise.resolve({ data: { user: null, session: null }, error: { name: 'AuthClientError', message: clientNotConfiguredError } as any });
+        return Promise.resolve({ data: { user: null, session: null }, error: createClientNotConfiguredAuthError() });
     }
     return supabase.auth.signUp(credentials);
 }
 
-export function signInWithPassword(credentials: SignInWithPasswordCredentials) {
+export function signInWithPassword(credentials: SignInWithPasswordCredentials): Promise<AuthTokenResponsePassword> {
     if (!supabase) {
         console.error(clientNotConfiguredError);
-        return Promise.resolve({ data: { user: null, session: null }, error: { name: 'AuthClientError', message: clientNotConfiguredError } as any });
+        return Promise.resolve({ data: { user: null, session: null }, error: createClientNotConfiguredAuthError() });
     }
     return supabase.auth.signInWithPassword(credentials);
 }
@@ -43,10 +47,10 @@ export function getSession() {
     return supabase.auth.getSession();
 }
 
-export function resendConfirmationEmail(email: string) {
+export function resendConfirmationEmail(email: string): Promise<AuthOtpResponse> {
     if (!supabase) {
         console.error(clientNotConfiguredError);
-        return Promise.resolve({ data: { user: null, session: null }, error: { name: 'AuthClientError', message: clientNotConfiguredError } as any });
+        return Promise.resolve({ data: { user: null, session: null }, error: createClientNotConfiguredAuthError() });
     }
     return supabase.auth.resend({ type: 'signup', email });
 }

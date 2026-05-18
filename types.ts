@@ -282,7 +282,10 @@ export interface ChecklistWidgetData extends WidgetData {
   tasks?: ChecklistTask[];
 }
 
-export interface CorrelationMatrixWidgetData extends WidgetData {}
+export interface CorrelationMatrixWidgetData extends WidgetData {
+  baseAsset?: string;
+  targetAssets?: string[];
+}
 
 export interface RoutinePluginComponentProps<TData extends WidgetData = WidgetData> {
   data: TData;

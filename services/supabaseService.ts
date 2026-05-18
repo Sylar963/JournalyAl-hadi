@@ -1,9 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexCachedTrade, type ThalexCachedPosition, type ThalexTradeCacheResult, type ThalexEnvironment, type ThalexInstrumentType } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
-import { getErrorMessage } from '../utils/errorHelpers';
+import { getErrorMessage, hasErrorCode } from '../utils/errorHelpers';
 import { normalizeEmotionValue } from '../utils/emotions';
-import { createTradeFingerprint, normalizeEntryTradingData, normalizeTradeTypeFromSide, resolveFutureTradeType } from './tradingIndexService';
+import { createTradeFingerprint, normalizeEntryTradingData, resolveFutureTradeType, tradeFromCachedBybitPosition, tradeFromCachedBybitTrade } from './tradingIndexService';
 
 export type Database = {
   public: {
@@ -17,7 +17,7 @@ export type Database = {
           user_id: string;
           image_url: string | null;
           pnl: number | null;
-          trading_data: { trades: TradeDetails[] } | null;
+          trading_data: EmotionEntry['tradingData'] | null;
         };
         Update: {
           date?: string;
@@ -27,7 +27,7 @@ export type Database = {
           user_id?: string;
           image_url?: string | null;
           pnl?: number | null;
-          trading_data?: { trades: TradeDetails[] } | null;
+          trading_data?: EmotionEntry['tradingData'] | null;
         };
         Insert: {
           date: string;
@@ -1090,7 +1090,7 @@ function mapBybitTrade(row: BybitTradeCacheRow): BybitCachedTrade {
 }
 
 function mapBybitPosition(row: BybitPositionCacheRow): BybitCachedPosition {
-    const type = normalizeTradeTypeFromSide(row.side);
+    const type = resolveFutureTradeType(row.side);
     return {
         id: row.id,
         provider: 'bybit',
@@ -1235,7 +1235,7 @@ async function getUserId(): Promise<string> {
  * @param fallbackValue An optional value to return if data is null or Supabase is not configured.
  */
 export async function performSupabaseOp<T>(
-  operation: () => PromiseLike<{ data: T | null; error: any }>,
+  operation: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
   errorMessage: string,
   fallbackValue?: T
 ): Promise<T> {
@@ -1252,9 +1252,9 @@ export async function performSupabaseOp<T>(
     if (data === null && fallbackValue !== undefined) return fallbackValue;
     
     return data as T;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If the error has a code (Supabase error), throw it as is to allow handling specific codes like PGRST116
-    if (error?.code) throw error;
+    if (hasErrorCode(error)) throw error;
     
     const msg = getErrorMessage(error);
     console.error(`${errorMessage}:`, msg);
@@ -1358,9 +1358,9 @@ export async function getProfile(): Promise<UserProfile> {
                 journalPurpose: profileData.journal_purpose ?? "Click the 'Edit' button in the sidebar to set a purpose!",
             };
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         // If it's not the "no rows" error, rethrow
-        if (error.code !== 'PGRST116') {
+        if (!hasErrorCode(error) || error.code !== 'PGRST116') {
              throw error;
         }
     }
@@ -1618,57 +1618,34 @@ export async function bulkCreateEntriesWithTrades(
             const cacheResult = await refreshBybitTradesForDate(dateStr, timezone);
             const trades = cacheResult.trades;
             const positions = cacheResult.positions || [];
-            const allTrades = [...trades, ...positions.map(p => ({
-                ...p,
-                id: p.id,
-                type: p.type,
-                symbol: p.symbol,
-                source: 'bybit' as const,
-                closedPnl: p.unrealizedPnl,
-                quantity: p.quantity,
-                side: p.side,
-                status: p.status as 'open' | 'closed',
-                entryPrice: p.entryPrice,
-                tradeFingerprint: `${p.provider}|${p.symbol}|${p.type}|${p.side}|${p.id}`
-            }))];
+            const tradeDetails = [
+                ...trades.map(tradeFromCachedBybitTrade),
+                ...positions.map(tradeFromCachedBybitPosition),
+            ];
             
-            if (allTrades.length === 0) {
+            if (tradeDetails.length === 0) {
                 results.push({ date: dateStr, tradesCount: 0, pnl: 0, created: false });
                 continue;
             }
             
-            const totalPnl = allTrades.reduce((sum, t) => sum + ((t as any).closedPnl ?? (t as any).pnl ?? 0), 0);
-            const tradeDetails = allTrades.map(t => ({
-                id: t.id,
-                type: t.type,
-                symbol: t.symbol,
-                source: t.source as 'bybit',
-                closedPnl: (t as any).closedPnl ?? (t as any).pnl,
-                pnl: (t as any).closedPnl ?? (t as any).pnl,
-                quantity: (t as any).quantity ?? (t as any).contracts,
-                contracts: (t as any).quantity ?? (t as any).contracts,
-                price: (t as any).price ?? (t as any).entryPrice,
-                side: t.side,
-                tradeFingerprint: t.tradeFingerprint,
-                externalTradeId: (t as any).externalTradeId ?? t.id,
-                orderId: (t as any).orderId,
-                executedAt: (t as any).executedAt ?? (t as any).updatedAt,
-                status: (t as any).closedPnl !== undefined ? 'closed' : 'open'
-            }));
+            const totalPnl = tradeDetails.reduce(
+                (sum, trade) => sum + (trade.closedPnl ?? trade.pnl ?? trade.unrealizedPnl ?? 0),
+                0,
+            );
             
             await saveEntry({
                 date: dateStr,
-                emotion: 'neutral',
+                emotion: 'composed',
                 intensity: 5,
-                notes: `Auto-imported from Bybit: ${allTrades.length} trades`,
+                notes: `Auto-imported from Bybit: ${tradeDetails.length} trades`,
                 pnl: totalPnl,
                 tradingData: {
-                    trades: tradeDetails as any,
+                    trades: tradeDetails,
                     pnlSource: 'linked_trades'
                 }
             });
             
-            results.push({ date: dateStr, tradesCount: allTrades.length, pnl: totalPnl, created: true });
+            results.push({ date: dateStr, tradesCount: tradeDetails.length, pnl: totalPnl, created: true });
         } catch (error) {
             results.push({ date: dateStr, tradesCount: 0, pnl: 0, created: false });
         }

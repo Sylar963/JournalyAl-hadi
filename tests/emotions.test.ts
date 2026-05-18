@@ -8,8 +8,8 @@ describe('normalizeEmotionValue', () => {
     expect(normalizeEmotionValue('angry')).toBe('frustrated');
   });
 
-  it('preserves current and non-mapped values', () => {
+  it('preserves current values and normalizes legacy neutral entries', () => {
     expect(normalizeEmotionValue('euphoric')).toBe('euphoric');
-    expect(normalizeEmotionValue('neutral')).toBe('neutral');
+    expect(normalizeEmotionValue('neutral')).toBe('composed');
   });
 });
