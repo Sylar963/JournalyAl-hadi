@@ -189,6 +189,7 @@ export const translations = {
     'emotion.hesitant': 'Hesitant',
     'emotion.frustrated': 'Frustrated',
     'emotion.euphoric': 'Euphoric',
+    'emotion.fomo': 'Fomo',
 
     // Trends
     'trends.title': 'Analytics Overview',
@@ -496,6 +497,7 @@ export const translations = {
     'emotion.hesitant': 'Vacilante',
     'emotion.frustrated': 'Frustrado',
     'emotion.euphoric': 'Euforico',
+    'emotion.fomo': 'Fomo',
 
     // Trends
     'trends.title': 'Resumen Analítico',
