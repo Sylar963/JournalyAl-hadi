@@ -259,7 +259,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ currentDate, onMonthChange,
                           onClick={() => handleCellClick(date)}
                           title={titleParts.join(' • ')}
                           aria-label={titleParts.join(', ')}
-                          className={`h-3.5 w-3.5 rounded-[4px] border border-[color:var(--calendar-border)]/40 transition-all duration-200 hover:scale-[1.18] hover:-translate-y-0.5 ${getFoldedCellClasses(entry)} ${isTodayCell ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface-1)]' : ''} ${isAnimatingCell ? 'animate-cell-click' : ''}`}
+                          className={`h-3.5 w-3.5 rounded-[4px] border border-gray-600/40 transition-all duration-200 hover:scale-[1.18] hover:-translate-y-0.5 ${getFoldedCellClasses(entry)} ${isTodayCell ? 'ring-1 ring-[var(--accent)] ring-offset-1 ring-offset-[var(--surface-1)]' : ''} ${isAnimatingCell ? 'animate-cell-click' : ''}`}
                         />
                       );
                     })}
