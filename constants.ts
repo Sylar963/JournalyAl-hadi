@@ -9,7 +9,7 @@ interface EmotionConfig {
   hoverColor: string;
 }
 
-export const EMOTION_KEYS: EmotionType[] = ['confident', 'composed', 'anxious', 'hesitant', 'frustrated', 'euphoric', 'fomo'];
+export const EMOTION_KEYS: EmotionType[] = ['confident', 'composed', 'anxious', 'hesitant', 'frustrated', 'euphoric', 'fomo', 'maxPain'];
 
 export const EMOTIONS_CONFIG: Record<EmotionType, EmotionConfig> = {
   confident: {
@@ -68,6 +68,14 @@ export const EMOTIONS_CONFIG: Record<EmotionType, EmotionConfig> = {
     textColor: 'text-orange-400',
     hoverColor: 'hover:bg-orange-500/40'
   },
+  maxPain: {
+    label: 'MaxPain',
+    emoji: '😵',
+    color: 'bg-rose-600/20 border-rose-500',
+    solidColor: 'bg-rose-600',
+    textColor: 'text-rose-400',
+    hoverColor: 'hover:bg-rose-600/40'
+  },
 };
 
 export const EMOTION_CHART_COLORS: Record<EmotionType, { bg: string; border: string }> = {
@@ -78,6 +86,7 @@ export const EMOTION_CHART_COLORS: Record<EmotionType, { bg: string; border: str
   frustrated: { bg: 'rgba(239, 68, 68, 0.5)', border: 'rgb(248, 113, 113)' },
   euphoric: { bg: 'rgba(217, 70, 239, 0.5)', border: 'rgb(232, 121, 249)' },
   fomo: { bg: 'rgba(249, 115, 22, 0.5)', border: 'rgb(249, 115, 22)' },
+  maxPain: { bg: 'rgba(225, 29, 72, 0.5)', border: 'rgb(244, 63, 94)' },
 };
 
 export const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];

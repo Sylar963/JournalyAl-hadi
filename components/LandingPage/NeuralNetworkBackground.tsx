@@ -35,6 +35,8 @@ const NeuralNetworkBackground: React.FC = () => {
     hesitant: { primary: '#94a3b8', secondary: '#64748b', rgb: '148, 163, 184' },
     frustrated: { primary: '#ef4444', secondary: '#dc2626', rgb: '239, 68, 68' },
     euphoric: { primary: '#e879f9', secondary: '#d946ef', rgb: '232, 121, 249' },
+    fomo: { primary: '#fb923c', secondary: '#f97316', rgb: '249, 115, 22' },
+    maxPain: { primary: '#fb7185', secondary: '#e11d48', rgb: '244, 63, 94' },
   };
 
   // Initialize neurons

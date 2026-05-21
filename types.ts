@@ -2,7 +2,7 @@ import type { Session, User } from '@supabase/supabase-js';
 
 export type { Session, User };
 
-export type EmotionType = 'confident' | 'composed' | 'anxious' | 'hesitant' | 'frustrated' | 'euphoric' | 'fomo';
+export type EmotionType = 'confident' | 'composed' | 'anxious' | 'hesitant' | 'frustrated' | 'euphoric' | 'fomo' | 'maxPain';
 
 export type ActiveView = 'journal' | 'trends' | 'reports' | 'history' | 'settings' | 'review';
 

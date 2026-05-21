@@ -190,6 +190,7 @@ export const translations = {
     'emotion.frustrated': 'Frustrated',
     'emotion.euphoric': 'Euphoric',
     'emotion.fomo': 'Fomo',
+    'emotion.maxPain': 'MaxPain',
 
     // Trends
     'trends.title': 'Analytics Overview',
@@ -498,6 +499,7 @@ export const translations = {
     'emotion.frustrated': 'Frustrado',
     'emotion.euphoric': 'Euforico',
     'emotion.fomo': 'Fomo',
+    'emotion.maxPain': 'MaxPain',
 
     // Trends
     'trends.title': 'Resumen Analítico',

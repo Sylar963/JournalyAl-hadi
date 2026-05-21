@@ -5,7 +5,7 @@ const WEIGHT_EMOTIONAL = 0.4;
 const WEIGHT_REVENGE = 0.4;
 const WEIGHT_LEVERAGE = 0.2;
 
-const HIGH_RISK_EMOTIONS: EmotionType[] = ['anxious', 'hesitant', 'frustrated', 'euphoric'];
+const HIGH_RISK_EMOTIONS: EmotionType[] = ['anxious', 'hesitant', 'frustrated', 'euphoric', 'fomo', 'maxPain'];
 
 /**
  * Calculates a 'Tilt Index' (0-100) indicating the likelihood of emotional trading.
