@@ -241,6 +241,13 @@ export interface UserProfile {
   journalPurpose?: string;
 }
 
+export interface AppDataSnapshot {
+  entries: Record<string, EmotionEntry>;
+  profile: UserProfile;
+  quests: Quest[];
+  reviews: PerformanceReview[];
+}
+
 export interface MonthlySummary {
     year: number;
     month: number; // 0-11
@@ -318,6 +325,18 @@ export interface RoutineLayout {
   items: RoutineLayoutItem[];
   thesis: BiasDirection | null;
   lastUpdated: string;
+}
+
+export interface AppBackupPayload {
+  version: 1;
+  appVersion: string;
+  exportedAt: string;
+  source: 'local' | 'supabase';
+  data: AppDataSnapshot;
+  preferences?: {
+    theme?: Theme;
+  };
+  routines?: Record<string, RoutineLayout>;
 }
 
 // Performance Review Types

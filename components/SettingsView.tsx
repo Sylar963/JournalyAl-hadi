@@ -1,17 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { type BybitEnvironment, type BybitValidationStatus, type ThalexEnvironment, type ThalexValidationStatus, type Theme } from '../types';
 import { THEMES_CONFIG } from '../constants';
 import { getTradingProviderClient } from '../services/tradingProviderRegistry';
-import { bulkRefreshBybitTrades, bulkCreateEntriesWithTrades } from '../services/dataService';
+import { bulkRefreshBybitTrades, bulkCreateEntriesWithTrades, deleteCurrentAccount } from '../services/dataService';
 import { BYBIT_SETUP_SQL, getBybitSchemaErrorMessage, THALEX_SETUP_SQL, getThalexSchemaErrorMessage } from '../services/supabaseService';
 import { useI18n } from '../hooks/useI18n';
 import { TranslationKey } from '../utils/translations';
+import { createAppBackup, isAppBackupPayload, restoreAppBackup } from '../services/backupService';
 
 interface SettingsViewProps {
   currentTheme: Theme;
   onThemeChange: (theme: Theme) => void;
   isBybitAvailable: boolean;
   isThalexAvailable: boolean;
+  canManageAccount: boolean;
+  onAccountDeleted: () => Promise<void>;
 }
 
 const validationClasses: Record<BybitValidationStatus, string> = {
@@ -22,10 +25,11 @@ const validationClasses: Record<BybitValidationStatus, string> = {
   permission_denied: 'bg-red-500/10 text-red-300',
 };
 
-const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange, isBybitAvailable, isThalexAvailable }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange, isBybitAvailable, isThalexAvailable, canManageAccount, onAccountDeleted }) => {
   const { t } = useI18n();
   const bybitClient = getTradingProviderClient('bybit');
   const thalexClient = getTradingProviderClient('thalex');
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [environment, setEnvironment] = useState<BybitEnvironment>('mainnet');
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
@@ -59,6 +63,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
   const [isThalexTesting, setIsThalexTesting] = useState(false);
   const [isThalexDeleting, setIsThalexDeleting] = useState(false);
   const [copiedThalexSetupSql, setCopiedThalexSetupSql] = useState(false);
+  const [isExportingBackup, setIsExportingBackup] = useState(false);
+  const [isImportingBackup, setIsImportingBackup] = useState(false);
+  const [backupFeedback, setBackupFeedback] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [accountFeedback, setAccountFeedback] = useState<string | null>(null);
 
   const shouldShowSetupSql = feedback === getBybitSchemaErrorMessage();
   const shouldShowThalexSetupSql = thalexFeedback === getThalexSchemaErrorMessage();
@@ -261,6 +271,72 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
     }
   }
 
+  async function handleExportBackup() {
+    setIsExportingBackup(true);
+    setBackupFeedback(null);
+
+    try {
+      const backup = await createAppBackup();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `delta-journal-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      setBackupFeedback('Backup exported successfully.');
+    } catch (error) {
+      setBackupFeedback(error instanceof Error ? error.message : 'Failed to export backup.');
+    } finally {
+      setIsExportingBackup(false);
+    }
+  }
+
+  async function handleImportBackup(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingBackup(true);
+    setBackupFeedback(null);
+
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown;
+      if (!isAppBackupPayload(parsed)) {
+        throw new Error('Choose a valid Delta Journal backup file.');
+      }
+
+      await restoreAppBackup(parsed);
+      setBackupFeedback('Backup imported. Reloading your workspace...');
+      window.setTimeout(() => window.location.reload(), 600);
+    } catch (error) {
+      setBackupFeedback(error instanceof Error ? error.message : 'Failed to import backup.');
+    } finally {
+      event.target.value = '';
+      setIsImportingBackup(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setAccountFeedback(null);
+
+    if (deleteConfirmation !== 'DELETE') {
+      setAccountFeedback('Type DELETE to confirm account deletion.');
+      return;
+    }
+
+    setIsDeletingAccount(true);
+
+    try {
+      await deleteCurrentAccount();
+      await onAccountDeleted();
+      window.location.replace('/');
+    } catch (error) {
+      setAccountFeedback(error instanceof Error ? error.message : 'Failed to delete the account.');
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  }
+
   return (
     <div className="space-y-6 animate-content-entry">
       <div>
@@ -305,6 +381,48 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
             );
           })}
         </div>
+      </div>
+
+      <div className="journal-panel p-6 rounded-2xl space-y-4">
+        <div>
+          <p className="journal-kicker mb-2">Backup &amp; Restore</p>
+          <h2 className="text-lg font-semibold text-[var(--text-main)]">Protect your journal data</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Export a JSON backup before major changes or when moving to a new device. Local mode now persists in this browser, but backups are still the safest option.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void handleExportBackup()}
+            disabled={isExportingBackup || isImportingBackup}
+            className="journal-button-primary rounded-xl px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isExportingBackup ? 'Exporting...' : 'Export Backup'}
+          </button>
+          <button
+            type="button"
+            onClick={() => importInputRef.current?.click()}
+            disabled={isExportingBackup || isImportingBackup}
+            className="journal-button-secondary rounded-xl px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isImportingBackup ? 'Importing...' : 'Import Backup'}
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            className="hidden"
+            onChange={(event) => void handleImportBackup(event)}
+          />
+        </div>
+
+        {backupFeedback && (
+          <div className="rounded-xl journal-panel-muted p-4 text-sm text-[var(--text-main)]">
+            {backupFeedback}
+          </div>
+        )}
       </div>
 
       <div className="journal-panel p-6 rounded-2xl space-y-5">
@@ -622,6 +740,55 @@ const SettingsView: React.FC<SettingsViewProps> = ({ currentTheme, onThemeChange
           </>
         )}
       </div>
+
+      <div className="journal-panel p-6 rounded-2xl space-y-4">
+        <div>
+          <p className="journal-kicker mb-2">Data Mode</p>
+          <h2 className="text-lg font-semibold text-[var(--text-main)]">Current persistence</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            {canManageAccount
+              ? 'Your authenticated data is stored in Supabase and follows your account.'
+              : 'Local mode now persists on this device using browser storage. Broker sync, AI, and account tools still require Supabase-backed mode.'}
+          </p>
+        </div>
+      </div>
+
+      {canManageAccount && (
+        <div className="journal-panel p-6 rounded-2xl space-y-4 border border-red-500/20">
+          <div>
+            <p className="journal-kicker mb-2 text-red-300">Danger Zone</p>
+            <h2 className="text-lg font-semibold text-[var(--text-main)]">Delete account</h2>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
+              This permanently deletes your journal entries, reviews, quests, broker connections, and account record from Supabase.
+            </p>
+          </div>
+
+          <label className="block text-sm text-[var(--text-muted)]">
+            <span className="mb-2 block">Type DELETE to confirm</span>
+            <input
+              type="text"
+              value={deleteConfirmation}
+              onChange={(event) => setDeleteConfirmation(event.target.value)}
+              className="journal-input w-full rounded-xl p-3 journal-metric"
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={() => void handleDeleteAccount()}
+            disabled={isDeletingAccount}
+            className="journal-button-danger rounded-xl px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isDeletingAccount ? 'Deleting account...' : 'Delete Account Permanently'}
+          </button>
+
+          {accountFeedback && (
+            <div className="rounded-xl journal-panel-muted p-4 text-sm text-[var(--text-main)]">
+              {accountFeedback}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -54,3 +54,19 @@ export function resendConfirmationEmail(email: string): Promise<AuthOtpResponse>
     }
     return supabase.auth.resend({ type: 'signup', email });
 }
+
+export function resetPasswordForEmail(email: string, redirectTo: string): Promise<{ data: {}; error: AuthError | null } | { data: null; error: AuthError }> {
+    if (!supabase) {
+        console.error(clientNotConfiguredError);
+        return Promise.resolve({ data: null, error: createClientNotConfiguredAuthError() });
+    }
+    return supabase.auth.resetPasswordForEmail(email, { redirectTo });
+}
+
+export function updatePassword(password: string) {
+    if (!supabase) {
+        console.error(clientNotConfiguredError);
+        return Promise.resolve({ data: { user: null }, error: createClientNotConfiguredAuthError() });
+    }
+    return supabase.auth.updateUser({ password });
+}

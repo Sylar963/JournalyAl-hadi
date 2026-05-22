@@ -2,7 +2,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 
 import * as supabaseService from './supabaseService';
 import * as localDataService from './localDataService';
-import { BybitConnection, BybitCredentialInput, BybitTradeCacheResult, EmotionEntry, UserProfile, Quest, PerformanceReview, ThalexConnection, ThalexCredentialInput, ThalexTradeCacheResult } from '../types';
+import { AppDataSnapshot, BybitConnection, BybitCredentialInput, BybitTradeCacheResult, EmotionEntry, UserProfile, Quest, PerformanceReview, ThalexConnection, ThalexCredentialInput, ThalexTradeCacheResult } from '../types';
 
 // Check if the environment variables for Supabase are provided.
 const isSupabaseConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
@@ -29,6 +29,9 @@ interface DataService {
     getReview(year: number): Promise<PerformanceReview | null>;
     saveReview(review: Omit<PerformanceReview, 'id' | 'createdAt' | 'updatedAt'>): Promise<PerformanceReview>;
     deleteReview(year: number): Promise<void>;
+    exportUserData(): Promise<AppDataSnapshot>;
+    importUserData(data: AppDataSnapshot): Promise<void>;
+    deleteCurrentAccount(): Promise<void>;
     // Bybit
     getBybitConnection(): Promise<BybitConnection | null>;
     saveBybitConnection(input: BybitCredentialInput): Promise<BybitConnection>;
@@ -65,6 +68,9 @@ export const getReviews = service.getReviews;
 export const getReview = service.getReview;
 export const saveReview = service.saveReview;
 export const deleteReview = service.deleteReview;
+export const exportUserData = service.exportUserData;
+export const importUserData = service.importUserData;
+export const deleteCurrentAccount = service.deleteCurrentAccount;
 export const getBybitConnection = service.getBybitConnection;
 export const saveBybitConnection = service.saveBybitConnection;
 export const validateBybitConnection = service.validateBybitConnection;

@@ -58,5 +58,47 @@ export const routineService = {
     } catch (error) {
         console.error('Failed to save routine template', error);
     }
+  },
+
+  exportLayouts: (): Record<string, RoutineLayout> => {
+    const layouts: Record<string, RoutineLayout> = {};
+
+    try {
+      const store = getPrimaryStore();
+      for (let index = 0; index < store.length; index += 1) {
+        const key = store.key(index);
+        if (!key || !key.startsWith(STORAGE_KEY_PREFIX)) continue;
+
+        const stored = store.getItem(key);
+        if (!stored) continue;
+
+        layouts[key.slice(STORAGE_KEY_PREFIX.length)] = JSON.parse(stored) as RoutineLayout;
+      }
+    } catch (error) {
+      console.error('Failed to export routine layouts', error);
+    }
+
+    return layouts;
+  },
+
+  replaceAllLayouts: (layouts: Record<string, RoutineLayout>): void => {
+    try {
+      const store = getPrimaryStore();
+      const keysToDelete: string[] = [];
+
+      for (let index = 0; index < store.length; index += 1) {
+        const key = store.key(index);
+        if (key?.startsWith(STORAGE_KEY_PREFIX)) {
+          keysToDelete.push(key);
+        }
+      }
+
+      keysToDelete.forEach((key) => store.removeItem(key));
+      Object.entries(layouts).forEach(([key, layout]) => {
+        store.setItem(`${STORAGE_KEY_PREFIX}${key}`, JSON.stringify(layout));
+      });
+    } catch (error) {
+      console.error('Failed to import routine layouts', error);
+    }
   }
 };

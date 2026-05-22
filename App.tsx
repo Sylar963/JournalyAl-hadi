@@ -29,6 +29,7 @@ import AppUpdatePrompt from './components/AppUpdatePrompt';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import PrivacyPolicy from './components/Legal/PrivacyPolicy';
 import TermsOfService from './components/Legal/TermsOfService';
+import ResetPasswordView from './components/ResetPasswordView';
 import { Analytics } from '@vercel/analytics/react';
 import { useConsent } from './hooks/useConsent';
 import PreMarketRoutine from './components/Routine/PreMarketRoutine';
@@ -63,19 +64,26 @@ const AppContent: React.FC = () => {
   const [showLanding, setShowLanding] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeView, setActiveView] = useState<ActiveView>('journal');
+  const [publicRoute, setPublicRoute] = useState<'reset-password' | null>(null);
   const [theme, setTheme] = useState<Theme>('insilico');
 
   // URL-based routing using history API for reliable SPA navigation
   useEffect(() => {
-    const getViewFromPath = () => {
+    const syncRouteState = () => {
       const path = window.location.pathname.replace(/^\//, '') || '';
+      if (path === 'reset-password') {
+        setPublicRoute('reset-password');
+        return 'journal';
+      }
+
+      setPublicRoute(null);
       return VIEW_ROUTES[path] || 'journal';
     };
 
-    setActiveView(getViewFromPath());
+    setActiveView(syncRouteState());
 
     const handlePopState = () => {
-      setActiveView(getViewFromPath());
+      setActiveView(syncRouteState());
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -165,6 +173,21 @@ const AppContent: React.FC = () => {
     return <div className="flex h-screen w-screen items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div></div>;
   }
 
+  if (publicRoute === 'reset-password') {
+    return (
+      <>
+        <ThemeWrapper theme="insilico" className="min-h-screen w-full">
+          <Background theme="insilico" />
+          <GridOverlay />
+          <div className="relative z-10">
+            <ResetPasswordView hasRecoverySession={!!session} />
+          </div>
+        </ThemeWrapper>
+        <CookieBanner />
+      </>
+    );
+  }
+
   const entriesArray = Object.values(entries);
   const isAppAccessible = !!session || !isSupabaseConfigured;
   const isLocalMode = !isSupabaseConfigured;
@@ -237,7 +260,7 @@ const AppContent: React.FC = () => {
                     <main className="flex-1 p-4 md:p-6 overflow-y-auto">
                         {isLocalMode && (
                             <div className="mb-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100">
-                                Local mode stores journal data only for the current browser tab and clears it when the tab closes. AI, lead capture, and broker integrations require Supabase-backed mode.
+                                Local mode now persists on this device only. Create a backup before switching browsers or clearing site data. AI, lead capture, and broker integrations still require Supabase-backed mode.
                             </div>
                         )}
                         {isDataLoading ? (
@@ -266,7 +289,16 @@ const AppContent: React.FC = () => {
                                 {activeView === 'reports' && <ReportsView entries={entriesArray} />}
                                 {activeView === 'history' && <HistoryView entries={entriesArray} />}
                                 {activeView === 'review' && <PerformanceReviewView />}
-                                {activeView === 'settings' && <SettingsView currentTheme={theme} onThemeChange={handleThemeChange} isBybitAvailable={!!session && isSupabaseConfigured} isThalexAvailable={!!session && isSupabaseConfigured} />}
+                                {activeView === 'settings' && (
+                                  <SettingsView
+                                    currentTheme={theme}
+                                    onThemeChange={handleThemeChange}
+                                    isBybitAvailable={!!session && isSupabaseConfigured}
+                                    isThalexAvailable={!!session && isSupabaseConfigured}
+                                    canManageAccount={!!session && isSupabaseConfigured}
+                                    onAccountDeleted={signOut}
+                                  />
+                                )}
                             </>
                         )}
                     </main>

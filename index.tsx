@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { initErrorMonitoring } from './services/errorMonitoring';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -10,6 +11,7 @@ if (!rootElement) {
 
 (async () => {
   sessionStorage.setItem('app_loaded', '1');
+  initErrorMonitoring();
   const root = ReactDOM.createRoot(rootElement);
   root.render(<App />);
 })();

@@ -1,4 +1,4 @@
-import { type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexTradeCacheResult } from '../types';
+import { type AppDataSnapshot, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type Quest, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexTradeCacheResult } from '../types';
 import { normalizeEntryTradingData } from './tradingIndexService';
 import { normalizeEmotionValue } from '../utils/emotions';
 
@@ -9,7 +9,33 @@ const REVIEWS_KEY = 'emotion-journal-reviews';
 const LOCAL_USER_ID = 'local-user';
 
 function getSessionStore(): Storage {
+    try {
+        const testKey = '__dj_local_store__';
+        localStorage.setItem(testKey, '1');
+        localStorage.removeItem(testKey);
+        return localStorage;
+    } catch {
+        return sessionStorage;
+    }
+}
+
+function getLegacyStore(): Storage {
     return sessionStorage;
+}
+
+function getStoredValue(key: string): string | null {
+    const primaryStore = getSessionStore();
+    const storedValue = primaryStore.getItem(key);
+    if (storedValue !== null) {
+        return storedValue;
+    }
+
+    const legacyValue = getLegacyStore().getItem(key);
+    if (legacyValue !== null && primaryStore !== getLegacyStore()) {
+        primaryStore.setItem(key, legacyValue);
+    }
+
+    return legacyValue;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -21,7 +47,7 @@ const DEFAULT_PROFILE: UserProfile = {
 
 // --- Entry Functions ---
 export async function getEntries(): Promise<Record<string, EmotionEntry>> {
-    const data = getSessionStore().getItem(ENTRIES_KEY);
+    const data = getStoredValue(ENTRIES_KEY);
     if (!data) return {};
 
     const parsed = JSON.parse(data) as Record<string, EmotionEntry>;
@@ -56,7 +82,7 @@ export async function deleteEntry(date: string): Promise<void> {
 
 // --- Profile Functions ---
 export async function getProfile(): Promise<UserProfile> {
-    const data = getSessionStore().getItem(PROFILE_KEY);
+    const data = getStoredValue(PROFILE_KEY);
     if (data) {
         const profile = JSON.parse(data);
         if (!profile.alias) {
@@ -77,7 +103,7 @@ export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
 
 // --- Quest Functions ---
 export async function getQuests(): Promise<Quest[]> {
-    const data = getSessionStore().getItem(QUESTS_KEY);
+    const data = getStoredValue(QUESTS_KEY);
     const quests: Quest[] = data ? JSON.parse(data) : [];
     // Sort by creation date, ascending
     return quests.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -120,7 +146,7 @@ export async function addLead(email: string): Promise<void> {
 
 // --- Review Functions ---
 export async function getReviews(): Promise<PerformanceReview[]> {
-    const data = getSessionStore().getItem(REVIEWS_KEY);
+    const data = getStoredValue(REVIEWS_KEY);
     const reviews: PerformanceReview[] = data ? JSON.parse(data) : [];
     return reviews
         .map((review) => ({ ...review, userId: review.userId || LOCAL_USER_ID }))
@@ -155,6 +181,33 @@ export async function deleteReview(year: number): Promise<void> {
     let reviews = await getReviews();
     reviews = reviews.filter(r => r.year !== year);
     getSessionStore().setItem(REVIEWS_KEY, JSON.stringify(reviews));
+}
+
+export async function exportUserData(): Promise<AppDataSnapshot> {
+    const [entries, profile, quests, reviews] = await Promise.all([
+        getEntries(),
+        getProfile(),
+        getQuests(),
+        getReviews(),
+    ]);
+
+    return {
+        entries,
+        profile,
+        quests,
+        reviews,
+    };
+}
+
+export async function importUserData(data: AppDataSnapshot): Promise<void> {
+    getSessionStore().setItem(ENTRIES_KEY, JSON.stringify(data.entries));
+    getSessionStore().setItem(PROFILE_KEY, JSON.stringify(data.profile));
+    getSessionStore().setItem(QUESTS_KEY, JSON.stringify(data.quests));
+    getSessionStore().setItem(REVIEWS_KEY, JSON.stringify(data.reviews));
+}
+
+export async function deleteCurrentAccount(): Promise<void> {
+    throw new Error('Account deletion is available only in Supabase-backed mode.');
 }
 
 export async function getBybitConnection(): Promise<BybitConnection | null> {

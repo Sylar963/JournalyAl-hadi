@@ -1,4 +1,5 @@
 import React from 'react';
+import { captureError } from '../services/errorMonitoring';
 
 interface AppErrorBoundaryState {
   hasError: boolean;
@@ -15,6 +16,7 @@ class AppErrorBoundary extends React.Component<React.PropsWithChildren, AppError
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Unhandled application error', error, errorInfo);
+    captureError(error, { componentStack: errorInfo.componentStack });
   }
 
   render() {

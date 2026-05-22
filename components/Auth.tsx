@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { signInWithPassword, signUp, resendConfirmationEmail } from '../services/auth';
+import { signInWithPassword, signUp, resendConfirmationEmail, resetPasswordForEmail } from '../services/auth';
 import { getErrorMessage } from '../utils/errorHelpers';
 
 const Auth: React.FC = () => {
     const [isLoginView, setIsLoginView] = useState(true);
+    const [isResetView, setIsResetView] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -11,6 +12,7 @@ const Auth: React.FC = () => {
     const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const [resendMessage, setResendMessage] = useState('');
+    const [resetMessage, setResetMessage] = useState<string | null>(null);
 
     useEffect(() => {
         let timer: number;
@@ -38,8 +40,16 @@ const Auth: React.FC = () => {
         setIsLoading(true);
         setError(null);
         setAwaitingConfirmation(false);
+        setResetMessage(null);
 
         try {
+            if (isResetView) {
+                const { error: resetError } = await resetPasswordForEmail(email, `${window.location.origin}/reset-password`);
+                if (resetError) throw resetError;
+                setResetMessage('Password reset email sent. Check your inbox for the secure link.');
+                return;
+            }
+
             const credentials = { email, password };
             if (isLoginView) {
                 const { error: authError } = await signInWithPassword(credentials);
@@ -112,8 +122,10 @@ const Auth: React.FC = () => {
         <div className="flex h-screen w-screen items-center justify-center bg-transparent backdrop-blur-sm p-4">
             <div className="w-full max-w-sm p-8 space-y-6 glass-panel rounded-2xl shadow-2xl border-[color:var(--glass-border)]">
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Deltajournal</h1>
-                    <p className="text-gray-400 mt-2">{isLoginView ? 'Sign in to access your journal' : 'Create a new account'}</p>
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Delta Journal</h1>
+                    <p className="text-gray-400 mt-2">
+                        {isResetView ? 'Request a password reset link' : isLoginView ? 'Sign in to access your journal' : 'Create a new account'}
+                    </p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
@@ -132,24 +144,27 @@ const Auth: React.FC = () => {
                         />
                     </div>
 
-                    <div>
-                         <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete={isLoginView ? "current-password" : "new-password"}
-                            required
-                            minLength={6}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
-                        />
-                    </div>
+                    {!isResetView && (
+                        <div>
+                             <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                autoComplete={isLoginView ? "current-password" : "new-password"}
+                                required
+                                minLength={6}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-white/5 border border-[color:var(--glass-border)] rounded-lg p-3 text-gray-200 focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-transparent transition placeholder-gray-500"
+                            />
+                        </div>
+                    )}
                     
                     {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+                    {resetMessage && <p className="text-sm text-green-400 text-center">{resetMessage}</p>}
 
                     <div>
                         <button
@@ -162,19 +177,51 @@ const Auth: React.FC = () => {
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                                     Processing...
                                 </>
-                            ) : (isLoginView ? 'Sign In' : 'Sign Up')}
+                            ) : (isResetView ? 'Send Reset Link' : isLoginView ? 'Sign In' : 'Sign Up')}
                         </button>
                     </div>
+
+                    {isLoginView && !isResetView && (
+                        <div className="text-center text-sm">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setIsResetView(true);
+                                    setError(null);
+                                    setResetMessage(null);
+                                    setPassword('');
+                                }}
+                                className="font-medium text-gray-400 hover:text-[var(--accent-primary)] transition-colors focus:outline-none"
+                            >
+                                Forgot password?
+                            </button>
+                        </div>
+                    )}
                 </form>
                 <div className="text-center text-sm text-gray-400">
-                    {isLoginView ? "Don't have an account?" : "Already have an account?"}
-                    <button 
-                        onClick={() => { setIsLoginView(!isLoginView); setError(null); }} 
-                        className="font-medium text-[var(--accent-primary)] hover:underline ml-1 focus:outline-none"
-                        aria-label={isLoginView ? 'Switch to sign up page' : 'Switch to sign in page'}
-                    >
-                        {isLoginView ? 'Sign Up' : 'Sign In'}
-                    </button>
+                    {isResetView ? (
+                        <button
+                            onClick={() => {
+                                setIsResetView(false);
+                                setError(null);
+                                setResetMessage(null);
+                            }}
+                            className="font-medium text-[var(--accent-primary)] hover:underline ml-1 focus:outline-none"
+                        >
+                            Back to Sign In
+                        </button>
+                    ) : (
+                        <>
+                            {isLoginView ? "Don't have an account?" : "Already have an account?"}
+                            <button 
+                                onClick={() => { setIsLoginView(!isLoginView); setError(null); setResetMessage(null); }} 
+                                className="font-medium text-[var(--accent-primary)] hover:underline ml-1 focus:outline-none"
+                                aria-label={isLoginView ? 'Switch to sign up page' : 'Switch to sign in page'}
+                            >
+                                {isLoginView ? 'Sign Up' : 'Sign In'}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

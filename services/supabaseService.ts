@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexCachedTrade, type ThalexCachedPosition, type ThalexTradeCacheResult, type ThalexEnvironment, type ThalexInstrumentType } from '../types';
+import { type AppDataSnapshot, type BybitCachedPosition, type BybitCachedTrade, type BybitConnection, type BybitCredentialInput, type BybitTradeCacheResult, type EmotionEntry, type UserProfile, type EmotionType, type Quest, type TradeDetails, type PerformanceReview, type ThalexConnection, type ThalexCredentialInput, type ThalexCachedTrade, type ThalexCachedPosition, type ThalexTradeCacheResult, type ThalexEnvironment, type ThalexInstrumentType } from '../types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config';
 import { getErrorMessage, hasErrorCode } from '../utils/errorHelpers';
 import { normalizeEmotionValue } from '../utils/emotions';
@@ -1783,6 +1783,94 @@ export async function deleteReview(year: number): Promise<void> {
         () => supabase!.from('reviews').delete().eq('user_id', userId).eq('year', year).select(),
         'Error deleting review'
     );
+}
+
+export async function exportUserData(): Promise<AppDataSnapshot> {
+    const [entries, profile, quests, reviews] = await Promise.all([
+        getEntries(),
+        getProfile(),
+        getQuests(),
+        getReviews(),
+    ]);
+
+    return {
+        entries,
+        profile,
+        quests,
+        reviews,
+    };
+}
+
+export async function importUserData(data: AppDataSnapshot): Promise<void> {
+    const userId = await getUserId();
+
+    await performSupabaseOp(
+        () => supabase!.from('entries').delete().eq('user_id', userId).select(),
+        'Error clearing entries before import'
+    );
+    await performSupabaseOp(
+        () => supabase!.from('quests').delete().eq('user_id', userId).select(),
+        'Error clearing quests before import'
+    );
+    await performSupabaseOp(
+        () => supabase!.from('reviews').delete().eq('user_id', userId).select(),
+        'Error clearing reviews before import'
+    );
+
+    await saveProfile(data.profile);
+
+    const entryRows = Object.values(data.entries).map((entry) => ({
+        date: entry.date,
+        emotion: entry.emotion,
+        intensity: entry.intensity,
+        notes: entry.notes,
+        user_id: userId,
+        image_url: entry.imageUrl ?? null,
+        pnl: entry.pnl ?? null,
+        trading_data: normalizeEntryTradingData(entry.tradingData) ?? null,
+    }));
+
+    if (entryRows.length > 0) {
+        await performSupabaseOp(
+            () => supabase!.from('entries').insert(entryRows).select(),
+            'Error importing entries'
+        );
+    }
+
+    const questRows = data.quests.map((quest) => ({
+        id: quest.id,
+        user_id: userId,
+        text: quest.text,
+        completed: quest.completed,
+        created_at: quest.createdAt,
+    }));
+
+    if (questRows.length > 0) {
+        await performSupabaseOp(
+            () => supabase!.from('quests').insert(questRows).select(),
+            'Error importing quests'
+        );
+    }
+
+    const reviewRows = data.reviews.map((review) => ({
+        id: review.id,
+        user_id: userId,
+        year: review.year,
+        data: { sections: review.sections },
+        created_at: review.createdAt,
+        updated_at: review.updatedAt,
+    }));
+
+    if (reviewRows.length > 0) {
+        await performSupabaseOp(
+            () => supabase!.from('reviews').insert(reviewRows).select(),
+            'Error importing reviews'
+        );
+    }
+}
+
+export async function deleteCurrentAccount(): Promise<void> {
+    await invokeAppFunction<{ ok: boolean }>('delete-account');
 }
 
 export async function addLead(email: string): Promise<void> {

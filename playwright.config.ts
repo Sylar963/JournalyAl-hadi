@@ -7,6 +7,12 @@ export default defineConfig({
   },
   webServer: {
     command: 'corepack pnpm exec vite --host 127.0.0.1 --port 4173',
+    env: {
+      ...process.env,
+      SUPABASE_URL: '',
+      SUPABASE_ANON_KEY: '',
+      SENTRY_DSN: '',
+    },
     port: 4173,
     reuseExistingServer: !process.env.CI,
   },

@@ -62,6 +62,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL),
       'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY),
+      'process.env.SENTRY_DSN': JSON.stringify(env.SENTRY_DSN),
       __APP_VERSION__: JSON.stringify(buildVersion),
     },
     resolve: {
