@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 function getTodayKey() {
   const today = new Date();
@@ -8,15 +8,23 @@ function getTodayKey() {
   return `${year}-${month}-${day}`;
 }
 
+async function dismissCookieBannerIfVisible(page: Page) {
+  const acceptButton = page.getByRole('button', { name: /accept all/i });
+  if (await acceptButton.count()) {
+    await acceptButton.click();
+  }
+}
+
 test('local mode persists a saved entry across reloads', async ({ page }) => {
   const todayKey = getTodayKey();
 
   await page.goto('/');
+  await dismissCookieBannerIfVisible(page);
   await page.getByRole('button', { name: /log confident/i }).click();
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
   await dialog.getByLabel(/notes/i).fill('Persistence test entry');
-  await dialog.getByRole('button', { name: /^save$/i }).click();
+  await dialog.getByRole('button', { name: /save entry/i }).click();
   await expect(page.getByText(/entry saved/i)).toBeVisible();
 
   await page.waitForTimeout(2200);
