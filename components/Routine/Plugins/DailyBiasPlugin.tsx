@@ -1,31 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { DailyBiasWidgetData } from '../../../types';
+import { useI18n } from '../../../hooks/useI18n';
 
 const DailyBiasPlugin: React.FC<{ data: DailyBiasWidgetData; onUpdate: (data: DailyBiasWidgetData) => void }> = ({ data, onUpdate }) => {
+  const { t, language } = useI18n();
   const [view, setView] = useState<BiasView>(data.view ?? 'daily');
   const [dailyBias, setDailyBias] = useState<BiasDirection>(data.dailyBias ?? 'neutral');
   const [dailyNotes, setDailyNotes] = useState(data.dailyNotes ?? '');
+  const [dailyNotesUpdatedAt, setDailyNotesUpdatedAt] = useState(data.dailyNotesUpdatedAt ?? '');
   const [weeklyBias, setWeeklyBias] = useState<BiasDirection>(data.weeklyBias ?? 'neutral');
   const [weeklyNotes, setWeeklyNotes] = useState(data.weeklyNotes ?? '');
+  const [weeklyNotesUpdatedAt, setWeeklyNotesUpdatedAt] = useState(data.weeklyNotesUpdatedAt ?? '');
 
   useEffect(() => {
     setView(data.view ?? 'daily');
     setDailyBias(data.dailyBias ?? 'neutral');
     setDailyNotes(data.dailyNotes ?? '');
+    setDailyNotesUpdatedAt(data.dailyNotesUpdatedAt ?? '');
     setWeeklyBias(data.weeklyBias ?? 'neutral');
     setWeeklyNotes(data.weeklyNotes ?? '');
-  }, [data.view, data.dailyBias, data.dailyNotes, data.weeklyBias, data.weeklyNotes]);
+    setWeeklyNotesUpdatedAt(data.weeklyNotesUpdatedAt ?? '');
+  }, [data.view, data.dailyBias, data.dailyNotes, data.dailyNotesUpdatedAt, data.weeklyBias, data.weeklyNotes, data.weeklyNotesUpdatedAt]);
 
   const syncData = (nextData: Partial<DailyBiasWidgetData>) => {
     onUpdate({
       view,
       dailyBias,
       dailyNotes,
+      dailyNotesUpdatedAt,
       weeklyBias,
       weeklyNotes,
+      weeklyNotesUpdatedAt,
       ...nextData,
     });
   };
+
+  const activeNotesUpdatedAt = view === 'daily' ? dailyNotesUpdatedAt : weeklyNotesUpdatedAt;
+  const formattedSavedAt = activeNotesUpdatedAt
+    ? new Date(activeNotesUpdatedAt).toLocaleTimeString(language === 'es' ? 'es-ES' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
 
   return (
     <div className="flex flex-col h-full">
@@ -83,15 +99,23 @@ const DailyBiasPlugin: React.FC<{ data: DailyBiasWidgetData; onUpdate: (data: Da
         value={view === 'daily' ? dailyNotes : weeklyNotes}
         onChange={(e) => {
           const nextNotes = e.target.value;
+          const nextTimestamp = nextNotes.trim() ? new Date().toISOString() : '';
           if (view === 'daily') {
             setDailyNotes(nextNotes);
-            syncData({ dailyNotes: nextNotes });
+            setDailyNotesUpdatedAt(nextTimestamp);
+            syncData({ dailyNotes: nextNotes, dailyNotesUpdatedAt: nextTimestamp });
           } else {
             setWeeklyNotes(nextNotes);
-            syncData({ weeklyNotes: nextNotes });
+            setWeeklyNotesUpdatedAt(nextTimestamp);
+            syncData({ weeklyNotes: nextNotes, weeklyNotesUpdatedAt: nextTimestamp });
           }
         }}
       />
+      {formattedSavedAt && (
+        <p className="mt-2 text-[11px] text-gray-500">
+          {t('plugin.bias.saved_at')} {formattedSavedAt}
+        </p>
+      )}
     </div>
   );
 };

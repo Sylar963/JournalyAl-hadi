@@ -285,8 +285,10 @@ export interface DailyBiasWidgetData extends WidgetData {
   view?: BiasView;
   dailyBias?: BiasDirection;
   dailyNotes?: string;
+  dailyNotesUpdatedAt?: string;
   weeklyBias?: BiasDirection;
   weeklyNotes?: string;
+  weeklyNotesUpdatedAt?: string;
 }
 
 export interface ChecklistTask {
