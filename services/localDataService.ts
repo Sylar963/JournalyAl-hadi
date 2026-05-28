@@ -43,6 +43,7 @@ const DEFAULT_PROFILE: UserProfile = {
     alias: 'Session-only local mode',
     picture: undefined,
     journalPurpose: "This diary I fill it on the mornings so represent the way I wake up",
+    memoryNotes: '',
 };
 
 // --- Entry Functions ---
@@ -91,14 +92,25 @@ export async function getProfile(): Promise<UserProfile> {
         if (profile.journalPurpose === undefined) { 
             profile.journalPurpose = DEFAULT_PROFILE.journalPurpose;
         }
+        if (profile.memoryNotes === undefined) {
+            profile.memoryNotes = DEFAULT_PROFILE.memoryNotes;
+        }
         return profile;
     }
     return DEFAULT_PROFILE;
 }
 
 export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
-    getSessionStore().setItem(PROFILE_KEY, JSON.stringify(profile));
-    return profile;
+    const currentProfile = await getProfile();
+    const nextProfile: UserProfile = {
+        ...currentProfile,
+        ...profile,
+        journalPurpose: profile.journalPurpose ?? currentProfile.journalPurpose,
+        memoryNotes: profile.memoryNotes ?? currentProfile.memoryNotes ?? '',
+    };
+
+    getSessionStore().setItem(PROFILE_KEY, JSON.stringify(nextProfile));
+    return nextProfile;
 }
 
 // --- Quest Functions ---

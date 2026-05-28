@@ -234,11 +234,19 @@ export interface ReportAnalysis {
     insights: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
+}
+
 export interface UserProfile {
   name: string;
   alias: string;
   picture?: string; // base64 encoded image
   journalPurpose?: string;
+  memoryNotes?: string;
 }
 
 export interface AppDataSnapshot {

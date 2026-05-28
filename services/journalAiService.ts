@@ -5,7 +5,8 @@ export type JournalAiAction =
   | 'trends-summary'
   | 'report-analysis'
   | 'learn-trader-signature'
-  | 'predict-session-risk';
+  | 'predict-session-risk'
+  | 'chat-memory';
 
 export function isJournalAiEnabled(): boolean {
   return isSupabaseConfigured;

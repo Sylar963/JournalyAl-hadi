@@ -92,6 +92,10 @@ function sanitizeEntries(entries: unknown, limit: number): EmotionEntryPayload[]
     .filter((entry): entry is EmotionEntryPayload => entry !== null && !!entry.date && !!entry.emotion);
 }
 
+function sanitizeMemoryNotes(value: unknown): string {
+  return clampText(value, 24000);
+}
+
 async function generateText(prompt: string, temperature: number): Promise<string> {
   const response = await getAiClient().models.generateContent({
     model: 'gemini-2.5-flash',
@@ -281,5 +285,42 @@ Based on their profile and current state, predict their risk of emotional tradin
     `,
     schema,
     0.6,
+  );
+}
+
+export async function buildMemoryChatReply(memoryNotesInput: unknown, messageInput: unknown, entriesInput: unknown, languageInput: unknown): Promise<string> {
+  const memoryNotes = sanitizeMemoryNotes(memoryNotesInput);
+  const message = clampText(messageInput, 4000);
+  const entries = sanitizeEntries(entriesInput, 45);
+  const responseLanguage = clampText(languageInput, 8) === 'es' ? 'Spanish' : 'English';
+
+  if (!message) {
+    throw new Error('A message is required to chat with Memory.');
+  }
+
+  return generateText(
+    `
+You are Delta Journal Memory, a concise AI trading coach inside a journaling app.
+
+Your job:
+- Treat the trader's MEMORY.md notes as the primary source of truth.
+- Help them stay aligned with their own written process and pattern recognition.
+- Point out contradictions between what they are asking now and what they previously wrote.
+- If the notes do not support an answer, say that clearly instead of inventing context.
+- Do not give financial guarantees. Keep the response practical, grounded, and short.
+
+Reply in ${responseLanguage}.
+Use short paragraphs or compact bullet points when they help clarity.
+
+MEMORY.md:
+${memoryNotes || 'No memory notes have been saved yet.'}
+
+Recent journal entries:
+${entries.length > 0 ? formatEntries(entries) : 'No recent journal entries available.'}
+
+User message:
+${message}
+    `,
+    0.5,
   );
 }

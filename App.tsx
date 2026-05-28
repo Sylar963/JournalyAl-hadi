@@ -33,6 +33,7 @@ import ResetPasswordView from './components/ResetPasswordView';
 import { Analytics } from '@vercel/analytics/react';
 import { useConsent } from './hooks/useConsent';
 import PreMarketRoutine from './components/Routine/PreMarketRoutine';
+import MemorySection from './components/MemorySection';
 import { useI18n } from './hooks/useI18n';
 
 
@@ -274,17 +275,23 @@ const AppContent: React.FC = () => {
 
                                 {activeView === 'journal' && (
                                     <>
-                                        <PreMarketRoutine />
-                                        <CalendarView
-                                            currentDate={currentDate}
-                                            onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
-                                            onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
-                                            onGoToToday={() => setCurrentDate(new Date())}
-                                            onDateClick={handleDateClick}
-                                            entries={entries}
-                                        />
-                                    </>
-                                )}
+                                         <PreMarketRoutine />
+                                         <CalendarView
+                                             currentDate={currentDate}
+                                             onMonthChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1))}
+                                             onYearChange={(offset) => setCurrentDate(prev => new Date(prev.getFullYear() + offset, prev.getMonth(), 1))}
+                                             onGoToToday={() => setCurrentDate(new Date())}
+                                             onDateClick={handleDateClick}
+                                             entries={entries}
+                                         />
+                                         <MemorySection
+                                             userProfile={userProfile}
+                                             onSaveProfile={saveProfile}
+                                             entries={entriesArray}
+                                             canUseAi={!!session && isSupabaseConfigured}
+                                         />
+                                     </>
+                                 )}
                                 {activeView === 'trends' && <TrendsView entries={entriesArray} />}
                                 {activeView === 'reports' && <ReportsView entries={entriesArray} />}
                                 {activeView === 'history' && <HistoryView entries={entriesArray} />}

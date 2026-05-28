@@ -69,7 +69,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, onSave, pr
   }, [isOpen, onClose]);
 
   const handleSave = () => {
-    onSave({ name, alias, picture, journalPurpose });
+    onSave({ ...profile, name, alias, picture, journalPurpose });
   };
   
   const handlePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

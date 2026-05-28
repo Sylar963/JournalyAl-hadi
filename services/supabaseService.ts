@@ -49,6 +49,7 @@ export type Database = {
           picture: string | null;
           updated_at: string | null;
           journal_purpose: string | null;
+          memory_notes: string | null;
         };
         Insert: {
           id: string; 
@@ -57,6 +58,7 @@ export type Database = {
           picture: string | null;
           updated_at: string | null;
           journal_purpose: string | null;
+          memory_notes: string | null;
         };
         Update: {
           id?: string;
@@ -65,6 +67,7 @@ export type Database = {
           picture?: string | null;
           updated_at?: string | null;
           journal_purpose?: string | null;
+          memory_notes?: string | null;
         };
         Relationships: [];
       };
@@ -566,19 +569,28 @@ export const isSupabaseConfigured = !!supabase;
 
 export const PROFILES_TABLE_SETUP_SQL = `
 -- 1. Create the table for user profiles
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   alias TEXT,
   picture TEXT,
   journal_purpose TEXT,
+  memory_notes TEXT,
   updated_at TIMESTAMPTZ
 );
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS journal_purpose TEXT;
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS memory_notes TEXT;
 
 -- 2. Enable Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- 3. Create policies for profiles
+DROP POLICY IF EXISTS "Users can manage their own profile" ON public.profiles;
+
 CREATE POLICY "Users can manage their own profile"
 ON public.profiles FOR ALL
 USING (auth.uid() = id)
@@ -1356,6 +1368,7 @@ export async function getProfile(): Promise<UserProfile> {
                 alias: profileData.alias,
                 picture: profileData.picture ?? undefined,
                 journalPurpose: profileData.journal_purpose ?? "Click the 'Edit' button in the sidebar to set a purpose!",
+                memoryNotes: profileData.memory_notes ?? '',
             };
         }
     } catch (error: unknown) {
@@ -1372,6 +1385,7 @@ export async function getProfile(): Promise<UserProfile> {
         alias: user?.email || 'No email',
         picture: undefined,
         journalPurpose: "This is my new Deltajournal!",
+        memoryNotes: '',
     };
     return saveProfile(newUserProfile);
 }
@@ -1380,14 +1394,19 @@ export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
     const userId = await getUserId();
     
     const data = await performSupabaseOp(
-        () => supabase!.from('profiles').upsert({
-            id: userId,
-            name: profile.name,
-            alias: profile.alias,
-            picture: profile.picture ?? null,
-            journal_purpose: profile.journalPurpose ?? null,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'id' }).select().single(),
+        () => {
+            const payload: Database['public']['Tables']['profiles']['Insert'] = {
+                id: userId,
+                name: profile.name,
+                alias: profile.alias,
+                picture: profile.picture ?? null,
+                journal_purpose: profile.journalPurpose ?? null,
+                memory_notes: profile.memoryNotes ?? null,
+                updated_at: new Date().toISOString(),
+            };
+
+            return supabase!.from('profiles').upsert(payload, { onConflict: 'id' }).select().single();
+        },
         'Error saving profile'
     );
 
@@ -1398,6 +1417,7 @@ export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
         alias: savedData.alias,
         picture: savedData.picture ?? undefined,
         journalPurpose: savedData.journal_purpose ?? undefined,
+        memoryNotes: savedData.memory_notes ?? '',
     };
 }
 

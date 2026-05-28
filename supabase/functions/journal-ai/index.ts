@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import {
+  buildMemoryChatReply,
   buildEmotionInsight,
   buildReportAnalysis,
   buildRiskPrediction,
@@ -45,6 +46,10 @@ serve(async (req) => {
       case 'predict-session-risk':
         return jsonResponse(200, {
           prediction: await buildRiskPrediction(body.profile, body.currentState),
+        });
+      case 'chat-memory':
+        return jsonResponse(200, {
+          response: await buildMemoryChatReply(body.memoryNotes, body.message, body.entries, body.language),
         });
       default:
         return jsonResponse(400, { error: 'Unsupported AI action.' });
