@@ -1,8 +1,8 @@
 const HYPERLIQUID_API_URL = 'https://api.hyperliquid.xyz/info';
 
-export const CORRELATION_CRYPTO_ASSETS = ['ETH', 'SOL', 'LINK', 'AVAX', 'HYPE', 'LIT', 'ARB', 'OP', 'ONDO', 'SUI', 'XLM', 'ENA', 'HBAR', 'ZEC'];
+export const CORRELATION_CRYPTO_ASSETS = ['BTC', 'ETH', 'SOL', 'LINK', 'AVAX', 'HYPE', 'LIT', 'ARB', 'OP', 'ONDO', 'SUI', 'XLM', 'ENA', 'HBAR', 'ZEC'];
 
-const KNOWN_CRYPTO_SYMBOLS = ['BTC', ...CORRELATION_CRYPTO_ASSETS];
+const KNOWN_CRYPTO_SYMBOLS = CORRELATION_CRYPTO_ASSETS;
 
 const XYZ_MARKET_SYMBOLS_FALLBACK = [
   'AAPL', 'ALUMINIUM', 'AMD', 'AMZN', 'ARM', 'ASML', 'AVGO', 'BABA', 'BB', 'BIRD', 'BRENTOIL', 'BX', 'CBRS', 'CL',

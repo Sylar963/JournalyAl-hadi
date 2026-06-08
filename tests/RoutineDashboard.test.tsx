@@ -5,10 +5,11 @@ import { I18nProvider } from '../hooks/useI18n';
 import { getAssetCorrelations, getCorrelationAssetOptions } from '../services/hyperliquidService';
 
 vi.mock('../services/hyperliquidService', () => ({
-  CORRELATION_CRYPTO_ASSETS: ['ETH', 'SOL', 'LINK', 'AVAX', 'HYPE', 'LIT', 'ARB', 'OP', 'ONDO', 'SUI', 'XLM', 'ENA', 'HBAR', 'ZEC'],
+  CORRELATION_CRYPTO_ASSETS: ['BTC', 'ETH', 'SOL', 'LINK', 'AVAX', 'HYPE', 'LIT', 'ARB', 'OP', 'ONDO', 'SUI', 'XLM', 'ENA', 'HBAR', 'ZEC'],
   getAssetCorrelations: vi.fn().mockResolvedValue([]),
   getCorrelationAssetOptions: vi.fn().mockResolvedValue({
     crypto: [
+      { symbol: 'BTC', name: 'Bitcoin' },
       { symbol: 'ETH', name: 'Ethereum' },
       { symbol: 'SOL', name: 'Solana' },
       { symbol: 'LINK', name: 'Chainlink' },
@@ -34,6 +35,7 @@ describe('RoutineDashboard', () => {
     mockedGetAssetCorrelations.mockResolvedValue([]);
     mockedGetCorrelationAssetOptions.mockResolvedValue({
       crypto: [
+        { symbol: 'BTC', name: 'Bitcoin' },
         { symbol: 'ETH', name: 'Ethereum' },
         { symbol: 'SOL', name: 'Solana' },
         { symbol: 'LINK', name: 'Chainlink' },
