@@ -2,19 +2,51 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import RoutineDashboard from '../components/Routine/RoutineDashboard';
 import { I18nProvider } from '../hooks/useI18n';
-import { getAssetCorrelations } from '../services/hyperliquidService';
+import { getAssetCorrelations, getCorrelationAssetOptions } from '../services/hyperliquidService';
 
 vi.mock('../services/hyperliquidService', () => ({
+  CORRELATION_CRYPTO_ASSETS: ['ETH', 'SOL', 'LINK', 'AVAX', 'HYPE', 'LIT', 'ARB', 'OP', 'ONDO', 'SUI', 'XLM', 'ENA', 'HBAR', 'ZEC'],
   getAssetCorrelations: vi.fn().mockResolvedValue([]),
+  getCorrelationAssetOptions: vi.fn().mockResolvedValue({
+    crypto: [
+      { symbol: 'ETH', name: 'Ethereum' },
+      { symbol: 'SOL', name: 'Solana' },
+      { symbol: 'LINK', name: 'Chainlink' },
+      { symbol: 'AVAX', name: 'Avalanche' },
+    ],
+    stocks: [
+      { symbol: 'AAPL', name: 'Apple' },
+      { symbol: 'TSLA', name: 'Tesla' },
+      { symbol: 'NVDA', name: 'Nvidia' },
+      { symbol: 'SP500', name: 'S&P 500' },
+      { symbol: 'XYZ100', name: 'Nasdaq 100' },
+    ],
+  }),
 }));
 
 const mockedGetAssetCorrelations = vi.mocked(getAssetCorrelations);
+const mockedGetCorrelationAssetOptions = vi.mocked(getCorrelationAssetOptions);
 
 describe('RoutineDashboard', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
     mockedGetAssetCorrelations.mockResolvedValue([]);
+    mockedGetCorrelationAssetOptions.mockResolvedValue({
+      crypto: [
+        { symbol: 'ETH', name: 'Ethereum' },
+        { symbol: 'SOL', name: 'Solana' },
+        { symbol: 'LINK', name: 'Chainlink' },
+        { symbol: 'AVAX', name: 'Avalanche' },
+      ],
+      stocks: [
+        { symbol: 'AAPL', name: 'Apple' },
+        { symbol: 'TSLA', name: 'Tesla' },
+        { symbol: 'NVDA', name: 'Nvidia' },
+        { symbol: 'SP500', name: 'S&P 500' },
+        { symbol: 'XYZ100', name: 'Nasdaq 100' },
+      ],
+    });
   });
 
   it('persists market bias notes across reloads', async () => {
@@ -144,5 +176,31 @@ describe('RoutineDashboard', () => {
 
     expect(await screen.findByText('Correlation data is unavailable right now.')).toBeInTheDocument();
     expect(screen.getByText('Correlation request failed')).toBeInTheDocument();
+  });
+
+  it('persists correlation matrix asset selections', async () => {
+    const storageKey = `journaly_routine_${new Date().toISOString().split('T')[0]}`;
+
+    render(
+      <I18nProvider>
+        <RoutineDashboard />
+      </I18nProvider>
+    );
+
+    fireEvent.change(await screen.findByLabelText(/base crypto/i), {
+      target: { value: 'SOL' },
+    });
+
+    await screen.findByText('5 available');
+    fireEvent.change(screen.getByLabelText(/stocks \/ xyz markets/i), {
+      target: { value: 'TSLA' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+
+    await waitFor(() => {
+      const stored = localStorage.getItem(storageKey);
+      expect(stored).toContain('"baseAsset":"SOL"');
+      expect(stored).toContain('TSLA');
+    });
   });
 });
