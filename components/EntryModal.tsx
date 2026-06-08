@@ -25,6 +25,9 @@ interface EntryModalProps {
   isBybitAvailable: boolean;
 }
 
+const MAX_ATTACHMENT_IMAGE_BYTES = 2 * 1024 * 1024;
+const ACCEPTED_ATTACHMENT_IMAGE_TYPES = new Set(['image/png', 'image/jpeg']);
+
 const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDelete, selectedDate, entry, initialEmotion, isBybitAvailable }) => {
   const { t, language } = useI18n();
   const [activeTab, setActiveTab] = useState<'journal' | 'trading'>('journal');
@@ -271,20 +274,45 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
     }
   };
 
+  const readAttachmentImage = useCallback((file: File) => {
+    if (!ACCEPTED_ATTACHMENT_IMAGE_TYPES.has(file.type)) {
+      alert(t('modal.entry.image_invalid'));
+      return;
+    }
+
+    if (file.size > MAX_ATTACHMENT_IMAGE_BYTES) {
+      alert(t('modal.entry.image_too_large'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }, [t]);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert("File is too large. Please select an image under 2MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    readAttachmentImage(file);
+    event.target.value = '';
   };
+
+  const handleImagePaste = useCallback((event: React.ClipboardEvent<HTMLDivElement>) => {
+    if (activeTab !== 'journal') return;
+
+    const imageItem = Array.from(event.clipboardData.items).find((item) =>
+      item.kind === 'file' && item.type.startsWith('image/')
+    );
+    const file = imageItem?.getAsFile();
+
+    if (!file) return;
+
+    event.preventDefault();
+    readAttachmentImage(file);
+  }, [activeTab, readAttachmentImage]);
 
   const handleRemoveImage = () => {
     setImage(undefined);
@@ -393,6 +421,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
         role="dialog"
         aria-modal="true"
         aria-labelledby="entry-modal-title"
+        onPaste={handleImagePaste}
         className="journal-panel rounded-2xl shadow-2xl w-full max-w-4xl animate-scale-in flex flex-col max-h-[92vh] overflow-hidden">
         
         <AnimatePresence mode="wait">
@@ -520,7 +549,7 @@ const EntryModal: React.FC<EntryModalProps> = ({ isOpen, onClose, onSave, onDele
                             <label htmlFor="image-upload" className="cursor-pointer w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-[var(--panel-border)] rounded-xl hover:bg-[var(--surface-2)] hover:border-[var(--panel-border-strong)] transition-all group">
                             <IconUpload className="w-8 h-8 text-[var(--text-subtle)] mb-2 group-hover:text-[var(--text-main)] transition-colors" />
                             <span className="text-sm font-semibold text-[var(--text-muted)] group-hover:text-[var(--text-main)] transition-colors">{t('modal.entry.upload_image')}</span>
-                            <p className="text-xs text-[var(--text-subtle)] mt-1">PNG, JPG up to 2MB</p>
+                            <p className="text-xs text-[var(--text-subtle)] mt-1">{t('modal.entry.image_hint')}</p>
                             <input id="image-upload" type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleImageUpload} />
                             </label>
                         )}
